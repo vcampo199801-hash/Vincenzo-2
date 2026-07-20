@@ -3,10 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { updateStudioInfo } from "@/lib/actions/studio";
 import { removeMember } from "@/lib/actions/team";
 import { PageHeader } from "@/components/ui/page-header";
-import { Field, SubmitButton } from "@/components/ui/form";
+import { Field, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { InviteMemberForm } from "@/components/app/invite-member-form";
+import { TestDigestButton } from "@/components/app/test-digest-button";
 import { formatDate } from "@/lib/compliance";
+import { isEmailConfigured } from "@/lib/email";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -35,8 +37,29 @@ export default async function ImpostazioniPage() {
             <Field label="Telefono" name="telefono" defaultValue={studio.telefono} />
           </div>
           <Field label="Email" name="email" type="email" defaultValue={studio.email} />
+          <CheckboxField
+            label="Ricevi via email un riepilogo delle scadenze in arrivo o già scadute"
+            name="notificheAttive"
+            defaultChecked={studio.notificheAttive}
+          />
           <SubmitButton>Salva impostazioni</SubmitButton>
         </form>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900">Notifiche</h2>
+        <p className="mb-3 text-sm text-slate-500">
+          Ogni giorno controlliamo scadenze, farmaci e lotti di magazzino in scadenza o scaduti: se c&apos;è
+          qualcosa da segnalare, arriva un&apos;email automatica all&apos;indirizzo dello studio qui sopra.
+        </p>
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <TestDigestButton />
+          {!isEmailConfigured() && (
+            <p className="mt-3 text-xs text-slate-400">
+              Nota per lo sviluppatore: imposta RESEND_API_KEY e EMAIL_FROM in .env per abilitare l&apos;invio reale.
+            </p>
+          )}
+        </div>
       </div>
 
       <div>

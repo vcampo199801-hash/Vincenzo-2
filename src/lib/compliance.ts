@@ -75,16 +75,18 @@ export const STATO_LABELS: Record<string, string> = {
   MANCANTE: "Mancante",
 };
 
+// Bold, high-contrast colors on purpose: these badges need to jump out at a
+// glance (green = a posto, giallo = attenzione, rosso = agire subito).
 export const STATO_COLORS: Record<string, string> = {
-  DA_COMPILARE: "bg-slate-100 text-slate-600 border-slate-200",
-  OK: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  IN_SCADENZA: "bg-amber-50 text-amber-700 border-amber-200",
-  SCADUTO: "bg-red-50 text-red-700 border-red-200",
-  SCORTA_BASSA: "bg-amber-50 text-amber-700 border-amber-200",
-  DA_RIORDINARE: "bg-red-50 text-red-700 border-red-200",
-  PRESENTE: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  DA_AGGIORNARE: "bg-amber-50 text-amber-700 border-amber-200",
-  MANCANTE: "bg-red-50 text-red-700 border-red-200",
+  DA_COMPILARE: "bg-slate-400 text-white border-slate-400",
+  OK: "bg-emerald-500 text-white border-emerald-500",
+  IN_SCADENZA: "bg-amber-400 text-slate-900 border-amber-400",
+  SCADUTO: "bg-red-600 text-white border-red-600",
+  SCORTA_BASSA: "bg-amber-400 text-slate-900 border-amber-400",
+  DA_RIORDINARE: "bg-red-600 text-white border-red-600",
+  PRESENTE: "bg-emerald-500 text-white border-emerald-500",
+  DA_AGGIORNARE: "bg-amber-400 text-slate-900 border-amber-400",
+  MANCANTE: "bg-red-600 text-white border-red-600",
 };
 
 export function formatDate(date: Date | null | undefined) {

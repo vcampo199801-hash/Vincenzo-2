@@ -85,6 +85,22 @@ riscattati" e produce un CSV pronto da caricare nell'app Shopify. Il cliente:
 Ogni codice è utilizzabile una sola volta; un riscatto concorrente sullo stesso codice fallisce in
 modo sicuro (transazione atomica).
 
+## Notifiche email
+
+Una volta al giorno (`vercel.json` → `0 7 * * *`, le 7:00 UTC) l'app controlla scadenze, farmaci e
+lotti di magazzino in scadenza o scaduti per ogni studio, e invia un'email di riepilogo se c'è
+qualcosa da segnalare — nessuna email se è tutto in regola.
+
+1. Crea un account gratuito su [resend.com](https://resend.com) e genera una API key.
+2. Verifica un dominio mittente (o usa il dominio di test di Resend in fase di prova).
+3. Imposta su Vercel: `RESEND_API_KEY`, `EMAIL_FROM` (es. `Scadenze in Regola <notifiche@tuodominio.it>`)
+   e `CRON_SECRET` (una stringa casuale — Vercel la invia automaticamente come header alle chiamate
+   cron, così `/api/cron/digest` rifiuta richieste esterne).
+4. Ogni studio può disattivare le notifiche dalla pagina Impostazioni, e ha un pulsante "Invia email
+   di prova ora" per verificare subito che tutto funzioni.
+
+Senza queste variabili l'app funziona lo stesso: il cron job si limita a non fare nulla.
+
 ## Struttura
 
 - `src/app/(marketing)` — landing page e pricing pubblici (`/`, `/login`, `/signup`)

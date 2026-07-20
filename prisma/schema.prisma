@@ -31,6 +31,7 @@ model Studio {
   telefono  String?
   email     String?
   logoUrl   String?
+  notificheAttive Boolean @default(true)
   createdAt DateTime @default(now())
 
   ownerId String

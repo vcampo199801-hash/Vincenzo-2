@@ -1,0 +1,16 @@
+{
+  "name": "Scadenze in Regola",
+  "short_name": "Scadenze in Regola",
+  "description": "Scadenze, controlli, magazzino, farmaci e documenti dello studio odontoiatrico sempre sotto controllo.",
+  "start_url": "/app",
+  "id": "/app",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4e888f",
+  "lang": "it",
+  "icons": [
+    { "src": "/brand/pwa-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/pwa-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/pwa-icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
