@@ -1,9 +1,23 @@
 import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { scadenzaStato, scortaStato, lottoStato, formatDate, formatCurrency } from "@/lib/compliance";
+import {
+  scadenzaStato,
+  scortaStato,
+  lottoStato,
+  ecmPercent,
+  formatDate,
+  formatCurrency,
+  STATO_LABELS,
+  MESI_LABELS,
+} from "@/lib/compliance";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
+import { StatusDonut } from "@/components/charts/donut";
+import { BarList } from "@/components/charts/bar-list";
+import { Meter } from "@/components/charts/meter";
+import { TrendBars } from "@/components/charts/trend-bars";
+import { STATUS_HEX } from "@/components/charts/colors";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -11,11 +25,13 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const { studio } = await requireActiveSubscription();
 
-  const [adempimenti, magazzino, farmaci, documenti] = await Promise.all([
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli] = await Promise.all([
     prisma.adempimento.findMany({ where: { studioId: studio.id } }),
     prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
     prisma.farmaco.findMany({ where: { studioId: studio.id } }),
     prisma.documento.findMany({ where: { studioId: studio.id } }),
+    prisma.ecmCredito.findMany({ where: { studioId: studio.id } }),
+    prisma.controlloLog.findMany({ where: { studioId: studio.id } }),
   ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -48,6 +64,42 @@ export default async function DashboardPage() {
   const documentiPresenti = documenti.filter((d) => d.stato === "PRESENTE").length;
   const documentiCompletezza = documenti.length > 0 ? Math.round((documentiPresenti / documenti.length) * 100) : 0;
 
+  // Magazzino: valore giacenze per categoria, le prime 6 per valore.
+  const valorePerCategoria = new Map<string, number>();
+  for (const m of magazzino) {
+    valorePerCategoria.set(m.categoria, (valorePerCategoria.get(m.categoria) ?? 0) + m.quantitaAttuale * m.prezzoUnitario);
+  }
+  const categorieRanked = [...valorePerCategoria.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
+  // Registro controlli: spesa per mese, ultimi 6 mesi (compresi i mesi senza interventi).
+  const now = new Date();
+  const speseUltimiMesi = Array.from({ length: 6 }).map((_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    const value = controlli
+      .filter((c) => c.dataIntervento.getFullYear() === d.getFullYear() && c.dataIntervento.getMonth() === d.getMonth())
+      .reduce((sum, c) => sum + c.costo, 0);
+    return { label: MESI_LABELS[d.getMonth()].slice(0, 3), value };
+  });
+
+  // Formazione ECM: chi ha più strada da fare verso il target, in cima.
+  const ecmRanked = ecmCrediti
+    .map((e) => ({ e, ...ecmPercent(e.crediti2026, e.crediti2027, e.crediti2028, e.target) }))
+    .sort((a, b) => a.percentuale - b.percentuale)
+    .slice(0, 5);
+  const ecmTotali = ecmCrediti.reduce(
+    (acc, e) => {
+      acc.totale += e.crediti2026 + e.crediti2027 + e.crediti2028;
+      acc.target += e.target;
+      return acc;
+    },
+    { totale: 0, target: 0 }
+  );
+
+  const farmaciOk = farmaciRows.filter((s) => s === "OK").length;
+
   return (
     <div className="space-y-8">
       <div>
@@ -63,6 +115,108 @@ export default async function DashboardPage() {
         <StatCard label="Scaduti" value={scadutiCount} tone="bad" />
         <StatCard label="Da compilare" value={daCompilareCount} />
         <StatCard label="% Compliance" value={`${compliancePct}%`} tone={compliancePct >= 80 ? "good" : compliancePct >= 50 ? "warn" : "bad"} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Scadenzario per stato</h2>
+          <StatusDonut
+            centerValue={`${compliancePct}%`}
+            centerLabel="in regola"
+            segments={[
+              { label: STATO_LABELS.OK, value: okCount, color: STATUS_HEX.OK },
+              { label: STATO_LABELS.IN_SCADENZA, value: inScadenzaCount, color: STATUS_HEX.IN_SCADENZA },
+              { label: STATO_LABELS.SCADUTO, value: scadutiCount, color: STATUS_HEX.SCADUTO },
+              { label: STATO_LABELS.DA_COMPILARE, value: daCompilareCount, color: STATUS_HEX.DA_COMPILARE },
+            ]}
+          />
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-slate-900">Valore magazzino per categoria</h2>
+            <Link href="/app/magazzino" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+              Vedi tutto →
+            </Link>
+          </div>
+          <BarList items={categorieRanked} formatValue={formatCurrency} />
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-slate-900">Spesa manutenzioni — ultimi 6 mesi</h2>
+            <Link href="/app/controlli" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+              Vedi tutto →
+            </Link>
+          </div>
+          <TrendBars items={speseUltimiMesi} formatValue={(v) => formatCurrency(v).replace(",00", "")} />
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-slate-900">Formazione ECM del team</h2>
+            <Link href="/app/ecm" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+              Vedi tutto →
+            </Link>
+          </div>
+          <div className="space-y-3">
+            <Meter
+              label="Crediti totali team vs target"
+              value={ecmTotali.totale}
+              max={ecmTotali.target}
+              tone={ecmTotali.totale >= ecmTotali.target ? "good" : ecmTotali.totale >= ecmTotali.target * 0.6 ? "warn" : "bad"}
+            />
+            {ecmRanked.length > 0 && (
+              <div className="space-y-2.5 border-t border-slate-100 pt-3">
+                {ecmRanked.map(({ e, percentuale }) => (
+                  <Meter
+                    key={e.id}
+                    label={e.professionista}
+                    value={Math.round(percentuale * 100)}
+                    max={100}
+                    tone={percentuale >= 1 ? "good" : percentuale >= 0.6 ? "warn" : "bad"}
+                  />
+                ))}
+              </div>
+            )}
+            {ecmCrediti.length === 0 && <p className="text-sm text-slate-500">Nessun professionista censito.</p>}
+          </div>
+        </section>
+
+        {farmaci.length > 0 && (
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-slate-900">Farmaci di emergenza per stato</h2>
+              <Link href="/app/farmaci" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                Vedi tutto →
+              </Link>
+            </div>
+            <StatusDonut
+              centerValue={String(farmaci.length)}
+              centerLabel="totali"
+              segments={[
+                { label: "In regola", value: farmaciOk, color: STATUS_HEX.OK },
+                { label: "In scadenza", value: farmaciInScadenza, color: STATUS_HEX.IN_SCADENZA },
+                { label: "Scaduti", value: farmaciScaduti, color: STATUS_HEX.SCADUTO },
+              ]}
+            />
+          </section>
+        )}
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-slate-900">Archivio documenti — completezza</h2>
+            <Link href="/app/documenti" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+              Vedi tutto →
+            </Link>
+          </div>
+          <Meter
+            label={`${documenti.length} documenti censiti`}
+            value={documentiPresenti}
+            max={documenti.length}
+            tone={documentiCompletezza >= 80 ? "good" : documentiCompletezza >= 50 ? "warn" : "bad"}
+          />
+        </section>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -101,32 +255,6 @@ export default async function DashboardPage() {
             <DashRow label="Articoli in scorta bassa" value={scortaBassa} bad={scortaBassa > 0} />
             <DashRow label="Lotti scaduti o in scadenza" value={lottiCritici} bad={lottiCritici > 0} />
             <DashRow label="Valore giacenze" value={formatCurrency(valoreGiacenze)} />
-          </dl>
-        </section>
-
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Farmaci di emergenza</h2>
-            <Link href="/app/farmaci" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutto →
-            </Link>
-          </div>
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <DashRow label="Farmaci scaduti" value={farmaciScaduti} bad={farmaciScaduti > 0} />
-            <DashRow label="In scadenza (90 giorni)" value={farmaciInScadenza} bad={farmaciInScadenza > 0} />
-          </dl>
-        </section>
-
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Archivio documenti</h2>
-            <Link href="/app/documenti" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutto →
-            </Link>
-          </div>
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <DashRow label="Completezza documenti presenti" value={`${documentiCompletezza}%`} bad={documentiCompletezza < 50} />
-            <DashRow label="Documenti censiti" value={documenti.length} />
           </dl>
         </section>
       </div>

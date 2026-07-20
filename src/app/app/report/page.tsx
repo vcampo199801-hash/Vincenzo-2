@@ -3,6 +3,9 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { scadenzaStato, scortaStato, lottoStato, formatDate, formatCurrency, STATO_LABELS } from "@/lib/compliance";
 import { PrintButton } from "@/components/app/print-button";
+import { StatusDonut } from "@/components/charts/donut";
+import { BarList } from "@/components/charts/bar-list";
+import { STATUS_HEX } from "@/components/charts/colors";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -39,6 +42,15 @@ export default async function ReportPage() {
 
   const documentiPresenti = documenti.filter((d) => d.stato === "PRESENTE").length;
   const documentiPct = documenti.length > 0 ? Math.round((documentiPresenti / documenti.length) * 100) : 0;
+
+  const valorePerCategoria = new Map<string, number>();
+  for (const m of magazzino) {
+    valorePerCategoria.set(m.categoria, (valorePerCategoria.get(m.categoria) ?? 0) + m.quantitaAttuale * m.prezzoUnitario);
+  }
+  const categorieRanked = [...valorePerCategoria.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -78,6 +90,28 @@ export default async function ReportPage() {
             <SummaryBox label="Scaduti" value={scadutiCount} />
             <SummaryBox label="Da compilare" value={daCompilareCount} />
             <SummaryBox label="% Compliance" value={`${compliancePct}%`} />
+          </div>
+        </section>
+
+        <section className="mb-8 grid grid-cols-2 gap-6 print:break-inside-avoid">
+          <div className="rounded-lg border border-slate-200 p-4">
+            <h2 className="mb-3 text-sm font-semibold text-slate-900">Scadenzario per stato</h2>
+            <StatusDonut
+              size={120}
+              strokeWidth={16}
+              centerValue={`${compliancePct}%`}
+              centerLabel="in regola"
+              segments={[
+                { label: STATO_LABELS.OK, value: okCount, color: STATUS_HEX.OK },
+                { label: STATO_LABELS.IN_SCADENZA, value: inScadenzaCount, color: STATUS_HEX.IN_SCADENZA },
+                { label: STATO_LABELS.SCADUTO, value: scadutiCount, color: STATUS_HEX.SCADUTO },
+                { label: STATO_LABELS.DA_COMPILARE, value: daCompilareCount, color: STATUS_HEX.DA_COMPILARE },
+              ]}
+            />
+          </div>
+          <div className="rounded-lg border border-slate-200 p-4">
+            <h2 className="mb-3 text-sm font-semibold text-slate-900">Valore magazzino per categoria</h2>
+            <BarList items={categorieRanked} formatValue={formatCurrency} />
           </div>
         </section>
 
