@@ -10,12 +10,19 @@ export async function requireSession() {
 
 export async function requireStudio() {
   const session = await requireSession();
+
+  const membership = await prisma.membership.findUnique({
+    where: { studioId_userId: { studioId: session.studioId, userId: session.userId } },
+  });
+  if (!membership) redirect("/login");
+
   const studio = await prisma.studio.findUnique({
     where: { id: session.studioId },
     include: { subscription: true },
   });
   if (!studio) redirect("/login");
-  return { session, studio };
+
+  return { session, studio, membership };
 }
 
 const ENTITLED_STATUSES = new Set(["ACTIVE", "TRIALING"]);

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const MODULES = [
   { icon: "🗓️", title: "Scadenzario", desc: "24 adempimenti normativi standard già pronti: estintori, autoclave, messa a terra, sorveglianza sanitaria e altro. Stato calcolato in automatico." },
@@ -16,14 +17,20 @@ export default function Home() {
     <div className="flex flex-1 flex-col">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <span className="text-lg font-semibold text-blue-700">Sorrisi in Regola</span>
+          <div className="flex items-center gap-2">
+            <Image src="/brand/monogram.png" alt="" width={32} height={32} className="h-8 w-8" />
+            <div className="leading-tight">
+              <span className="block text-lg font-semibold text-brand-700">Vigilo</span>
+              <span className="block text-[11px] font-medium text-slate-400">by Sorrisi in Regola</span>
+            </div>
+          </div>
           <nav className="flex items-center gap-4">
             <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">
               Accedi
             </Link>
             <Link
               href="/signup"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
             >
               Prova gratis 14 giorni
             </Link>
@@ -31,19 +38,20 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="bg-gradient-to-b from-blue-50 to-white">
+      <section className="bg-gradient-to-b from-brand-50 to-white">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center">
+          <Image src="/brand/monogram.png" alt="Vigilo" width={72} height={72} className="mx-auto mb-4 h-16 w-16" />
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-            Studio Sotto Controllo
+            Vigilo
           </h1>
           <p className="mt-4 text-lg text-slate-600">
-            La app che tiene sotto controllo scadenze, controlli, magazzino, farmaci e documenti del tuo studio
-            odontoiatrico — così non ci pensi più tu.
+            La app <span className="text-slate-900 font-medium">di Sorrisi in Regola</span> che tiene sotto controllo
+            scadenze, controlli, magazzino, farmaci e documenti del tuo studio odontoiatrico — così non ci pensi più tu.
           </p>
           <div className="mt-8 flex justify-center gap-4">
             <Link
               href="/signup"
-              className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              className="rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
             >
               Inizia la prova gratuita
             </Link>
@@ -79,8 +87,8 @@ export default function Home() {
           <h2 className="text-2xl font-semibold text-slate-900">Un piano semplice</h2>
           <p className="mt-2 text-slate-500">Nessun vincolo, disdici quando vuoi.</p>
 
-          <div className="mt-8 rounded-2xl border border-blue-200 bg-white p-8 shadow-sm">
-            <p className="text-sm font-medium text-blue-700">Piano Studio</p>
+          <div className="mt-8 rounded-2xl border border-brand-200 bg-white p-8 shadow-sm">
+            <p className="text-sm font-medium text-brand-700">Piano Studio</p>
             <p className="mt-2 text-4xl font-bold text-slate-900">
               €12<span className="text-base font-medium text-slate-500">/mese</span>
             </p>
@@ -90,11 +98,12 @@ export default function Home() {
               <li>✓ Utenti e team illimitati</li>
               <li>✓ Checklist standard precompilate</li>
               <li>✓ Promemoria scadenze automatici</li>
+              <li>✓ Report stampabile per le ispezioni ASL</li>
               <li>✓ 14 giorni di prova gratuita</li>
             </ul>
             <Link
               href="/signup"
-              className="mt-6 block rounded-lg bg-blue-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              className="mt-6 block rounded-lg bg-brand-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
             >
               Inizia la prova gratuita
             </Link>
@@ -102,7 +111,7 @@ export default function Home() {
 
           <p className="mt-6 text-sm text-slate-500">
             Hai acquistato su Shopify?{" "}
-            <Link href="/codice" className="font-medium text-blue-700">
+            <Link href="/codice" className="font-medium text-brand-700">
               Attiva il tuo codice
             </Link>
           </p>
@@ -110,9 +119,12 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-slate-200 bg-white py-8">
-        <div className="mx-auto max-w-6xl px-6 text-center text-xs text-slate-400">
-          Sorrisi in Regola — Studio Sotto Controllo. Questo strumento è un supporto organizzativo e non sostituisce gli
-          obblighi di verifica con i propri consulenti.
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 text-center">
+          <Image src="/brand/wordmark.png" alt="Sorrisi in Regola" width={160} height={57} className="h-8 w-auto opacity-70" />
+          <p className="text-xs text-slate-400">
+            Vigilo by Sorrisi in Regola. Questo strumento è un supporto organizzativo e non sostituisce gli
+            obblighi di verifica con i propri consulenti.
+          </p>
         </div>
       </footer>
     </div>

@@ -69,7 +69,7 @@ export default async function DashboardPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Le tue prossime 5 scadenze</h2>
-            <Link href="/app/scadenzario" className="text-sm font-medium text-blue-600 hover:text-blue-800">
+            <Link href="/app/scadenzario" className="text-sm font-medium text-brand-600 hover:text-brand-800">
               Vedi tutte →
             </Link>
           </div>
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Magazzino in sintesi</h2>
-            <Link href="/app/magazzino" className="text-sm font-medium text-blue-600 hover:text-blue-800">
+            <Link href="/app/magazzino" className="text-sm font-medium text-brand-600 hover:text-brand-800">
               Vedi tutto →
             </Link>
           </div>
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Farmaci di emergenza</h2>
-            <Link href="/app/farmaci" className="text-sm font-medium text-blue-600 hover:text-blue-800">
+            <Link href="/app/farmaci" className="text-sm font-medium text-brand-600 hover:text-brand-800">
               Vedi tutto →
             </Link>
           </div>
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Archivio documenti</h2>
-            <Link href="/app/documenti" className="text-sm font-medium text-blue-600 hover:text-blue-800">
+            <Link href="/app/documenti" className="text-sm font-medium text-brand-600 hover:text-brand-800">
               Vedi tutto →
             </Link>
           </div>
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
         </section>
       </div>
 
-      <p className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+      <p className="rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-800">
         Suggerimento: apri lo Scadenzario e aggiorna la data dell&apos;ultimo controllo dopo ogni intervento — il cruscotto si aggiorna da solo.
       </p>
     </div>

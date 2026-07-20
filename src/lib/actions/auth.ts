@@ -36,27 +36,31 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + trialDays());
 
-  const user = await prisma.user.create({
-    data: {
-      name: name || null,
-      email,
-      passwordHash,
-      studios: {
-        create: {
-          name: nomeStudio,
-          subscription: {
-            create: {
-              status: "TRIALING",
-              trialEndsAt,
+  const { user, studio } = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name: name || null,
+        email,
+        passwordHash,
+        studios: {
+          create: {
+            name: nomeStudio,
+            subscription: {
+              create: {
+                status: "TRIALING",
+                trialEndsAt,
+              },
             },
           },
         },
       },
-    },
-    include: { studios: true },
+      include: { studios: true },
+    });
+    const studio = user.studios[0];
+    await tx.membership.create({ data: { studioId: studio.id, userId: user.id, role: "OWNER" } });
+    return { user, studio };
   });
 
-  const studio = user.studios[0];
   await provisionStudioDefaults(studio.id);
   await createSession({ userId: user.id, email: user.email, studioId: studio.id });
   redirect("/app");
@@ -66,19 +70,16 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
-  const user = await prisma.user.findUnique({
-    where: { email },
-    include: { studios: true },
-  });
+  const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return { error: "Credenziali non valide." };
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) return { error: "Credenziali non valide." };
 
-  const studio = user.studios[0];
-  if (!studio) return { error: "Nessuno studio associato a questo account." };
+  const membership = await prisma.membership.findFirst({ where: { userId: user.id } });
+  if (!membership) return { error: "Nessuno studio associato a questo account." };
 
-  await createSession({ userId: user.id, email: user.email, studioId: studio.id });
+  await createSession({ userId: user.id, email: user.email, studioId: membership.studioId });
   redirect("/app");
 }
 

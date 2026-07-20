@@ -65,16 +65,20 @@ export async function redeemCodeForNewStudio(_prev: FormState, formData: FormDat
 
   const passwordHash = await bcrypt.hash(password, 10);
 
-  const user = await prisma.user.create({
-    data: {
-      name: name || null,
-      email,
-      passwordHash,
-      studios: { create: { name: nomeStudio } },
-    },
-    include: { studios: true },
+  const { user, studio } = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name: name || null,
+        email,
+        passwordHash,
+        studios: { create: { name: nomeStudio } },
+      },
+      include: { studios: true },
+    });
+    const studio = user.studios[0];
+    await tx.membership.create({ data: { studioId: studio.id, userId: user.id, role: "OWNER" } });
+    return { user, studio };
   });
-  const studio = user.studios[0];
 
   try {
     await applyCodeToStudio(accessCode.id, studio.id, accessCode.days);

@@ -56,3 +56,34 @@ export async function deleteAdempimento(id: string) {
   revalidatePath("/app/scadenzario");
   revalidatePath("/app");
 }
+
+/**
+ * One-click "segna eseguito": updates the deadline's last-check date and logs
+ * the intervention in the Registro Controlli in a single action, so compiling
+ * a deadline never requires visiting two different modules.
+ */
+export async function markAdempimentoDone(
+  id: string,
+  data: { data: string; tecnico: string; costo: string; esito: string; note: string }
+) {
+  const { studio } = await requireStudio();
+  const dataIntervento = data.data ? new Date(data.data) : new Date();
+  const costo = Number(data.costo) || 0;
+  const tecnico = data.tecnico.trim() || null;
+  const esito = data.esito.trim() || "Conforme";
+  const note = data.note.trim() || null;
+
+  const adempimento = await prisma.adempimento.findFirst({ where: { id, studioId: studio.id } });
+  if (!adempimento) return;
+
+  await prisma.$transaction([
+    prisma.adempimento.update({ where: { id }, data: { dataUltimoControllo: dataIntervento } }),
+    prisma.controlloLog.create({
+      data: { studioId: studio.id, adempimentoId: id, dataIntervento, tecnico, esito, costo, note },
+    }),
+  ]);
+
+  revalidatePath("/app/scadenzario");
+  revalidatePath("/app/controlli");
+  revalidatePath("/app");
+}

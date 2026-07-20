@@ -52,7 +52,7 @@ export default async function EcmPage() {
                   <td className="px-4 py-3">
                     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                       <div
-                        className={`h-full rounded-full ${percentuale >= 1 ? "bg-emerald-500" : percentuale >= 0.6 ? "bg-blue-500" : "bg-amber-500"}`}
+                        className={`h-full rounded-full ${percentuale >= 1 ? "bg-emerald-500" : percentuale >= 0.6 ? "bg-brand-500" : "bg-amber-500"}`}
                         style={{ width: `${Math.round(percentuale * 100)}%` }}
                       />
                     </div>
@@ -60,7 +60,7 @@ export default async function EcmPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
-                      <Link href={`/app/ecm/${e.id}/edit`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                      <Link href={`/app/ecm/${e.id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">
                         Modifica
                       </Link>
                       <DeleteButton action={deleteEcm.bind(null, e.id)} />

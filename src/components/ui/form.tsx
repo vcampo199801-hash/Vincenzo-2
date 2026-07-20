@@ -31,7 +31,7 @@ export function Field({
         defaultValue={defaultValue ?? ""}
         required={required}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
     </label>
   );
@@ -56,7 +56,7 @@ export function TextAreaField({
         defaultValue={defaultValue ?? ""}
         placeholder={placeholder}
         rows={3}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
     </label>
   );
@@ -84,7 +84,7 @@ export function SelectField({
         name={name}
         defaultValue={defaultValue ?? ""}
         required={required}
-        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -111,7 +111,7 @@ export function CheckboxField({
         type="checkbox"
         name={name}
         defaultChecked={defaultChecked}
-        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
       />
       {label}
     </label>
@@ -124,7 +124,7 @@ export function SubmitButton({ children = "Salva" }: { children?: React.ReactNod
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+      className="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700 disabled:opacity-60"
     >
       {pending ? "Salvataggio…" : children}
     </button>

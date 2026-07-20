@@ -53,7 +53,7 @@ export default async function AbbonamentoPage({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-slate-500">Piano attuale</p>
-            <p className="text-lg font-semibold text-slate-900">Studio Sotto Controllo — {PLAN_PRICE_LABEL}</p>
+            <p className="text-lg font-semibold text-slate-900">Vigilo — {PLAN_PRICE_LABEL}</p>
           </div>
           <StatusPill status={sub?.status ?? "INCOMPLETE"} />
         </div>
@@ -101,7 +101,7 @@ export default async function AbbonamentoPage({
       <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-medium text-slate-500">Hai un codice di attivazione?</p>
         <p className="mt-1 text-sm text-slate-500">
-          Se hai acquistato Studio Sotto Controllo sul nostro shop, inserisci qui il codice ricevuto per
+          Se hai acquistato Vigilo sul nostro shop, inserisci qui il codice ricevuto per
           attivare o estendere l&apos;abbonamento.
         </p>
         <div className="mt-4 max-w-sm">
@@ -114,7 +114,7 @@ export default async function AbbonamentoPage({
 
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, { label: string; className: string }> = {
-    TRIALING: { label: "In prova", className: "bg-blue-50 text-blue-700 border-blue-200" },
+    TRIALING: { label: "In prova", className: "bg-brand-50 text-brand-700 border-brand-200" },
     ACTIVE: { label: "Attivo", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
     PAST_DUE: { label: "Pagamento scaduto", className: "bg-red-50 text-red-700 border-red-200" },
     CANCELED: { label: "Annullato", className: "bg-slate-100 text-slate-600 border-slate-200" },

@@ -50,6 +50,7 @@ async function main() {
   });
 
   const studio = user.studios[0];
+  await prisma.membership.create({ data: { studioId: studio.id, userId: user.id, role: "OWNER" } });
   await provisionStudioDefaults(studio.id);
 
   // Backfill a few of the standard adempimenti with example dates, mirroring the

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Studio Sotto Controllo — Sorrisi in Regola",
+  title: "Vigilo — by Sorrisi in Regola",
   description:
     "La app di compliance per studi odontoiatrici: scadenze, controlli, magazzino, farmaci e documenti sempre sotto controllo.",
 };

@@ -20,7 +20,7 @@ export function PageHeader({
       {action && actionHref && (
         <Link
           href={actionHref}
-          className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+          className="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
         >
           {action}
         </Link>

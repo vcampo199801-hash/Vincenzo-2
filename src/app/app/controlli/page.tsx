@@ -62,7 +62,7 @@ export default async function ControlliPage() {
                 <td className="px-4 py-3 max-w-xs truncate text-slate-500">{c.note ?? "—"}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-3">
-                    <Link href={`/app/controlli/${c.id}/edit`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    <Link href={`/app/controlli/${c.id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">
                       Modifica
                     </Link>
                     <DeleteButton action={deleteControllo.bind(null, c.id)} />

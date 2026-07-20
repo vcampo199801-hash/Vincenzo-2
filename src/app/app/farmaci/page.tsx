@@ -75,7 +75,7 @@ export default async function FarmaciPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
-                      <Link href={`/app/farmaci/${f.id}/edit`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                      <Link href={`/app/farmaci/${f.id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">
                         Modifica
                       </Link>
                       <DeleteButton action={deleteFarmaco.bind(null, f.id)} />

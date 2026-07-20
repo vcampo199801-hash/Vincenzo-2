@@ -20,6 +20,7 @@ model User {
   createdAt     DateTime @default(now())
 
   studios       Studio[]
+  memberships   Membership[]
 }
 
 model Studio {
@@ -45,6 +46,22 @@ model Studio {
   farmacoControlli     FarmacoControlloMensile[]
   fornitori            Fornitore[]
   accessCodes          AccessCode[]
+  memberships          Membership[]
+}
+
+// Team members with access to a studio (the practice owner plus invited
+// collaborators — hygienists, assistants). Role (string): OWNER | MEMBER.
+model Membership {
+  id        String   @id @default(cuid())
+  studioId  String
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("MEMBER")
+  createdAt DateTime @default(now())
+
+  @@unique([studioId, userId])
+  @@index([userId])
 }
 
 // ---------- Billing ----------

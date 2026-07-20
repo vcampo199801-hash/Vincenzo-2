@@ -78,7 +78,7 @@ export default async function MagazzinoPage() {
                 <td className="px-4 py-3 text-slate-600">{formatCurrency(valore)}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-3">
-                    <Link href={`/app/magazzino/${i.id}/edit`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    <Link href={`/app/magazzino/${i.id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">
                       Modifica
                     </Link>
                     <DeleteButton action={deleteMagazzinoItem.bind(null, i.id)} />

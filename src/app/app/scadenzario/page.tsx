@@ -1,11 +1,8 @@
-import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { scadenzaStato, formatDate } from "@/lib/compliance";
+import { scadenzaStato } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatoBadge } from "@/components/ui/badge";
-import { DeleteButton } from "@/components/ui/delete-button";
-import { deleteAdempimento } from "@/lib/actions/scadenzario";
+import { ScadenzarioRow } from "@/components/app/scadenzario-row";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -65,27 +62,17 @@ export default async function ScadenzarioPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {rows.map(({ a, prossimaScadenza, giorni, stato }) => (
-              <tr key={a.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3">
-                  <p className="font-medium text-slate-900">{a.nome}</p>
-                  {a.riferimento && <p className="text-xs text-slate-500">{a.riferimento}</p>}
-                </td>
-                <td className="px-4 py-3 text-slate-600">{a.periodicita}</td>
-                <td className="px-4 py-3 text-slate-600">{formatDate(a.dataUltimoControllo)}</td>
-                <td className="px-4 py-3 text-slate-600">{formatDate(prossimaScadenza)}</td>
-                <td className="px-4 py-3 text-slate-600">{giorni ?? "—"}</td>
-                <td className="px-4 py-3">
-                  <StatoBadge stato={stato} />
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    <Link href={`/app/scadenzario/${a.id}/edit`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
-                      Modifica
-                    </Link>
-                    <DeleteButton action={deleteAdempimento.bind(null, a.id)} />
-                  </div>
-                </td>
-              </tr>
+              <ScadenzarioRow
+                key={a.id}
+                id={a.id}
+                nome={a.nome}
+                riferimento={a.riferimento}
+                periodicita={a.periodicita}
+                dataUltimoControllo={a.dataUltimoControllo}
+                prossimaScadenza={prossimaScadenza}
+                giorni={giorni}
+                stato={stato}
+              />
             ))}
             {rows.length === 0 && (
               <tr>
