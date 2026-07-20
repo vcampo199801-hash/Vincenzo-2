@@ -1,0 +1,213 @@
+// Prisma schema — Sorrisi in Regola / Studio Sotto Controllo
+// Mirrors the original compliance-tracking spreadsheet, one Studio (tenant) per dental practice.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Auth & tenant ----------
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  passwordHash  String
+  createdAt     DateTime @default(now())
+
+  studios       Studio[]
+}
+
+model Studio {
+  id        String   @id @default(cuid())
+  name      String
+  titolare  String?
+  citta     String?
+  telefono  String?
+  email     String?
+  logoUrl   String?
+  createdAt DateTime @default(now())
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  subscription        Subscription?
+  adempimenti          Adempimento[]
+  controlli            ControlloLog[]
+  ecmCrediti           EcmCredito[]
+  documenti            Documento[]
+  magazzinoItems       MagazzinoItem[]
+  farmaci              Farmaco[]
+  farmacoControlli     FarmacoControlloMensile[]
+  fornitori            Fornitore[]
+}
+
+// ---------- Billing ----------
+
+// SubscriptionStatus (string): TRIALING | ACTIVE | PAST_DUE | CANCELED | INCOMPLETE
+model Subscription {
+  id                   String   @id @default(cuid())
+  studioId             String   @unique
+  studio               Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  plan                 String   @default("standard")
+  status               String   @default("TRIALING")
+  trialEndsAt          DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+// ---------- Scadenzario (compliance deadlines) ----------
+
+model Adempimento {
+  id                  String    @id @default(cuid())
+  studioId            String
+  studio              Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  ordine              Int       @default(0)
+  nome                String
+  riferimento         String?
+  periodicita         String
+  mesi                Int
+  dataUltimoControllo DateTime?
+  note                String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  controlli ControlloLog[]
+
+  @@index([studioId])
+}
+
+// ---------- Registro Controlli (maintenance log) ----------
+
+model ControlloLog {
+  id             String       @id @default(cuid())
+  studioId       String
+  studio         Studio       @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  adempimentoId  String?
+  adempimento    Adempimento? @relation(fields: [adempimentoId], references: [id], onDelete: SetNull)
+  dataIntervento DateTime
+  tecnico        String?
+  esito          String
+  costo          Float        @default(0)
+  note           String?
+  createdAt      DateTime     @default(now())
+
+  @@index([studioId])
+}
+
+// ---------- Formazione ECM ----------
+
+model EcmCredito {
+  id            String   @id @default(cuid())
+  studioId      String
+  studio        Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  professionista String
+  crediti2026   Int      @default(0)
+  crediti2027   Int      @default(0)
+  crediti2028   Int      @default(0)
+  target        Int      @default(150)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([studioId])
+}
+
+// ---------- Documenti ----------
+
+// DocumentoStato (string): PRESENTE | DA_AGGIORNARE | MANCANTE
+model Documento {
+  id        String   @id @default(cuid())
+  studioId  String
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  ordine    Int      @default(0)
+  nome      String
+  stato     String   @default("MANCANTE")
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studioId])
+}
+
+// ---------- Magazzino ----------
+
+model MagazzinoItem {
+  id             String    @id @default(cuid())
+  studioId       String
+  studio         Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  categoria      String
+  prodotto       String
+  fornitore      String?
+  unita          String    @default("pz")
+  scortaMinima   Float     @default(0)
+  quantitaAttuale Float    @default(0)
+  scadenzaLotto  DateTime?
+  prezzoUnitario Float     @default(0)
+  note           String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([studioId])
+}
+
+// ---------- Farmaci ----------
+
+model Farmaco {
+  id            String   @id @default(cuid())
+  studioId      String
+  studio        Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  nome          String
+  categoriaUso  String?
+  doveSiTrova   String?
+  quantita      Int      @default(1)
+  lotto         String?
+  scadenza      DateTime?
+  note          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([studioId])
+}
+
+model FarmacoControlloMensile {
+  id            String   @id @default(cuid())
+  studioId      String
+  studio        Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  anno          Int
+  mese          Int // 1-12
+  dataControllo DateTime?
+  operatore     String?
+  esito         String?
+
+  @@unique([studioId, anno, mese])
+  @@index([studioId])
+}
+
+// ---------- Fornitori ----------
+
+// FornitoreTipo (string): COMPLIANCE | MATERIALI
+model Fornitore {
+  id                String   @id @default(cuid())
+  studioId          String
+  studio            Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  tipo              String   @default("COMPLIANCE")
+  ruolo             String
+  nome              String?
+  telefono          String?
+  email             String?
+  contrattoAttivo   Boolean  @default(false)
+  scadenzaContratto DateTime?
+  note              String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([studioId])
+}
