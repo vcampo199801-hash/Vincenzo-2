@@ -10,21 +10,48 @@ standard, checklist documenti e rubrica fornitori al momento della registrazione
 ## Stack
 
 - **Next.js 15** (App Router, TypeScript, Server Actions) + Tailwind CSS
-- **Prisma** + SQLite (facilmente sostituibile con Postgres cambiando `DATABASE_URL`)
+- **Prisma** + **PostgreSQL**
 - Sessioni **JWT firmate** in cookie httpOnly (nessuna dipendenza da provider OAuth esterni)
 - **Stripe Checkout + Billing Portal + webhook** per l'abbonamento mensile ricorrente
 
 ## Sviluppo locale
 
+Serve un database Postgres raggiungibile (locale, oppure uno gratuito su Neon/Supabase/Vercel).
+
 ```bash
 npm install
-cp .env.example .env   # genera un AUTH_SECRET reale con: openssl rand -base64 32
+cp .env.example .env   # imposta DATABASE_URL e genera AUTH_SECRET con: openssl rand -base64 32
 npx prisma migrate dev
 npm run db:seed        # crea uno studio demo con dati di esempio
 npm run dev
 ```
 
 Login demo (dopo il seed): `demo@sorrisiinregola.it` / `demo12345`.
+
+## Pubblicare l'app online (Vercel)
+
+Il modo più veloce per ottenere un link pubblico da aprire nel browser:
+
+1. **Crea un database Postgres gratuito** — la via più semplice è [Neon](https://neon.tech) o
+   [Vercel Postgres](https://vercel.com/storage/postgres) (bastano un paio di click, nessuna carta
+   richiesta per il piano free). Copia la connection string che ti danno (inizia con
+   `postgresql://...`).
+2. Vai su [vercel.com](https://vercel.com), accedi con GitHub e scegli **Add New → Project**.
+3. Importa questo repository (`vcampo199801-hash/Vincenzo-2`), branch
+   `claude/app-monthly-subscription-idfylw` (o `main` una volta uniti i branch).
+4. Nella schermata di configurazione, apri **Environment Variables** e aggiungi almeno:
+   - `DATABASE_URL` — la connection string del database creato al passo 1
+   - `AUTH_SECRET` — genera un valore con `openssl rand -base64 32`
+   - `NEXT_PUBLIC_APP_URL` — l'URL che Vercel ti assegnerà (puoi aggiornarlo dopo il primo deploy)
+   - Le variabili `STRIPE_*` sono opzionali: senza di esse l'app funziona lo stesso, mostra solo un
+     avviso nella pagina Abbonamento invece del pulsante di pagamento.
+5. Premi **Deploy**. Il comando di build (`prisma migrate deploy && next build`) crea
+   automaticamente le tabelle nel database al primo avvio.
+6. (Opzionale) Esegui `npm run db:seed` puntando `DATABASE_URL` al database di produzione per avere
+   subito uno studio demo da mostrare.
+
+Da quel momento l'app è raggiungibile all'indirizzo che Vercel assegna (tipo
+`https://tuo-progetto.vercel.app`), aggiornato automaticamente a ogni push sul branch collegato.
 
 ## Abbonamento (Stripe)
 
