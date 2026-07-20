@@ -1,4 +1,4 @@
-# Vigilo — by Sorrisi in Regola
+# Scadenze in Regola — by Sorrisi in Regola
 
 App SaaS di compliance per studi odontoiatrici: scadenze, registro controlli, formazione ECM,
 documenti, magazzino, farmaci di emergenza e fornitori — con abbonamento mensile ricorrente.

@@ -53,7 +53,7 @@ export default async function AbbonamentoPage({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-slate-500">Piano attuale</p>
-            <p className="text-lg font-semibold text-slate-900">Vigilo — {PLAN_PRICE_LABEL}</p>
+            <p className="text-lg font-semibold text-slate-900">Scadenze in Regola — {PLAN_PRICE_LABEL}</p>
           </div>
           <StatusPill status={sub?.status ?? "INCOMPLETE"} />
         </div>
@@ -101,7 +101,7 @@ export default async function AbbonamentoPage({
       <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-medium text-slate-500">Hai un codice di attivazione?</p>
         <p className="mt-1 text-sm text-slate-500">
-          Se hai acquistato Vigilo sul nostro shop, inserisci qui il codice ricevuto per
+          Se hai acquistato Scadenze in Regola sul nostro shop, inserisci qui il codice ricevuto per
           attivare o estendere l&apos;abbonamento.
         </p>
         <div className="mt-4 max-w-sm">

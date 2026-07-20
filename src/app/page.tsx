@@ -20,7 +20,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Image src="/brand/monogram.png" alt="" width={32} height={32} className="h-8 w-8" />
             <div className="leading-tight">
-              <span className="block text-lg font-semibold text-brand-700">Vigilo</span>
+              <span className="block text-lg font-semibold text-brand-700">Scadenze in Regola</span>
               <span className="block text-[11px] font-medium text-slate-400">by Sorrisi in Regola</span>
             </div>
           </div>
@@ -40,9 +40,9 @@ export default function Home() {
 
       <section className="bg-gradient-to-b from-brand-50 to-white">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center">
-          <Image src="/brand/monogram.png" alt="Vigilo" width={72} height={72} className="mx-auto mb-4 h-16 w-16" />
+          <Image src="/brand/monogram.png" alt="Scadenze in Regola" width={72} height={72} className="mx-auto mb-4 h-16 w-16" />
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-            Vigilo
+            Scadenze in Regola
           </h1>
           <p className="mt-4 text-lg text-slate-600">
             La app <span className="text-slate-900 font-medium">di Sorrisi in Regola</span> che tiene sotto controllo
@@ -122,7 +122,7 @@ export default function Home() {
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 text-center">
           <Image src="/brand/wordmark.png" alt="Sorrisi in Regola" width={160} height={57} className="h-8 w-auto opacity-70" />
           <p className="text-xs text-slate-400">
-            Vigilo by Sorrisi in Regola. Questo strumento è un supporto organizzativo e non sostituisce gli
+            Scadenze in Regola — by Sorrisi in Regola. Questo strumento è un supporto organizzativo e non sostituisce gli
             obblighi di verifica con i propri consulenti.
           </p>
         </div>

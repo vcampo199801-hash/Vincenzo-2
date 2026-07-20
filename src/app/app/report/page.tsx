@@ -66,7 +66,7 @@ export default async function ReportPage() {
           </div>
           <div className="text-right text-sm text-slate-500">
             <p>Report generato il {formatDate(new Date())}</p>
-            <p>Vigilo by Sorrisi in Regola</p>
+            <p>Scadenze in Regola — by Sorrisi in Regola</p>
           </div>
         </div>
 
@@ -130,7 +130,7 @@ export default async function ReportPage() {
         </section>
 
         <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-400">
-          Documento generato automaticamente da Vigilo. È un supporto organizzativo e non sostituisce gli
+          Documento generato automaticamente da Scadenze in Regola. È un supporto organizzativo e non sostituisce gli
           obblighi di verifica con i propri consulenti.
         </p>
       </div>

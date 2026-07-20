@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-5">
           <Image src="/brand/monogram.png" alt="" width={28} height={28} className="h-7 w-7" />
           <div className="leading-tight">
-            <span className="block text-base font-semibold text-brand-700">Vigilo</span>
+            <span className="block text-base font-semibold text-brand-700">Scadenze in Regola</span>
             <span className="block text-[10px] font-medium text-slate-400">by Sorrisi in Regola</span>
           </div>
         </div>
@@ -45,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <header className="no-print flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8">
           <div className="flex items-center gap-2 md:hidden">
             <Image src="/brand/monogram.png" alt="" width={24} height={24} className="h-6 w-6" />
-            <span className="text-lg font-semibold text-brand-700">Vigilo</span>
+            <span className="text-lg font-semibold text-brand-700">Scadenze in Regola</span>
           </div>
           <div className="flex items-center gap-3">
             {sub?.status === "TRIALING" && (
