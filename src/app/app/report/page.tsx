@@ -94,7 +94,7 @@ export default async function ReportPage() {
         </section>
 
         <section className="mb-8 grid grid-cols-2 gap-6 print:break-inside-avoid">
-          <div className="rounded-lg border border-slate-200 p-4">
+          <div className="min-w-0 rounded-lg border border-slate-200 p-4">
             <h2 className="mb-3 text-sm font-semibold text-slate-900">Scadenzario per stato</h2>
             <StatusDonut
               size={120}
@@ -109,7 +109,7 @@ export default async function ReportPage() {
               ]}
             />
           </div>
-          <div className="rounded-lg border border-slate-200 p-4">
+          <div className="min-w-0 rounded-lg border border-slate-200 p-4">
             <h2 className="mb-3 text-sm font-semibold text-slate-900">Valore magazzino per categoria</h2>
             <BarList items={categorieRanked} formatValue={formatCurrency} />
           </div>

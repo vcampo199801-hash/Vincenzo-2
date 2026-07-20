@@ -118,7 +118,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
+        <section className="min-w-0 rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Le tue prossime 5 scadenze</h2>
             <Link href="/app/scadenzario" className="text-sm font-medium text-brand-600 hover:text-brand-800">
@@ -141,7 +141,7 @@ export default async function DashboardPage() {
           </ul>
         </section>
 
-        <section className="rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
+        <section className="min-w-0 rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Magazzino in sintesi</h2>
             <Link href="/app/magazzino" className="text-sm font-medium text-brand-600 hover:text-brand-800">
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-base font-semibold text-slate-900">Scadenzario per stato</h2>
           <StatusDonut
             centerValue={`${compliancePct}%`}
@@ -172,7 +172,7 @@ export default async function DashboardPage() {
           />
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Valore magazzino per categoria</h2>
             <Link href="/app/magazzino" className="text-sm font-medium text-brand-600 hover:text-brand-800">
@@ -182,7 +182,7 @@ export default async function DashboardPage() {
           <BarList items={categorieRanked} formatValue={formatCurrency} />
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Spesa manutenzioni — ultimi 6 mesi</h2>
             <Link href="/app/controlli" className="text-sm font-medium text-brand-600 hover:text-brand-800">
@@ -192,7 +192,7 @@ export default async function DashboardPage() {
           <TrendBars items={speseUltimiMesi} formatValue={(v) => formatCurrency(v).replace(",00", "")} />
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Formazione ECM del team</h2>
             <Link href="/app/ecm" className="text-sm font-medium text-brand-600 hover:text-brand-800">
@@ -224,7 +224,7 @@ export default async function DashboardPage() {
         </section>
 
         {farmaci.length > 0 && (
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-semibold text-slate-900">Farmaci di emergenza per stato</h2>
               <Link href="/app/farmaci" className="text-sm font-medium text-brand-600 hover:text-brand-800">
@@ -243,7 +243,7 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Archivio documenti — completezza</h2>
             <Link href="/app/documenti" className="text-sm font-medium text-brand-600 hover:text-brand-800">
