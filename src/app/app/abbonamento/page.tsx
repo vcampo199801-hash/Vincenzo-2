@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/compliance";
 import { startCheckout, openBillingPortal } from "@/lib/actions/billing";
 import { PageHeader } from "@/components/ui/page-header";
 import { SubmitButton } from "@/components/ui/form";
+import { RedeemCodeForm } from "@/components/app/redeem-code-form";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ const PLAN_PRICE_LABEL = process.env.STRIPE_PRICE_LABEL ?? "€12/mese";
 export default async function AbbonamentoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ success?: string; canceled?: string; error?: string }>;
+  searchParams: Promise<{ success?: string; canceled?: string; error?: string; redeemed?: string }>;
 }) {
   const { studio } = await requireStudio();
   const params = await searchParams;
@@ -40,6 +41,11 @@ export default async function AbbonamentoPage({
       {params.error === "stripe-not-configured" && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           I pagamenti non sono ancora configurati su questa istanza. Contatta l&apos;amministratore.
+        </p>
+      )}
+      {params.redeemed && (
+        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          Codice riscattato! Il tuo abbonamento è attivo.
         </p>
       )}
 
@@ -90,6 +96,17 @@ export default async function AbbonamentoPage({
             Nota per lo sviluppatore: imposta STRIPE_SECRET_KEY, STRIPE_PRICE_ID e STRIPE_WEBHOOK_SECRET in .env per abilitare i pagamenti reali.
           </p>
         )}
+      </div>
+
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p className="text-sm font-medium text-slate-500">Hai un codice di attivazione?</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Se hai acquistato Studio Sotto Controllo sul nostro shop, inserisci qui il codice ricevuto per
+          attivare o estendere l&apos;abbonamento.
+        </p>
+        <div className="mt-4 max-w-sm">
+          <RedeemCodeForm />
+        </div>
       </div>
     </div>
   );

@@ -44,6 +44,7 @@ model Studio {
   farmaci              Farmaco[]
   farmacoControlli     FarmacoControlloMensile[]
   fornitori            Fornitore[]
+  accessCodes          AccessCode[]
 }
 
 // ---------- Billing ----------
@@ -62,6 +63,22 @@ model Subscription {
   cancelAtPeriodEnd    Boolean  @default(false)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+}
+
+// Single-use activation codes generated in bulk and distributed through the
+// Shopify store (a digital-codes app assigns one per sale). Redeeming a code
+// activates or extends the studio's subscription without going through Stripe.
+model AccessCode {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  days       Int       @default(30)
+  batchNote  String?
+  studioId   String?
+  studio     Studio?   @relation(fields: [studioId], references: [id], onDelete: SetNull)
+  redeemedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([studioId])
 }
 
 // ---------- Scadenzario (compliance deadlines) ----------

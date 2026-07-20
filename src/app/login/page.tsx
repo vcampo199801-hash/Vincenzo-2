@@ -30,6 +30,12 @@ export default function LoginPage() {
             Registrati
           </Link>
         </p>
+        <p className="mt-2 text-sm text-slate-500">
+          Hai un codice di attivazione?{" "}
+          <Link href="/codice" className="font-medium text-blue-700">
+            Attivalo qui
+          </Link>
+        </p>
       </div>
     </div>
   );

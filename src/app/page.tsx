@@ -99,6 +99,13 @@ export default function Home() {
               Inizia la prova gratuita
             </Link>
           </div>
+
+          <p className="mt-6 text-sm text-slate-500">
+            Hai acquistato su Shopify?{" "}
+            <Link href="/codice" className="font-medium text-blue-700">
+              Attiva il tuo codice
+            </Link>
+          </p>
         </div>
       </section>
 

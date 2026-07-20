@@ -39,6 +39,25 @@ Ogni nuovo studio riceve 14 giorni di prova gratuita (`TRIAL_DAYS` in `.env`); a
 prova l'accesso ai moduli viene bloccato finché non si attiva l'abbonamento dalla pagina
 "Abbonamento".
 
+## Codici di attivazione (vendita via Shopify)
+
+In alternativa a Stripe, l'abbonamento può essere attivato con un **codice monouso** — pensato per
+la vendita tramite un'app di codici digitali su Shopify (lo shop assegna un codice a ogni ordine).
+
+```bash
+npm run codes:generate -- --count 50 --days 30 --note "Batch 2026-07" --out codes.csv
+```
+
+Genera 50 codici univoci (formato `SIR-XXXX-XXXX-XXXX`), li salva nel database come "non
+riscattati" e produce un CSV pronto da caricare nell'app Shopify. Il cliente:
+
+- **senza account**: va su `/codice`, inserisce il codice e crea lo studio in un unico passaggio;
+- **con account esistente**: va su "Abbonamento" nell'app e riscatta il codice per attivare/estendere
+  l'abbonamento (i giorni si sommano se l'abbonamento è già attivo).
+
+Ogni codice è utilizzabile una sola volta; un riscatto concorrente sullo stesso codice fallisce in
+modo sicuro (transazione atomica).
+
 ## Struttura
 
 - `src/app/(marketing)` — landing page e pricing pubblici (`/`, `/login`, `/signup`)
