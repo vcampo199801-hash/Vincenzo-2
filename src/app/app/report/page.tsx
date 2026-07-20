@@ -54,8 +54,8 @@ export default async function ReportPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="no-print mb-6 flex items-center justify-between">
-        <div>
+      <div className="no-print mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-slate-900">Report compliance</h1>
           <p className="mt-1 text-sm text-slate-500">
             Riepilogo pronto da stampare o esportare in PDF — utile da mostrare a un ispettore ASL o da
@@ -65,18 +65,20 @@ export default async function ReportPage() {
         <PrintButton />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm print:border-0 print:shadow-none print:p-0">
-        <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-3">
-            <Image src="/brand/monogram.png" alt="" width={40} height={40} className="h-10 w-10" />
-            <div>
-              <p className="text-lg font-semibold text-slate-900">{studio.name}</p>
-              <p className="text-sm text-slate-500">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm print:border-0 print:shadow-none print:p-0 sm:p-8">
+        <div className="mb-6 flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-50">
+              <Image src="/brand/monogram.png" alt="" width={32} height={32} className="h-8 w-8" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-lg font-semibold text-slate-900">{studio.name}</p>
+              <p className="truncate text-sm text-slate-500">
                 {[studio.titolare, studio.citta].filter(Boolean).join(" · ") || "—"}
               </p>
             </div>
           </div>
-          <div className="text-right text-sm text-slate-500">
+          <div className="text-sm text-slate-500 sm:text-right">
             <p>Report generato il {formatDate(new Date())}</p>
             <p>Scadenze in Regola — by Sorrisi in Regola</p>
           </div>
@@ -84,7 +86,7 @@ export default async function ReportPage() {
 
         <section className="mb-8">
           <h2 className="mb-3 text-base font-semibold text-slate-900">Sintesi compliance</h2>
-          <div className="grid grid-cols-5 gap-3 text-center text-sm">
+          <div className="grid grid-cols-2 gap-3 text-center text-sm sm:grid-cols-5">
             <SummaryBox label="In regola" value={okCount} />
             <SummaryBox label="In scadenza" value={inScadenzaCount} />
             <SummaryBox label="Scaduti" value={scadutiCount} />
@@ -93,7 +95,7 @@ export default async function ReportPage() {
           </div>
         </section>
 
-        <section className="mb-8 grid grid-cols-2 gap-6 print:break-inside-avoid">
+        <section className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 print:break-inside-avoid">
           <div className="min-w-0 rounded-lg border border-slate-200 p-4">
             <h2 className="mb-3 text-sm font-semibold text-slate-900">Scadenzario per stato</h2>
             <StatusDonut
@@ -174,7 +176,7 @@ export default async function ReportPage() {
 
 function SummaryBox({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-3">
+    <div className="min-w-0 rounded-lg border border-slate-200 p-3">
       <p className="text-xl font-semibold text-slate-900">{value}</p>
       <p className="text-xs text-slate-500">{label}</p>
     </div>

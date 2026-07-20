@@ -12,6 +12,11 @@ function isIos() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
+function isAndroid() {
+  if (typeof navigator === "undefined") return false;
+  return /android/i.test(navigator.userAgent);
+}
+
 function isStandalone() {
   if (typeof window === "undefined") return false;
   return (
@@ -23,9 +28,11 @@ function isStandalone() {
 /** "Installa app" button: uses the native install prompt on Android/desktop
  * Chrome, and falls back to a step-by-step hint on iOS Safari, which has no
  * install-prompt API and requires the manual Condividi → Aggiungi a Home flow. */
+type Hint = "ios" | "android" | null;
+
 export function InstallAppButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showIosHint, setShowIosHint] = useState(false);
+  const [hint, setHint] = useState<Hint>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -41,7 +48,7 @@ export function InstallAppButton() {
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
 
-    if (isIos()) setVisible(true);
+    if (isIos() || isAndroid()) setVisible(true);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
@@ -59,7 +66,7 @@ export function InstallAppButton() {
       setVisible(false);
       return;
     }
-    setShowIosHint((v) => !v);
+    setHint((h) => (h ? null : isIos() ? "ios" : "android"));
   };
 
   return (
@@ -68,12 +75,12 @@ export function InstallAppButton() {
         type="button"
         onClick={handleClick}
         title="Installa app"
-        className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100 sm:px-3"
+        className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-2.5 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700 sm:px-3"
       >
         <span aria-hidden>📲</span>
         <span className="hidden sm:inline">Installa app</span>
       </button>
-      {showIosHint && (
+      {hint === "ios" && (
         <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-lg">
           <p className="mb-2 font-medium text-slate-900">Aggiungi alla schermata Home</p>
           <ol className="list-decimal space-y-1 pl-4">
@@ -83,7 +90,28 @@ export function InstallAppButton() {
           </ol>
           <button
             type="button"
-            onClick={() => setShowIosHint(false)}
+            onClick={() => setHint(null)}
+            className="mt-3 text-xs font-medium text-slate-500 hover:text-slate-800"
+          >
+            Chiudi
+          </button>
+        </div>
+      )}
+      {hint === "android" && (
+        <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-lg">
+          <p className="mb-2 font-medium text-slate-900">Serve Google Chrome</p>
+          <p>
+            Per aggiungere l&apos;app alla schermata Home su Android bisogna aprire questo sito con{" "}
+            <strong>Google Chrome</strong> — con altri browser (es. quello di Samsung) la voce
+            &quot;Installa app&quot; non compare.
+          </p>
+          <p className="mt-2">
+            Apri Chrome su questa pagina, poi tocca il pulsante <strong>Installa app</strong> qui sopra,
+            oppure il menu <strong>⋮</strong> in alto e scegli &quot;Installa app&quot;.
+          </p>
+          <button
+            type="button"
+            onClick={() => setHint(null)}
             className="mt-3 text-xs font-medium text-slate-500 hover:text-slate-800"
           >
             Chiudi

@@ -23,7 +23,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen bg-slate-50">
       <aside className="no-print hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
         <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-5">
-          <Image src="/brand/monogram.png" alt="" width={28} height={28} className="h-7 w-7" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50">
+            <Image src="/brand/monogram.png" alt="" width={24} height={24} className="h-6 w-6" />
+          </span>
           <div className="leading-tight">
             <span className="block text-base font-semibold text-brand-700">Scadenze in Regola</span>
             <span className="block text-[10px] font-medium text-slate-400">by Sorrisi in Regola</span>
@@ -47,7 +49,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <header className="no-print flex h-16 items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 md:px-8">
           <div className="flex min-w-0 flex-1 items-center gap-2 md:hidden">
             <MobileNav />
-            <Image src="/brand/monogram.png" alt="" width={24} height={24} className="h-6 w-6 shrink-0" />
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50">
+              <Image src="/brand/monogram.png" alt="" width={20} height={20} className="h-5 w-5" />
+            </span>
             <span className="min-w-0 flex-1 truncate text-lg font-semibold text-brand-700">Scadenze in Regola</span>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">

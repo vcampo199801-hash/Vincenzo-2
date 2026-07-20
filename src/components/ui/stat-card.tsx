@@ -8,7 +8,7 @@ export function StatCard({
   tone?: "default" | "good" | "warn" | "bad";
 }) {
   const toneClasses: Record<string, string> = {
-    default: "text-slate-900",
+    default: "text-brand-700",
     good: "text-emerald-600",
     warn: "text-amber-600",
     bad: "text-red-600",
