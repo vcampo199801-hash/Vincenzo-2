@@ -85,21 +85,32 @@ riscattati" e produce un CSV pronto da caricare nell'app Shopify. Il cliente:
 Ogni codice è utilizzabile una sola volta; un riscatto concorrente sullo stesso codice fallisce in
 modo sicuro (transazione atomica).
 
-## Notifiche email
+## Notifiche email e SMS
 
 Una volta al giorno (`vercel.json` → `0 7 * * *`, le 7:00 UTC) l'app controlla scadenze, farmaci e
-lotti di magazzino in scadenza o scaduti per ogni studio, e invia un'email di riepilogo se c'è
-qualcosa da segnalare — nessuna email se è tutto in regola.
+lotti di magazzino in scadenza o scaduti per ogni studio, e invia un promemoria di riepilogo se c'è
+qualcosa da segnalare — via email, via SMS, o entrambi, a seconda di cosa lo studio ha attivato dalla
+pagina Impostazioni. Nessun invio se è tutto in regola.
 
+**Email (Resend):**
 1. Crea un account gratuito su [resend.com](https://resend.com) e genera una API key.
 2. Verifica un dominio mittente (o usa il dominio di test di Resend in fase di prova).
-3. Imposta su Vercel: `RESEND_API_KEY`, `EMAIL_FROM` (es. `Scadenze in Regola <notifiche@tuodominio.it>`)
-   e `CRON_SECRET` (una stringa casuale — Vercel la invia automaticamente come header alle chiamate
-   cron, così `/api/cron/digest` rifiuta richieste esterne).
-4. Ogni studio può disattivare le notifiche dalla pagina Impostazioni, e ha un pulsante "Invia email
-   di prova ora" per verificare subito che tutto funzioni.
+3. Imposta su Vercel: `RESEND_API_KEY`, `EMAIL_FROM` (es. `Scadenze in Regola <notifiche@tuodominio.it>`).
 
-Senza queste variabili l'app funziona lo stesso: il cron job si limita a non fare nulla.
+**SMS (Twilio):**
+1. Crea un account su [twilio.com](https://www.twilio.com/try-twilio) e attiva un numero di invio.
+2. Recupera `Account SID` e `Auth Token` dalla console Twilio.
+3. Imposta su Vercel: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` (il numero
+   Twilio in formato internazionale, es. `+15551234567`).
+
+**Comune a entrambi:**
+- Imposta `CRON_SECRET` (una stringa casuale — Vercel la invia automaticamente come header alle
+  chiamate cron, così `/api/cron/digest` rifiuta richieste esterne).
+- Ogni studio attiva/disattiva email e SMS separatamente dalla pagina Impostazioni, con un numero di
+  cellulare dedicato per gli SMS e pulsanti "Invia di prova ora" per verificare subito che funzioni.
+
+Senza queste variabili l'app funziona lo stesso: il cron job si limita a non fare nulla sui canali
+non configurati.
 
 ## Struttura
 

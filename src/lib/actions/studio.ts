@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireStudio } from "@/lib/auth-guards";
-import { isEmailConfigured } from "@/lib/email";
-import { sendDigestForStudio } from "@/lib/notifications";
+import { isEmailConfigured, sendEmail } from "@/lib/email";
+import { isSmsConfigured, sendSms, normalizePhoneForSms } from "@/lib/sms";
+import { buildDigestForStudio, renderDigestHtml, renderDigestText } from "@/lib/notifications";
 
 export async function updateStudioInfo(formData: FormData) {
   const { studio } = await requireStudio();
+
+  const telefonoSmsRaw = String(formData.get("telefonoSms") ?? "").trim();
 
   await prisma.studio.update({
     where: { id: studio.id },
@@ -18,6 +21,8 @@ export async function updateStudioInfo(formData: FormData) {
       telefono: String(formData.get("telefono") ?? "").trim() || null,
       email: String(formData.get("email") ?? "").trim() || null,
       notificheAttive: formData.get("notificheAttive") === "on",
+      notificheSms: formData.get("notificheSms") === "on",
+      telefonoSms: normalizePhoneForSms(telefonoSmsRaw),
     },
   });
 
@@ -38,10 +43,39 @@ export async function sendTestDigest(): Promise<TestDigestState> {
   }
 
   try {
-    const sent = await sendDigestForStudio(studio);
-    return sent
-      ? { success: `Email di riepilogo inviata a ${studio.email}.` }
-      : { success: "Nessuna scadenza urgente al momento: non c'è nulla da segnalare, quindi non è stata inviata alcuna email." };
+    const digest = await buildDigestForStudio(studio.id);
+    if (!digest) {
+      return { success: "Nessuna scadenza urgente al momento: non c'è nulla da segnalare, quindi non è stata inviata alcuna email." };
+    }
+    const totalCount = digest.scadenzeUrgenti.length + digest.farmaciUrgenti.length + digest.lottiUrgenti.length;
+    await sendEmail({
+      to: studio.email,
+      subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,
+      html: renderDigestHtml(studio.name, digest),
+    });
+    return { success: `Email di riepilogo inviata a ${studio.email}.` };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Invio non riuscito." };
+  }
+}
+
+export async function sendTestSms(): Promise<TestDigestState> {
+  const { studio } = await requireStudio();
+
+  if (!isSmsConfigured()) {
+    return { error: "Gli SMS non sono ancora configurati su questa istanza (manca TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_FROM_NUMBER)." };
+  }
+  if (!studio.telefonoSms) {
+    return { error: "Imposta prima un cellulare per gli SMS qui sopra." };
+  }
+
+  try {
+    const digest = await buildDigestForStudio(studio.id);
+    if (!digest) {
+      return { success: "Nessuna scadenza urgente al momento: non c'è nulla da segnalare, quindi non è stato inviato alcun SMS." };
+    }
+    await sendSms({ to: studio.telefonoSms, body: renderDigestText(studio.name, digest) });
+    return { success: `SMS di riepilogo inviato a ${studio.telefonoSms}.` };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Invio non riuscito." };
   }

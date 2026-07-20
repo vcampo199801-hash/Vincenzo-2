@@ -118,6 +118,46 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <section className="rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">Le tue prossime 5 scadenze</h2>
+            <Link href="/app/scadenzario" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+              Vedi tutte →
+            </Link>
+          </div>
+          <ul className="divide-y divide-slate-100">
+            {prossime5.map(({ a, prossimaScadenza, giorni, stato }) => (
+              <li key={a.id} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-800">{a.nome}</p>
+                  <p className="text-xs text-slate-500">
+                    {formatDate(prossimaScadenza)} · {giorni} giorni
+                  </p>
+                </div>
+                <StatoBadge stato={stato} />
+              </li>
+            ))}
+            {prossime5.length === 0 && <p className="py-4 text-sm text-slate-500">Nessuna scadenza compilata ancora.</p>}
+          </ul>
+        </section>
+
+        <section className="rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">Magazzino in sintesi</h2>
+            <Link href="/app/magazzino" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+              Vedi tutto →
+            </Link>
+          </div>
+          <dl className="grid grid-cols-2 gap-4 text-sm">
+            <DashRow label="Articoli da riordinare" value={daRiordinare} bad={daRiordinare > 0} />
+            <DashRow label="Articoli in scorta bassa" value={scortaBassa} bad={scortaBassa > 0} />
+            <DashRow label="Lotti scaduti o in scadenza" value={lottiCritici} bad={lottiCritici > 0} />
+            <DashRow label="Valore giacenze" value={formatCurrency(valoreGiacenze)} />
+          </dl>
+        </section>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-base font-semibold text-slate-900">Scadenzario per stato</h2>
           <StatusDonut
@@ -216,46 +256,6 @@ export default async function DashboardPage() {
             max={documenti.length}
             tone={documentiCompletezza >= 80 ? "good" : documentiCompletezza >= 50 ? "warn" : "bad"}
           />
-        </section>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Le tue prossime 5 scadenze</h2>
-            <Link href="/app/scadenzario" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutte →
-            </Link>
-          </div>
-          <ul className="divide-y divide-slate-100">
-            {prossime5.map(({ a, prossimaScadenza, giorni, stato }) => (
-              <li key={a.id} className="flex items-center justify-between gap-3 py-2.5">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-800">{a.nome}</p>
-                  <p className="text-xs text-slate-500">
-                    {formatDate(prossimaScadenza)} · {giorni} giorni
-                  </p>
-                </div>
-                <StatoBadge stato={stato} />
-              </li>
-            ))}
-            {prossime5.length === 0 && <p className="py-4 text-sm text-slate-500">Nessuna scadenza compilata ancora.</p>}
-          </ul>
-        </section>
-
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Magazzino in sintesi</h2>
-            <Link href="/app/magazzino" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutto →
-            </Link>
-          </div>
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <DashRow label="Articoli da riordinare" value={daRiordinare} bad={daRiordinare > 0} />
-            <DashRow label="Articoli in scorta bassa" value={scortaBassa} bad={scortaBassa > 0} />
-            <DashRow label="Lotti scaduti o in scadenza" value={lottiCritici} bad={lottiCritici > 0} />
-            <DashRow label="Valore giacenze" value={formatCurrency(valoreGiacenze)} />
-          </dl>
         </section>
       </div>
 

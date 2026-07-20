@@ -32,6 +32,8 @@ model Studio {
   email     String?
   logoUrl   String?
   notificheAttive Boolean @default(true)
+  notificheSms    Boolean @default(false)
+  telefonoSms     String?
   createdAt DateTime @default(now())
 
   ownerId String

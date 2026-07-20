@@ -40,6 +40,15 @@ export default async function ScadenzarioPage() {
         actionHref="/app/scadenzario/new"
       />
 
+      <div className="-mt-4 mb-6">
+        <a
+          href="/api/calendario"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-800"
+        >
+          📅 Esporta scadenze nel calendario (.ics) — promemoria su telefono/Google/Apple Calendar
+        </a>
+      </div>
+
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SummaryPill label="In regola" value={counts.OK ?? 0} tone="good" />
         <SummaryPill label="In scadenza" value={counts.IN_SCADENZA ?? 0} tone="warn" />

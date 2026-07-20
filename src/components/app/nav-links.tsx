@@ -12,7 +12,7 @@ const LINKS = [
   { href: "/app/magazzino", label: "Magazzino", icon: "📦" },
   { href: "/app/farmaci", label: "Farmaci emergenza", icon: "💊" },
   { href: "/app/fornitori", label: "Fornitori", icon: "📇" },
-  { href: "/app/report", label: "Report ispezione", icon: "🖨️" },
+  { href: "/app/report", label: "Report ispezione", icon: "📋" },
   { href: "/app/abbonamento", label: "Abbonamento", icon: "💳" },
 ];
 
@@ -31,8 +31,10 @@ export function NavLinks() {
               active ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100"
             }`}
           >
-            <span aria-hidden>{link.icon}</span>
-            {link.label}
+            <span aria-hidden className="inline-flex w-5 shrink-0 justify-center">
+              {link.icon}
+            </span>
+            <span className="truncate">{link.label}</span>
           </Link>
         );
       })}

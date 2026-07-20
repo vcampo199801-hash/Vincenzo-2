@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, isEmailConfigured } from "@/lib/email";
+import { sendSms, isSmsConfigured } from "@/lib/sms";
 import { scadenzaStato, lottoStato } from "@/lib/compliance";
 
 const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -74,16 +75,45 @@ export function renderDigestHtml(studioName: string, digest: Digest) {
   `;
 }
 
-export async function sendDigestForStudio(studio: { id: string; name: string; email: string | null }) {
-  if (!studio.email) return false;
+export function renderDigestText(studioName: string, digest: Digest) {
+  const all = [...digest.scadenzeUrgenti, ...digest.farmaciUrgenti, ...digest.lottiUrgenti];
+  const top = all
+    .slice(0, 3)
+    .map((i) => `${i.nome} (${i.scaduto ? `scaduto da ${Math.abs(i.giorni)}gg` : `scade tra ${i.giorni}gg`})`);
+  const extra = all.length > top.length ? ` e altri ${all.length - top.length}` : "";
+
+  return `Scadenze in Regola — ${studioName}: ${all.length} ${
+    all.length === 1 ? "cosa richiede" : "cose richiedono"
+  } attenzione. ${top.join("; ")}${extra}. Apri l'app: ${APP_URL()}/app`;
+}
+
+export async function sendDigestForStudio(studio: {
+  id: string;
+  name: string;
+  email: string | null;
+  telefonoSms: string | null;
+  notificheAttive: boolean;
+  notificheSms: boolean;
+}) {
   const digest = await buildDigestForStudio(studio.id);
   if (!digest) return false;
 
   const totalCount = digest.scadenzeUrgenti.length + digest.farmaciUrgenti.length + digest.lottiUrgenti.length;
-  await sendEmail({
-    to: studio.email,
-    subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,
-    html: renderDigestHtml(studio.name, digest),
-  });
-  return true;
+  let sent = false;
+
+  if (studio.notificheAttive && studio.email && isEmailConfigured()) {
+    await sendEmail({
+      to: studio.email,
+      subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,
+      html: renderDigestHtml(studio.name, digest),
+    });
+    sent = true;
+  }
+
+  if (studio.notificheSms && studio.telefonoSms && isSmsConfigured()) {
+    await sendSms({ to: studio.telefonoSms, body: renderDigestText(studio.name, digest) });
+    sent = true;
+  }
+
+  return sent;
 }

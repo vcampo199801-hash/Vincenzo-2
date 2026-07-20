@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isEmailConfigured } from "@/lib/email";
+import { isSmsConfigured } from "@/lib/sms";
 import { sendDigestForStudio } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
@@ -16,12 +17,17 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  if (!isEmailConfigured()) {
-    return NextResponse.json({ skipped: "email-not-configured" }, { status: 200 });
+  if (!isEmailConfigured() && !isSmsConfigured()) {
+    return NextResponse.json({ skipped: "no-channel-configured" }, { status: 200 });
   }
 
   const studios = await prisma.studio.findMany({
-    where: { notificheAttive: true, email: { not: null } },
+    where: {
+      OR: [
+        { notificheAttive: true, email: { not: null } },
+        { notificheSms: true, telefonoSms: { not: null } },
+      ],
+    },
     include: { subscription: true },
   });
 
