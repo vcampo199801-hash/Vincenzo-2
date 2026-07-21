@@ -36,8 +36,21 @@ export default async function DipendentiPage() {
         actionHref="/app/personale/dipendenti/new"
       />
 
+      <p className="mb-4 text-sm text-slate-500">
+        Clicca su &quot;Nuovo dipendente&quot; per aggiungere un collaboratore (ASO, igienista, segretaria,
+        odontoiatra collaboratore...). Servono solo nome e cognome per iniziare: gli altri dati (contratto, ferie,
+        scadenze) si compilano quando vuoi, aprendo la scheda del dipendente. La colonna &quot;Compliance&quot; ti
+        mostra a colpo d&apos;occhio se ci sono scadenze da tenere d&apos;occhio: verde tutto ok, giallo in
+        avvicinamento, rosso scaduto o urgente.
+      </p>
+
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="mb-3 text-sm font-medium text-slate-700">Import / export CSV (per allinearsi col consulente del lavoro)</p>
+        <p className="mb-1 text-sm font-medium text-slate-700">Import / export CSV</p>
+        <p className="mb-3 text-xs text-slate-500">
+          Utile se il tuo consulente del lavoro ti manda già un elenco dipendenti in Excel/CSV: importalo per non
+          reinserire tutto a mano. L&apos;export ti serve per condividere i dati con lui in un formato che può
+          riaprire.
+        </p>
         <div className="flex flex-wrap items-center gap-4">
           <ImportDipendentiCsvForm />
           <a href="/api/personale/export" className="text-sm font-medium text-brand-600 hover:text-brand-800">
@@ -83,8 +96,14 @@ export default async function DipendentiPage() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
-                  Nessun dipendente censito.
+                <td colSpan={7} className="px-4 py-10 text-center">
+                  <p className="text-sm text-slate-500">Non hai ancora aggiunto nessun collaboratore dello studio.</p>
+                  <Link
+                    href="/app/personale/dipendenti/new"
+                    className="mt-3 inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
+                  >
+                    Aggiungi il primo dipendente
+                  </Link>
                 </td>
               </tr>
             )}

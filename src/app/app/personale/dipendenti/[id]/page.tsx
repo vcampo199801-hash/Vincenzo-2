@@ -188,24 +188,70 @@ function AssenzeTab({
   return (
     <div className="space-y-6">
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-base font-semibold text-slate-900">Saldo annuale {annoCorrente}</h2>
+        <h2 className="text-base font-semibold text-slate-900">Saldo annuale {annoCorrente}</h2>
+        <p className="mb-4 mt-1 text-sm text-slate-500">
+          Aggiorna questi numeri quando li ricevi dal consulente del lavoro (es. dal cedolino paga o dal prospetto
+          ferie/ROL). Non serve compilare tutto: lascia a 0 quello che non conosci e correggilo più avanti.
+        </p>
         <form action={upsertSaldo} className="space-y-4">
           <input type="hidden" name="anno" value={annoCorrente} />
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Field label="Ferie maturate" name="ferieMaturate" type="number" step="0.5" defaultValue={saldoCorrente?.ferieMaturate ?? 0} />
-            <Field label="Ferie godute" name="ferieGodute" type="number" step="0.5" defaultValue={saldoCorrente?.ferieGodute ?? 0} />
-            <Field label="ROL maturati" name="rolMaturati" type="number" step="0.5" defaultValue={saldoCorrente?.rolMaturati ?? 0} />
-            <Field label="ROL goduti" name="rolGoduti" type="number" step="0.5" defaultValue={saldoCorrente?.rolGoduti ?? 0} />
+            <Field
+              label="Ferie maturate"
+              name="ferieMaturate"
+              type="number"
+              step="0.5"
+              defaultValue={saldoCorrente?.ferieMaturate ?? 0}
+              hint="Giorni di ferie accumulati quest'anno."
+            />
+            <Field
+              label="Ferie godute"
+              name="ferieGodute"
+              type="number"
+              step="0.5"
+              defaultValue={saldoCorrente?.ferieGodute ?? 0}
+              hint="Giorni di ferie già presi."
+            />
+            <Field
+              label="ROL maturati"
+              name="rolMaturati"
+              type="number"
+              step="0.5"
+              defaultValue={saldoCorrente?.rolMaturati ?? 0}
+              hint="Permessi/riduzione orario di lavoro accumulati."
+            />
+            <Field
+              label="ROL goduti"
+              name="rolGoduti"
+              type="number"
+              step="0.5"
+              defaultValue={saldoCorrente?.rolGoduti ?? 0}
+              hint="Permessi ROL già usati."
+            />
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <Field label="Giorni malattia anno" name="giorniMalattiaAnno" type="number" step="0.5" defaultValue={saldoCorrente?.giorniMalattiaAnno ?? 0} />
+            <Field
+              label="Giorni malattia anno"
+              name="giorniMalattiaAnno"
+              type="number"
+              step="0.5"
+              defaultValue={saldoCorrente?.giorniMalattiaAnno ?? 0}
+              hint="Totale giorni di malattia registrati quest'anno."
+            />
             <Field
               label="Giorni comporto massimo (CCNL)"
               name="giorniComportoMassimo"
               type="number"
               defaultValue={saldoCorrente?.giorniComportoMassimo ?? 180}
+              hint="Oltre questo limite di giorni di malattia scatta il rischio di licenziamento per superamento del comporto: il valore varia per CCNL, verificalo col consulente."
             />
-            <Field label="Destinazione TFR" name="destinazioneTfr" defaultValue={saldoCorrente?.destinazioneTfr} />
+            <Field
+              label="Destinazione TFR"
+              name="destinazioneTfr"
+              defaultValue={saldoCorrente?.destinazioneTfr}
+              placeholder="Es. Fondo pensione / Azienda"
+              hint="Facoltativo. Dove viene accantonato il TFR del dipendente."
+            />
           </div>
           <p className="text-xs text-slate-500">{COMPORTO_DISCLAIMER}</p>
           {comportoAlert >= 0.7 && (
@@ -215,7 +261,11 @@ function AssenzeTab({
           )}
 
           <div className="border-t border-slate-100 pt-4">
-            <p className="mb-3 text-sm font-medium text-slate-700">TFR — dati per la stima</p>
+            <p className="text-sm font-medium text-slate-700">TFR — dati per la stima (facoltativi)</p>
+            <p className="mb-3 mt-1 text-xs text-slate-500">
+              Se non hai questi dati sottomano, lasciali vuoti: puoi chiederli al consulente del lavoro e inserirli
+              in un secondo momento. Servono solo per farti un&apos;idea di massima, non sono il valore ufficiale.
+            </p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <Field
                 label="Retribuzione utile annua (€)"
@@ -223,6 +273,7 @@ function AssenzeTab({
                 type="number"
                 step="0.01"
                 defaultValue={saldoCorrente?.retribuzioneUtileAnnua ?? undefined}
+                hint="La retribuzione lorda annua su cui si calcola il TFR (dal cedolino/CU)."
               />
               <Field
                 label="TFR accantonato inizio anno (€)"
@@ -230,6 +281,7 @@ function AssenzeTab({
                 type="number"
                 step="0.01"
                 defaultValue={saldoCorrente?.tfrAccantonatoInizioAnno ?? 0}
+                hint="Quanto TFR risultava già accantonato all'inizio dell'anno."
               />
               <Field
                 label="TFR accantonato nell'anno (€)"
@@ -237,6 +289,7 @@ function AssenzeTab({
                 type="number"
                 step="0.01"
                 defaultValue={saldoCorrente?.tfrAccantonatoAnno ?? 0}
+                hint="Facoltativo, solo come promemoria: non entra nella formula di stima."
               />
               <Field
                 label="Indice rivalutazione ISTAT (%)"
@@ -244,7 +297,8 @@ function AssenzeTab({
                 type="number"
                 step="0.01"
                 defaultValue={saldoCorrente?.indiceRivalutazioneIstat ?? undefined}
-                placeholder="Inserisci manualmente"
+                placeholder="Es. 5.2"
+                hint="Indice ISTAT dell'anno, da inserire manualmente (te lo comunica di norma il consulente)."
               />
             </div>
           </div>
@@ -267,16 +321,25 @@ function AssenzeTab({
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-base font-semibold text-slate-900">Movimenti assenza</h2>
+        <h2 className="text-base font-semibold text-slate-900">Movimenti assenza</h2>
+        <p className="mb-4 mt-1 text-sm text-slate-500">
+          Registra qui ogni singola assenza (un giorno di ferie, un periodo di malattia, un permesso...). Ti serve
+          per avere lo storico e per far quadrare i conteggi col consulente del lavoro.
+        </p>
         <form action={createMovimento} className="mb-6 space-y-3 rounded-lg border border-slate-100 bg-slate-50 p-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <SelectField label="Tipo" name="tipo" defaultValue="FERIE" options={TIPO_ASSENZA_OPTIONS} />
             <Field label="Data inizio" name="dataInizio" type="date" required />
-            <Field label="Data fine" name="dataFine" type="date" />
-            <Field label="Giorni" name="giorni" type="number" step="0.5" />
+            <Field label="Data fine" name="dataFine" type="date" hint="Lascia vuoto per un'assenza di un solo giorno." />
+            <Field label="Giorni" name="giorni" type="number" step="0.5" hint="Facoltativo. Es. 0.5 per una mezza giornata." />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Protocollo certificato" name="protocolloCertificato" placeholder="Es. per malattia/infortunio" />
+            <Field
+              label="Protocollo certificato"
+              name="protocolloCertificato"
+              placeholder="Es. per malattia/infortunio"
+              hint="Facoltativo. Il numero di protocollo del certificato medico/INAIL, se presente."
+            />
             <Field label="Note" name="note" />
           </div>
           <SubmitButton>Registra movimento</SubmitButton>
@@ -323,16 +386,37 @@ function ComplianceTab({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-base font-semibold text-slate-900">Adempimenti e formazione</h2>
+      <h2 className="text-base font-semibold text-slate-900">Adempimenti e formazione</h2>
+      <p className="mb-4 mt-1 text-sm text-slate-500">
+        Qui registri visite mediche, corsi di formazione, vaccinazioni e altre scadenze obbligatorie legate a
+        questo dipendente. Scegli la tipologia, inserisci quando è stata fatta e l&apos;app calcola da sola la
+        prossima scadenza (se ricorrente) e ti avvisa in dashboard quando si avvicina.
+      </p>
 
       <form action={createAdempimento} className="mb-6 space-y-3 rounded-lg border border-slate-100 bg-slate-50 p-4">
         <SelectField label="Tipologia" name="tipologia" defaultValue={TIPOLOGIA_ADEMPIMENTO_OPTIONS[0].value} options={TIPOLOGIA_ADEMPIMENTO_OPTIONS} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Field label="Data esecuzione" name="dataEsecuzione" type="date" />
-          <Field label="Periodicità (mesi)" name="periodicitaMesi" type="number" placeholder="Es. 36" />
-          <Field label="Scadenza (se diversa dal calcolo)" name="dataScadenza" type="date" />
+          <Field label="Data esecuzione" name="dataEsecuzione" type="date" hint="Quando è stata svolta l'ultima volta." />
+          <Field
+            label="Periodicità (mesi)"
+            name="periodicitaMesi"
+            type="number"
+            placeholder="Es. 36"
+            hint="Ogni quanti mesi va ripetuta: 12 = annuale, 36 = triennale, 60 = quinquennale. Lascia vuoto se non si ripete (es. consegna DPI)."
+          />
+          <Field
+            label="Scadenza (se diversa dal calcolo)"
+            name="dataScadenza"
+            type="date"
+            hint="Lascia vuoto per farla calcolare automaticamente da data esecuzione + periodicità."
+          />
         </div>
-        <Field label="Esito / idoneità" name="esito" placeholder="Es. Idoneo, Idoneo con prescrizioni, Completato" />
+        <Field
+          label="Esito / idoneità"
+          name="esito"
+          placeholder="Es. Idoneo, Idoneo con prescrizioni, Completato"
+          hint="Facoltativo. L'esito riportato sul certificato o attestato."
+        />
         <div>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-slate-700">Allegato (certificato, attestato)</span>
@@ -343,11 +427,11 @@ function ComplianceTab({
               className="w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200 disabled:opacity-50"
             />
           </label>
-          {!isAttachmentStorageConfigured() && (
-            <p className="mt-1 text-xs text-slate-400">
-              Nota per lo sviluppatore: imposta BLOB_READ_WRITE_TOKEN e ATTACHMENT_ENCRYPTION_KEY in .env per abilitare gli allegati cifrati.
-            </p>
-          )}
+          <p className="mt-1 text-xs text-slate-400">
+            {isAttachmentStorageConfigured()
+              ? "Facoltativo. Il file viene cifrato e conservato in modo sicuro (dati sanitari, art. 9 GDPR)."
+              : "Nota per lo sviluppatore: imposta BLOB_READ_WRITE_TOKEN e ATTACHMENT_ENCRYPTION_KEY in .env per abilitare gli allegati cifrati."}
+          </p>
         </div>
         <TextAreaField label="Note" name="note" />
         <SubmitButton>Registra adempimento</SubmitButton>

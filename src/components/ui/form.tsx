@@ -10,6 +10,7 @@ export function Field({
   required,
   placeholder,
   step,
+  hint,
 }: {
   label: string;
   name: string;
@@ -18,6 +19,7 @@ export function Field({
   required?: boolean;
   placeholder?: string;
   step?: string;
+  hint?: string;
 }) {
   return (
     <label className="block text-sm">
@@ -33,6 +35,7 @@ export function Field({
         placeholder={placeholder}
         className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
+      {hint && <span className="mt-1 block text-xs text-slate-400">{hint}</span>}
     </label>
   );
 }
@@ -42,11 +45,13 @@ export function TextAreaField({
   name,
   defaultValue,
   placeholder,
+  hint,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
   placeholder?: string;
+  hint?: string;
 }) {
   return (
     <label className="block text-sm">
@@ -58,6 +63,7 @@ export function TextAreaField({
         rows={3}
         className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
+      {hint && <span className="mt-1 block text-xs text-slate-400">{hint}</span>}
     </label>
   );
 }
@@ -68,12 +74,14 @@ export function SelectField({
   defaultValue,
   options,
   required,
+  hint,
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
   options: { value: string; label: string }[];
   required?: boolean;
+  hint?: string;
 }) {
   return (
     <label className="block text-sm">
@@ -92,6 +100,7 @@ export function SelectField({
           </option>
         ))}
       </select>
+      {hint && <span className="mt-1 block text-xs text-slate-400">{hint}</span>}
     </label>
   );
 }
