@@ -3,8 +3,8 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updateAdempimento } from "@/lib/actions/scadenzario";
 import { PageHeader } from "@/components/ui/page-header";
-import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
-import { PERIODICITA_OPTIONS } from "@/lib/compliance";
+import { Field, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { PeriodicitaFields } from "@/components/app/periodicita-fields";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -24,15 +24,7 @@ export default async function EditAdempimentoPage({ params }: { params: Promise<
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Adempimento" name="nome" required defaultValue={item.nome} />
         <Field label="Riferimento normativo / note" name="riferimento" defaultValue={item.riferimento} />
-        <div className="grid grid-cols-2 gap-4">
-          <SelectField
-            label="Periodicità"
-            name="periodicita"
-            defaultValue={item.periodicita}
-            options={PERIODICITA_OPTIONS.map((p) => ({ value: p.label, label: p.label }))}
-          />
-          <Field label="Mesi periodicità" name="mesi" type="number" defaultValue={item.mesi} required />
-        </div>
+        <PeriodicitaFields defaultPeriodicita={item.periodicita} defaultMesi={item.mesi} />
         <Field
           label="Data ultimo controllo"
           name="dataUltimoControllo"
