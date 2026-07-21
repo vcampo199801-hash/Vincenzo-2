@@ -20,6 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const showTrialBanner = sub?.status === "TRIALING" && sub.trialEndsAt;
   const trialDaysLeft = showTrialBanner ? Math.max(0, daysUntil(sub!.trialEndsAt)!) : null;
   const allowedKeys = membership.role === "OWNER" ? null : parsePermessi(membership.permessi);
+  const isOwner = membership.role === "OWNER";
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -34,7 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          <NavLinks allowedKeys={allowedKeys} />
+          <NavLinks allowedKeys={allowedKeys} isOwner={isOwner} />
         </nav>
         <div className="border-t border-slate-200 p-4">
           <p className="truncate text-sm font-medium text-slate-800">{studio.name}</p>
@@ -50,7 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="no-print flex h-16 items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 md:px-8">
           <div className="flex min-w-0 flex-1 items-center gap-2 md:hidden">
-            <MobileNav allowedKeys={allowedKeys} />
+            <MobileNav allowedKeys={allowedKeys} isOwner={isOwner} />
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50">
               <Image src="/brand/monogram.png" alt="" width={20} height={20} className="h-5 w-5" />
             </span>

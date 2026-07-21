@@ -50,6 +50,8 @@ model Studio {
   fornitori            Fornitore[]
   accessCodes          AccessCode[]
   memberships          Membership[]
+  dipendenti           Dipendente[]
+  personaleAccessLog   PersonaleAccessLog[]
 }
 
 // Team members with access to a studio (the practice owner plus invited
@@ -231,6 +233,149 @@ model FarmacoControlloMensile {
 
   @@unique([studioId, anno, mese])
   @@index([studioId])
+}
+
+// ---------- Gestione Personale ----------
+// Modulo riservato al solo titolare (dati sanitari ex art. 9 GDPR: malattia,
+// idoneità, vaccinazioni). Non calcola buste paga né contributi: registra dati
+// inseriti manualmente o importati, li aggrega, e genera alert di scadenza.
+// Ogni accesso viene tracciato in PersonaleAccessLog.
+
+// MansioneDipendente: ASO | IGIENISTA | ODONTOIATRA_COLLABORATORE | SEGRETARIA | ALTRO
+// TipoContratto: INDETERMINATO | DETERMINATO | APPRENDISTATO | TIROCINIO
+// StatoDipendente: ATTIVO | CESSATO
+model Dipendente {
+  id                String    @id @default(cuid())
+  studioId          String
+  studio            Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  nome              String
+  cognome           String
+  codiceFiscale     String?
+  dataNascita       DateTime?
+  mansione          String    @default("ALTRO")
+  tipoContratto     String    @default("INDETERMINATO")
+  ccnl              String?
+  livello           String?
+  dataAssunzione    DateTime?
+  dataFineContratto DateTime?
+  oreSettimanali    Float?
+  finePeriodoProva  DateTime?
+  stato             String    @default("ATTIVO")
+  note              String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  movimentiAssenza     MovimentoAssenza[]
+  saldiAnnuali         SaldoAnnuale[]
+  adempimentiPersonale AdempimentoPersonale[]
+  accessLog            PersonaleAccessLog[]
+
+  @@index([studioId])
+}
+
+// TipoAssenza: FERIE | ROL | PERMESSO | MALATTIA | INFORTUNIO | MATERNITA | CONGEDO | ASPETTATIVA
+model MovimentoAssenza {
+  id                    String     @id @default(cuid())
+  dipendenteId          String
+  dipendente            Dipendente @relation(fields: [dipendenteId], references: [id], onDelete: Cascade)
+  studioId              String
+  tipo                  String
+  dataInizio            DateTime
+  dataFine              DateTime?
+  giorni                Float?
+  ore                   Float?
+  protocolloCertificato String?
+  note                  String?
+  createdAt             DateTime   @default(now())
+
+  @@index([dipendenteId])
+  @@index([studioId])
+}
+
+model SaldoAnnuale {
+  id                        String     @id @default(cuid())
+  dipendenteId              String
+  dipendente                Dipendente @relation(fields: [dipendenteId], references: [id], onDelete: Cascade)
+  studioId                  String
+  anno                      Int
+  ferieMaturate             Float      @default(0)
+  ferieGodute               Float      @default(0)
+  rolMaturati               Float      @default(0)
+  rolGoduti                 Float      @default(0)
+  giorniMalattiaAnno        Float      @default(0)
+  // Limite comporto in giorni: NON hardcodato, varia per CCNL e anzianità —
+  // valore di default prudenziale, va sempre verificato col consulente del lavoro.
+  giorniComportoMassimo     Int        @default(180)
+  tfrAccantonatoInizioAnno  Float      @default(0)
+  tfrAccantonatoAnno        Float      @default(0)
+  destinazioneTfr           String?
+  // Base di calcolo e indice per la STIMA del TFR (mai un valore ufficiale).
+  retribuzioneUtileAnnua    Float?
+  indiceRivalutazioneIstat  Float?
+  note                      String?
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
+
+  @@unique([dipendenteId, anno])
+  @@index([studioId])
+}
+
+// TipologiaAdempimentoPersonale: FORMAZIONE_GENERALE_81_08 | FORMAZIONE_SPECIFICA |
+//   AGGIORNAMENTO_QUINQUENNALE | PRIMO_SOCCORSO | ANTINCENDIO | RLS | PREPOSTO |
+//   VISITA_MEDICO_COMPETENTE | VACCINAZIONE_HBV | DOSIMETRIA | VISITA_MEDICO_RADIOPROTEZIONE |
+//   CONSEGNA_DPI | NOMINA_AUTORIZZATO_GDPR | FORMAZIONE_GDPR | CONSEGNA_DVR
+model AdempimentoPersonale {
+  id              String             @id @default(cuid())
+  dipendenteId    String
+  dipendente      Dipendente         @relation(fields: [dipendenteId], references: [id], onDelete: Cascade)
+  studioId        String
+  tipologia       String
+  dataEsecuzione  DateTime?
+  periodicitaMesi Int?
+  dataScadenza    DateTime?
+  esito           String?
+  fileAllegatoId  String?            @unique
+  fileAllegato    AllegatoPersonale? @relation(fields: [fileAllegatoId], references: [id])
+  note            String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([dipendenteId])
+  @@index([studioId])
+}
+
+// Metadati di un file caricato e cifrato (AES-256-GCM) prima di essere salvato
+// nello storage — vedi src/lib/attachments.ts. Il contenuto in chiaro non
+// tocca mai il disco: solo il ciphertext viene caricato.
+model AllegatoPersonale {
+  id               String   @id @default(cuid())
+  studioId         String
+  nomeFile         String
+  mimeType         String
+  dimensioneByte   Int
+  storageUrl       String
+  iv               String
+  caricatoDaUserId String
+  createdAt        DateTime @default(now())
+
+  adempimento AdempimentoPersonale?
+
+  @@index([studioId])
+}
+
+// Azione: VIEW_LISTA | VIEW_DIPENDENTE | VIEW_ALLEGATO | EXPORT_PDF | EXPORT_CSV | MODIFICA
+model PersonaleAccessLog {
+  id           String      @id @default(cuid())
+  studioId     String
+  studio       Studio      @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  userId       String
+  dipendenteId String?
+  dipendente   Dipendente? @relation(fields: [dipendenteId], references: [id], onDelete: SetNull)
+  azione       String
+  createdAt    DateTime    @default(now())
+
+  @@index([studioId])
+  @@index([dipendenteId])
 }
 
 // ---------- Fornitori ----------

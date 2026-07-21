@@ -47,3 +47,18 @@ export async function requireActiveSubscription(moduleKey?: ModuleKey) {
 
   return { session, studio, subscription: sub! };
 }
+
+/** Gestione Personale handles special-category data (health, sick leave, fitness
+ * certificates) — it is owner-only, always, regardless of any collaborator
+ * "permessi" a titolare may have granted elsewhere. There is no toggle for it. */
+export async function requirePersonaleAccess() {
+  const { session, studio, membership } = await requireStudio();
+  if (membership.role !== "OWNER") redirect("/app");
+
+  const sub = studio.subscription;
+  const trialExpired = sub?.status === "TRIALING" && sub.trialEndsAt !== null && sub.trialEndsAt < new Date();
+  const entitled = sub && ENTITLED_STATUSES.has(sub.status) && !trialExpired;
+  if (!entitled) redirect("/app/abbonamento");
+
+  return { session, studio, subscription: sub! };
+}

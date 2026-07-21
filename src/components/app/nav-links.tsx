@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ModuleKey } from "@/lib/modules";
 
-const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey | null; external?: boolean }[] = [
+const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey | null; external?: boolean; ownerOnly?: boolean }[] = [
   { href: "/app", label: "Dashboard", icon: "📊", moduleKey: "dashboard" },
   { href: "/app/scadenzario", label: "Scadenzario", icon: "🗓️", moduleKey: "scadenzario" },
   { href: "/app/controlli", label: "Registro controlli", icon: "🛠️", moduleKey: "controlli" },
@@ -14,6 +14,8 @@ const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey |
   { href: "/app/farmaci", label: "Farmaci emergenza", icon: "💊", moduleKey: "farmaci" },
   { href: "/app/fornitori", label: "Fornitori", icon: "📇", moduleKey: "fornitori" },
   { href: "/app/report", label: "Report ispezione", icon: "📋", moduleKey: "report" },
+  // Owner-only, always — dati sanitari ex art. 9 GDPR, mai visibile ai collaboratori.
+  { href: "/app/personale", label: "Gestione Personale", icon: "🧑‍⚕️", moduleKey: null, ownerOnly: true },
   { href: "/app/abbonamento", label: "Abbonamento", icon: "💳", moduleKey: null },
   {
     href: "https://www.sorrisiinregola.com",
@@ -24,11 +26,15 @@ const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey |
   },
 ];
 
-/** allowedKeys null = unrestricted (show everything). */
-export function NavLinks({ allowedKeys }: { allowedKeys: ModuleKey[] | null }) {
+/** allowedKeys null = unrestricted (show everything). isOwner gates the
+ * owner-only entries (Gestione Personale) — never toggleable via permessi. */
+export function NavLinks({ allowedKeys, isOwner }: { allowedKeys: ModuleKey[] | null; isOwner: boolean }) {
   const pathname = usePathname();
 
-  const links = LINKS.filter((link) => !link.moduleKey || allowedKeys === null || allowedKeys.includes(link.moduleKey));
+  const links = LINKS.filter((link) => {
+    if (link.ownerOnly && !isOwner) return false;
+    return !link.moduleKey || allowedKeys === null || allowedKeys.includes(link.moduleKey);
+  });
 
   return (
     <>

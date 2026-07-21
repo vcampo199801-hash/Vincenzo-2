@@ -136,6 +136,35 @@ nemmeno via URL diretto (`src/lib/modules.ts`, applicato in `requireStudio`/`req
 Abbonamento e Impostazioni (dati account, logout) restano sempre fuori da questa lista: Abbonamento è
 owner-only, Impostazioni resta raggiungibile da chiunque per non bloccare mai l'uscita dall'app.
 
+## Gestione Personale
+
+Modulo per l'anagrafica del personale, le assenze/maturato e la compliance individuale (formazione,
+sorveglianza sanitaria, DPI). **Non sostituisce il consulente del lavoro**: non calcola buste paga né
+contributi, registra solo dati inseriti manualmente o importati e genera promemoria di scadenza. Ogni
+valore stimato (TFR) mostra sempre il relativo disclaimer.
+
+- **Riservato al titolare**: invisibile e irraggiungibile per qualunque collaboratore, anche con permessi
+  "tutte le sezioni" — non è una sezione togglabile, è un controllo separato (`requirePersonaleAccess` in
+  `src/lib/auth-guards.ts`). Contiene dati sanitari ex art. 9 GDPR (malattia, idoneità, vaccinazioni).
+- **Log di accesso**: ogni consultazione, modifica ed export viene registrata in `PersonaleAccessLog`
+  (`src/lib/personale-access-log.ts`).
+- **Comporto configurabile**: il limite di giorni non è hardcodato — è un campo per dipendente/anno con un
+  default prudenziale, da verificare sempre col consulente del lavoro. Alert: giallo al 70% del limite,
+  rosso al 90%. Le altre scadenze (formazione, contratti, periodo di prova) usano una finestra 90/30 giorni
+  (verde/giallo/rosso), più ampia dei 30 giorni usati nel resto dell'app.
+- **Allegati cifrati**: i certificati caricati (idoneità, attestati) sono cifrati AES-256-GCM lato server
+  prima di essere salvati su Vercel Blob — solo il ciphertext lascia il server. Richiede `BLOB_READ_WRITE_TOKEN`
+  (si attiva dal progetto Vercel, sezione Storage → Blob) e `ATTACHMENT_ENCRYPTION_KEY` (una stringa segreta a
+  scelta, es. `openssl rand -hex 32`); senza queste variabili il caricamento resta disabilitato e l'app
+  funziona lo stesso.
+- **Import/export CSV** dei dipendenti per allinearsi con lo studio di consulenza (date sempre in formato
+  ISO `yyyy-mm-dd` per un roundtrip senza ambiguità).
+- **Fascicolo Dipendente**: export stampabile con anagrafica e storico adempimenti, pronto da esibire in
+  caso di ispezione ASL/Ispettorato del Lavoro.
+- **Registro dei Trattamenti**: questo modulo introduce un nuovo trattamento di dati particolari che va
+  aggiunto al registro GDPR dello studio (documento esterno all'app, gestito dal titolare) — un testo pronto
+  da incollare è stato consegnato separatamente.
+
 ## Struttura
 
 - `src/app/(marketing)` — landing page e pricing pubblici (`/`, `/login`, `/signup`)
