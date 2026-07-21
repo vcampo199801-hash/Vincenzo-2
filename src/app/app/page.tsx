@@ -11,13 +11,14 @@ import {
   STATO_LABELS,
   MESI_LABELS,
 } from "@/lib/compliance";
+import { contrattoStato, optionLabel, MANSIONE_OPTIONS } from "@/lib/personale";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
 import { StatusDonut } from "@/components/charts/donut";
 import { BarList } from "@/components/charts/bar-list";
 import { Meter } from "@/components/charts/meter";
 import { TrendBars } from "@/components/charts/trend-bars";
-import { STATUS_HEX } from "@/components/charts/colors";
+import { STATUS_HEX, BRAND_SEQUENTIAL } from "@/components/charts/colors";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -25,13 +26,14 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const { studio } = await requireActiveSubscription("dashboard");
 
-  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli] = await Promise.all([
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti] = await Promise.all([
     prisma.adempimento.findMany({ where: { studioId: studio.id } }),
     prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
     prisma.farmaco.findMany({ where: { studioId: studio.id } }),
     prisma.documento.findMany({ where: { studioId: studio.id } }),
     prisma.ecmCredito.findMany({ where: { studioId: studio.id } }),
     prisma.controlloLog.findMany({ where: { studioId: studio.id } }),
+    prisma.dipendente.findMany({ where: { studioId: studio.id } }),
   ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -99,6 +101,27 @@ export default async function DashboardPage() {
   );
 
   const farmaciOk = farmaciRows.filter((s) => s === "OK").length;
+
+  // Personale: costo aziendale mensile/annuo e scadenze contrattuali imminenti,
+  // solo sui dipendenti attivi. Nessun calcolo di ferie/contributi/TFR qui.
+  const dipendentiAttivi = dipendenti.filter((d) => d.stato === "ATTIVO");
+  const costoMensileTotale = dipendentiAttivi.reduce((s, d) => s + (d.costoAziendaleMensile ?? 0), 0);
+  const scadenzeContrattualiImminenti = dipendentiAttivi.filter((d) => {
+    const { stato } = contrattoStato(d.dataScadenzaContratto);
+    return d.dataScadenzaContratto !== null && (stato === "IN_SCADENZA" || stato === "SCADUTO");
+  }).length;
+  const costoPerMansione = new Map<string, number>();
+  for (const d of dipendentiAttivi) {
+    costoPerMansione.set(d.mansione, (costoPerMansione.get(d.mansione) ?? 0) + (d.costoAziendaleMensile ?? 0));
+  }
+  const costoPerMansioneRanked = [...costoPerMansione.entries()]
+    .filter(([, value]) => value > 0)
+    .map(([mansione, value], i) => ({
+      label: optionLabel(MANSIONE_OPTIONS, mansione),
+      value,
+      color: BRAND_SEQUENTIAL[i % BRAND_SEQUENTIAL.length],
+    }))
+    .sort((a, b) => b.value - a.value);
 
   return (
     <div className="space-y-8">
@@ -221,6 +244,38 @@ export default async function DashboardPage() {
             )}
             {ecmCrediti.length === 0 && <p className="text-sm text-slate-500">Nessun professionista censito.</p>}
           </div>
+        </section>
+
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-semibold text-slate-900">Personale</h2>
+              {scadenzeContrattualiImminenti > 0 && (
+                <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                  {scadenzeContrattualiImminenti}
+                </span>
+              )}
+            </div>
+            <Link href="/app/personale" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+              Vedi tutto →
+            </Link>
+          </div>
+          <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
+            <DashRow label="Dipendenti attivi" value={dipendentiAttivi.length} />
+            <DashRow label="Scadenze contrattuali imminenti" value={scadenzeContrattualiImminenti} bad={scadenzeContrattualiImminenti > 0} />
+            <DashRow label="Costo aziendale mensile" value={formatCurrency(costoMensileTotale)} />
+            <DashRow label="Costo aziendale annuo (stimato)" value={formatCurrency(costoMensileTotale * 12)} />
+          </div>
+          {costoPerMansioneRanked.length > 0 ? (
+            <div className="border-t border-slate-100 pt-4">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Costo per mansione</p>
+              <StatusDonut segments={costoPerMansioneRanked} formatValue={formatCurrency} />
+            </div>
+          ) : (
+            <p className="border-t border-slate-100 pt-4 text-sm text-slate-500">
+              Aggiungi il costo aziendale mensile ai dipendenti per vedere la ripartizione.
+            </p>
+          )}
         </section>
 
         {farmaci.length > 0 && (

@@ -14,6 +14,7 @@ const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey |
   { href: "/app/farmaci", label: "Farmaci emergenza", icon: "💊", moduleKey: "farmaci" },
   { href: "/app/fornitori", label: "Fornitori", icon: "📇", moduleKey: "fornitori" },
   { href: "/app/report", label: "Report ispezione", icon: "📋", moduleKey: "report" },
+  { href: "/app/personale", label: "Personale", icon: "🧑‍⚕️", moduleKey: "personale" },
   { href: "/app/abbonamento", label: "Abbonamento", icon: "💳", moduleKey: null },
   {
     href: "https://www.sorrisiinregola.com",

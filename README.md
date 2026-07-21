@@ -136,6 +136,23 @@ nemmeno via URL diretto (`src/lib/modules.ts`, applicato in `requireStudio`/`req
 Abbonamento e Impostazioni (dati account, logout) restano sempre fuori da questa lista: Abbonamento è
 owner-only, Impostazioni resta raggiungibile da chiunque per non bloccare mai l'uscita dall'app.
 
+## Personale
+
+Modulo per l'anagrafica dei dipendenti e l'archivio cedolini. **Non è un gestionale HR**: non gestisce
+ferie, permessi, ROL, ore lavorate o presenze, e non calcola contributi, TFR o netto in busta. Registra solo
+lo stato anagrafico-contrattuale (mansione, tipo contratto, date, ore settimanali) e i valori economici
+(stipendio lordo mensile, costo aziendale mensile) inseriti manualmente dal titolare sulla base dei prospetti
+del consulente del lavoro.
+
+- **Riepilogo in dashboard**: dipendenti attivi, costo aziendale mensile/annuo, ripartizione del costo per
+  mansione (mini-donut) e un badge rosso con le scadenze contrattuali imminenti (finestra 30 giorni, come nel
+  resto dell'app).
+- **Cedolini**: archivio PDF mese per mese per dipendente, su Vercel Blob. Richiede `BLOB_READ_WRITE_TOKEN`
+  (si attiva dal progetto Vercel, sezione Storage → Blob); senza questa variabile l'app funziona lo stesso, il
+  caricamento resta solo disabilitato.
+- Come gli altri moduli, il titolare può nascondere "Personale" ai singoli collaboratori dal pannello permessi
+  in Impostazioni.
+
 ## Struttura
 
 - `src/app/(marketing)` — landing page e pricing pubblici (`/`, `/login`, `/signup`)

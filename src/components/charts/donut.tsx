@@ -7,12 +7,14 @@ export function StatusDonut({
   strokeWidth = 20,
   centerValue,
   centerLabel,
+  formatValue = (v: number) => String(v),
 }: {
   segments: DonutSegment[];
   size?: number;
   strokeWidth?: number;
   centerValue?: string;
   centerLabel?: string;
+  formatValue?: (value: number) => string;
 }) {
   const total = segments.reduce((sum, seg) => sum + seg.value, 0);
   const radius = (size - strokeWidth) / 2;
@@ -62,7 +64,7 @@ export function StatusDonut({
           <li key={seg.label} className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: seg.color }} />
             <span className="text-slate-600">{seg.label}</span>
-            <span className="ml-auto pl-3 font-medium tabular-nums text-slate-900">{seg.value}</span>
+            <span className="ml-auto pl-3 font-medium tabular-nums text-slate-900">{formatValue(seg.value)}</span>
           </li>
         ))}
       </ul>
