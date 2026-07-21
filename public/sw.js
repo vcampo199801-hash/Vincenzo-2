@@ -2,7 +2,7 @@
 // Home"). It intentionally does NOT cache pages or API/data requests — this
 // app's content changes per request (scadenze, magazzino, ecc.), so serving
 // stale data from a cache would be worse than no offline support at all.
-const CACHE_NAME = "sir-static-v1";
+const CACHE_NAME = "sir-static-v2";
 const STATIC_ASSETS = ["/brand/pwa-icon-192.png", "/brand/pwa-icon-512.png"];
 
 self.addEventListener("install", (event) => {
