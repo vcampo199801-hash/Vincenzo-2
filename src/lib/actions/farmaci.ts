@@ -18,6 +18,7 @@ function payload(formData: FormData) {
     quantita: Number(formData.get("quantita") ?? 1) || 1,
     lotto: String(formData.get("lotto") ?? "").trim() || null,
     scadenza: parseDate(formData.get("scadenza")),
+    codice: String(formData.get("codice") ?? "").trim() || null,
     note: String(formData.get("note") ?? "").trim() || null,
   };
 }

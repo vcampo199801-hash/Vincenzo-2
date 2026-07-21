@@ -20,6 +20,7 @@ function payload(formData: FormData) {
     quantitaAttuale: Number(formData.get("quantitaAttuale") ?? 0) || 0,
     scadenzaLotto: parseDate(formData.get("scadenzaLotto")),
     prezzoUnitario: Number(formData.get("prezzoUnitario") ?? 0) || 0,
+    codice: String(formData.get("codice") ?? "").trim() || null,
     note: String(formData.get("note") ?? "").trim() || null,
   };
 }

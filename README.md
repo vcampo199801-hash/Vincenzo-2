@@ -112,6 +112,19 @@ pagina Impostazioni. Nessun invio se è tutto in regola.
 Senza queste variabili l'app funziona lo stesso: il cron job si limita a non fare nulla sui canali
 non configurati.
 
+## Scansione codici a barre / QR / DataMatrix
+
+Nei moduli Farmaci e Magazzino, il form "Aggiungi/Modifica" ha un campo di scansione:
+
+- **Lettore esterno (USB o Bluetooth)**: funziona ovunque, su qualsiasi browser — il lettore si comporta
+  come una tastiera, quindi basta cliccare nel campo e scansionare.
+- **Fotocamera del telefono/computer**: disponibile solo su Chrome (Android o desktop), tramite l'API
+  `BarcodeDetector` del browser — Safari/iOS non la supporta, quindi su iPhone va usato un lettore esterno.
+
+Se il codice scansionato è un DataMatrix/GS1-128 (il "bollino" anticontraffazione presente sulle
+confezioni dei farmaci italiani), l'app estrae automaticamente lotto e data di scadenza (`src/lib/barcode.ts`).
+Per un codice a barre semplice (EAN-13, QR generico) viene comunque salvato il codice, da completare a mano.
+
 ## Struttura
 
 - `src/app/(marketing)` — landing page e pricing pubblici (`/`, `/login`, `/signup`)
