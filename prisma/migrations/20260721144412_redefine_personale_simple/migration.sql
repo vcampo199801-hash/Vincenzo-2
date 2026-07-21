@@ -12,52 +12,63 @@
   - You are about to drop the `PersonaleAccessLog` table. If the table is not empty, all the data it contains will be lost.
   - You are about to drop the `SaldoAnnuale` table. If the table is not empty, all the data it contains will be lost.
 
+  Written defensively (IF EXISTS everywhere): earlier deploy attempts on this
+  database left it in an inconsistent intermediate state, so this migration
+  must succeed no matter which of these objects are already gone.
 */
 -- DropForeignKey
-ALTER TABLE "AdempimentoPersonale" DROP CONSTRAINT "AdempimentoPersonale_dipendenteId_fkey";
+ALTER TABLE IF EXISTS "AdempimentoPersonale" DROP CONSTRAINT IF EXISTS "AdempimentoPersonale_dipendenteId_fkey";
 
 -- DropForeignKey
-ALTER TABLE "AdempimentoPersonale" DROP CONSTRAINT "AdempimentoPersonale_fileAllegatoId_fkey";
+ALTER TABLE IF EXISTS "AdempimentoPersonale" DROP CONSTRAINT IF EXISTS "AdempimentoPersonale_fileAllegatoId_fkey";
 
 -- DropForeignKey
-ALTER TABLE "MovimentoAssenza" DROP CONSTRAINT "MovimentoAssenza_dipendenteId_fkey";
+ALTER TABLE IF EXISTS "MovimentoAssenza" DROP CONSTRAINT IF EXISTS "MovimentoAssenza_dipendenteId_fkey";
 
 -- DropForeignKey
-ALTER TABLE "PersonaleAccessLog" DROP CONSTRAINT "PersonaleAccessLog_dipendenteId_fkey";
+ALTER TABLE IF EXISTS "PersonaleAccessLog" DROP CONSTRAINT IF EXISTS "PersonaleAccessLog_dipendenteId_fkey";
 
 -- DropForeignKey
-ALTER TABLE "PersonaleAccessLog" DROP CONSTRAINT "PersonaleAccessLog_studioId_fkey";
+ALTER TABLE IF EXISTS "PersonaleAccessLog" DROP CONSTRAINT IF EXISTS "PersonaleAccessLog_studioId_fkey";
 
 -- DropForeignKey
-ALTER TABLE "SaldoAnnuale" DROP CONSTRAINT "SaldoAnnuale_dipendenteId_fkey";
+ALTER TABLE IF EXISTS "SaldoAnnuale" DROP CONSTRAINT IF EXISTS "SaldoAnnuale_dipendenteId_fkey";
 
 -- AlterTable
-ALTER TABLE "Dipendente" DROP COLUMN "ccnl",
-DROP COLUMN "codiceFiscale",
-DROP COLUMN "dataFineContratto",
-DROP COLUMN "dataNascita",
-DROP COLUMN "livello",
-ADD COLUMN     "costoAziendaleMensile" DOUBLE PRECISION,
-ADD COLUMN     "dataScadenzaContratto" TIMESTAMP(3),
-ADD COLUMN     "stipendioLordoMensile" DOUBLE PRECISION;
+ALTER TABLE "Dipendente"
+DROP COLUMN IF EXISTS "ccnl",
+DROP COLUMN IF EXISTS "codiceFiscale",
+DROP COLUMN IF EXISTS "dataFineContratto",
+DROP COLUMN IF EXISTS "dataNascita",
+DROP COLUMN IF EXISTS "livello",
+-- Colonne di un esperimento successivo (calcolo automatico ferie/ROL), poi
+-- annullato: rimaste sul database di produzione ma non più usate da nessun
+-- codice applicativo.
+DROP COLUMN IF EXISTS "oreSettimanaliFullTime",
+DROP COLUMN IF EXISTS "ferieAnnueContrattuali",
+DROP COLUMN IF EXISTS "rolAnnueContrattuali",
+DROP COLUMN IF EXISTS "retribuzioneLordaAnnua",
+ADD COLUMN IF NOT EXISTS "costoAziendaleMensile" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS "dataScadenzaContratto" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS "stipendioLordoMensile" DOUBLE PRECISION;
 
 -- DropTable
-DROP TABLE "AdempimentoPersonale";
+DROP TABLE IF EXISTS "AdempimentoPersonale";
 
 -- DropTable
-DROP TABLE "AllegatoPersonale";
+DROP TABLE IF EXISTS "AllegatoPersonale";
 
 -- DropTable
-DROP TABLE "MovimentoAssenza";
+DROP TABLE IF EXISTS "MovimentoAssenza";
 
 -- DropTable
-DROP TABLE "PersonaleAccessLog";
+DROP TABLE IF EXISTS "PersonaleAccessLog";
 
 -- DropTable
-DROP TABLE "SaldoAnnuale";
+DROP TABLE IF EXISTS "SaldoAnnuale";
 
 -- CreateTable
-CREATE TABLE "Cedolino" (
+CREATE TABLE IF NOT EXISTS "Cedolino" (
     "id" TEXT NOT NULL,
     "studioId" TEXT NOT NULL,
     "dipendenteId" TEXT NOT NULL,
@@ -71,16 +82,22 @@ CREATE TABLE "Cedolino" (
 );
 
 -- CreateIndex
-CREATE INDEX "Cedolino_studioId_idx" ON "Cedolino"("studioId");
+CREATE INDEX IF NOT EXISTS "Cedolino_studioId_idx" ON "Cedolino"("studioId");
 
 -- CreateIndex
-CREATE INDEX "Cedolino_dipendenteId_idx" ON "Cedolino"("dipendenteId");
+CREATE INDEX IF NOT EXISTS "Cedolino_dipendenteId_idx" ON "Cedolino"("dipendenteId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Cedolino_dipendenteId_mese_anno_key" ON "Cedolino"("dipendenteId", "mese", "anno");
+CREATE UNIQUE INDEX IF NOT EXISTS "Cedolino_dipendenteId_mese_anno_key" ON "Cedolino"("dipendenteId", "mese", "anno");
 
 -- AddForeignKey
-ALTER TABLE "Cedolino" ADD CONSTRAINT "Cedolino_studioId_fkey" FOREIGN KEY ("studioId") REFERENCES "Studio"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Cedolino" ADD CONSTRAINT "Cedolino_studioId_fkey" FOREIGN KEY ("studioId") REFERENCES "Studio"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Cedolino" ADD CONSTRAINT "Cedolino_dipendenteId_fkey" FOREIGN KEY ("dipendenteId") REFERENCES "Dipendente"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Cedolino" ADD CONSTRAINT "Cedolino_dipendenteId_fkey" FOREIGN KEY ("dipendenteId") REFERENCES "Dipendente"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
