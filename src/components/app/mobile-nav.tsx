@@ -7,7 +7,7 @@ import type { ModuleKey } from "@/lib/modules";
 
 /** Hamburger + slide-in drawer — the sidebar in AppLayout is hidden below md,
  * so this is the only way to reach the module list (Scadenzario, Magazzino, …) on phones. */
-export function MobileNav({ allowedKeys, isOwner }: { allowedKeys: ModuleKey[] | null; isOwner: boolean }) {
+export function MobileNav({ allowedKeys }: { allowedKeys: ModuleKey[] | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -49,7 +49,7 @@ export function MobileNav({ allowedKeys, isOwner }: { allowedKeys: ModuleKey[] |
               </button>
             </div>
             <nav className="space-y-1">
-              <NavLinks allowedKeys={allowedKeys} isOwner={isOwner} />
+              <NavLinks allowedKeys={allowedKeys} />
             </nav>
           </div>
         </div>
