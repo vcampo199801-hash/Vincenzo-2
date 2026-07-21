@@ -37,10 +37,6 @@ export async function GET() {
     isoDate(d.finePeriodoProva),
     d.stato,
     d.note,
-    d.oreSettimanaliFullTime,
-    d.ferieAnnueContrattuali,
-    d.rolAnnueContrattuali,
-    d.retribuzioneLordaAnnua,
   ]);
 
   await logPersonaleAccess({ studioId: studio.id, userId: session.userId, azione: "EXPORT_CSV" });

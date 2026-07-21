@@ -37,10 +37,6 @@ export default async function EditDipendentePage({ params }: { params: Promise<{
             finePeriodoProva: item.finePeriodoProva?.toISOString().slice(0, 10),
             stato: item.stato,
             note: item.note,
-            oreSettimanaliFullTime: item.oreSettimanaliFullTime,
-            ferieAnnueContrattuali: item.ferieAnnueContrattuali,
-            rolAnnueContrattuali: item.rolAnnueContrattuali,
-            retribuzioneLordaAnnua: item.retribuzioneLordaAnnua,
           }}
         />
         <SubmitButton>Salva modifiche</SubmitButton>

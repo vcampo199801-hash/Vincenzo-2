@@ -47,53 +47,6 @@ export function calcolaScadenzaAdempimento(dataEsecuzione: Date | null, periodic
   return addMonths(dataEsecuzione, periodicitaMesi);
 }
 
-export const MATURAZIONE_DISCLAIMER =
-  "Stima calcolata in proporzione a orario contrattuale e periodo lavorato nell'anno: il valore ufficiale di ferie e ROL maturati è quello del consulente del lavoro/cedolino paga.";
-
-function round05(value: number) {
-  return Math.round(value * 2) / 2;
-}
-
-/** Stima ferie/ROL maturati nell'anno, in proporzione a: percentuale di part-time
- * (ore settimanali / ore settimanali a tempo pieno) e alla frazione dell'anno
- * effettivamente lavorata (tra assunzione/inizio anno e cessazione/oggi/fine anno).
- * Ritorna null se manca la data di assunzione: senza quella non si può stimare nulla. */
-export function calcolaMaturazioneAnno(params: {
-  anno: number;
-  dataAssunzione: Date | null;
-  dataFineContratto: Date | null;
-  oreSettimanali: number | null;
-  oreSettimanaliFullTime: number;
-  ferieAnnueContrattuali: number;
-  rolAnnueContrattuali: number;
-}): { ferieMaturate: number; rolMaturati: number; fattoreParttime: number; percentualeAnno: number } | null {
-  const { anno, dataAssunzione, dataFineContratto, oreSettimanali, oreSettimanaliFullTime, ferieAnnueContrattuali, rolAnnueContrattuali } = params;
-  if (!dataAssunzione) return null;
-
-  const inizioAnno = new Date(anno, 0, 1);
-  const fineAnno = new Date(anno, 11, 31);
-  const oggi = new Date();
-
-  const effStart = dataAssunzione > inizioAnno ? dataAssunzione : inizioAnno;
-  let effEnd = fineAnno;
-  if (dataFineContratto && dataFineContratto < effEnd) effEnd = dataFineContratto;
-  if (anno === oggi.getFullYear() && oggi < effEnd) effEnd = oggi;
-
-  const msPerDay = 1000 * 60 * 60 * 24;
-  const giorniTotaliAnno = Math.round((fineAnno.getTime() - inizioAnno.getTime()) / msPerDay) + 1;
-  const giorniLavorati = Math.max(0, Math.round((effEnd.getTime() - effStart.getTime()) / msPerDay) + 1);
-  const percentualeAnno = Math.min(1, giorniLavorati / giorniTotaliAnno);
-
-  const fattoreParttime = oreSettimanali ? Math.min(1, oreSettimanali / oreSettimanaliFullTime) : 1;
-
-  return {
-    ferieMaturate: round05(ferieAnnueContrattuali * fattoreParttime * percentualeAnno),
-    rolMaturati: round05(rolAnnueContrattuali * fattoreParttime * percentualeAnno),
-    fattoreParttime,
-    percentualeAnno,
-  };
-}
-
 // SemaforoStato values ("OK" | "IN_SCADENZA" | "SCADUTO") are the same keys used
 // by STATO_COLORS/STATO_LABELS in src/lib/compliance.ts — reuse <StatoBadge> as-is.
 
@@ -198,8 +151,4 @@ export const DIPENDENTE_CSV_HEADERS = [
   "finePeriodoProva",
   "stato",
   "note",
-  "oreSettimanaliFullTime",
-  "ferieAnnueContrattuali",
-  "rolAnnueContrattuali",
-  "retribuzioneLordaAnnua",
 ];

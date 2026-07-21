@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "Dipendente" ADD COLUMN     "ferieAnnueContrattuali" DOUBLE PRECISION NOT NULL DEFAULT 26,
-ADD COLUMN     "oreSettimanaliFullTime" DOUBLE PRECISION NOT NULL DEFAULT 36,
-ADD COLUMN     "retribuzioneLordaAnnua" DOUBLE PRECISION,
-ADD COLUMN     "rolAnnueContrattuali" DOUBLE PRECISION NOT NULL DEFAULT 32;

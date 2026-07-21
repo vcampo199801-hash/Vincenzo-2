@@ -39,10 +39,6 @@ function dipendentePayload(formData: FormData) {
     finePeriodoProva: parseDate(formData.get("finePeriodoProva")),
     stato: String(formData.get("stato") ?? "ATTIVO"),
     note: String(formData.get("note") ?? "").trim() || null,
-    oreSettimanaliFullTime: parseFloatOrNull(formData.get("oreSettimanaliFullTime")) ?? 36,
-    ferieAnnueContrattuali: parseFloatOrNull(formData.get("ferieAnnueContrattuali")) ?? 26,
-    rolAnnueContrattuali: parseFloatOrNull(formData.get("rolAnnueContrattuali")) ?? 32,
-    retribuzioneLordaAnnua: parseFloatOrNull(formData.get("retribuzioneLordaAnnua")),
   };
 }
 
@@ -215,10 +211,6 @@ export async function importDipendentiCsv(_prev: ImportCsvState, formData: FormD
       finePeriodoProva: row.finePeriodoProva ? new Date(row.finePeriodoProva) : null,
       stato: row.stato || "ATTIVO",
       note: row.note || null,
-      oreSettimanaliFullTime: row.oreSettimanaliFullTime ? Number(row.oreSettimanaliFullTime) : 36,
-      ferieAnnueContrattuali: row.ferieAnnueContrattuali ? Number(row.ferieAnnueContrattuali) : 26,
-      rolAnnueContrattuali: row.rolAnnueContrattuali ? Number(row.rolAnnueContrattuali) : 32,
-      retribuzioneLordaAnnua: row.retribuzioneLordaAnnua ? Number(row.retribuzioneLordaAnnua) : null,
     };
 
     const esistente = data.codiceFiscale

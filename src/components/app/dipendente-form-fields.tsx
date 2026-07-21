@@ -16,10 +16,6 @@ type DipendenteDefaults = {
   finePeriodoProva?: string;
   stato?: string;
   note?: string | null;
-  oreSettimanaliFullTime?: number;
-  ferieAnnueContrattuali?: number;
-  rolAnnueContrattuali?: number;
-  retribuzioneLordaAnnua?: number | null;
 };
 
 /** Shared by "Nuovo dipendente" e "Modifica dipendente" così le spiegazioni dei
@@ -111,50 +107,6 @@ export function DipendenteFormFields({ item }: { item?: DipendenteDefaults }) {
             hint="Facoltativo. Di solito 3-6 mesi dopo l'assunzione. Lascia vuoto se il periodo di prova è già concluso."
           />
         </div>
-      </fieldset>
-
-      <fieldset className="space-y-4 border-t border-slate-100 pt-6">
-        <legend className="mb-1 text-sm font-semibold text-slate-900">⚙️ Parametri per il calcolo automatico</legend>
-        <p className="text-xs text-slate-500">
-          Facoltativi. Servono a far calcolare all&apos;app una <strong>stima</strong> di ferie/ROL maturati e del
-          TFR nella scheda del dipendente, in base a tipo di contratto e ore lavorate. Restano sempre valori di
-          partenza: verificali col consulente del lavoro e correggili quando vuoi.
-        </p>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <Field
-            label="Ore settimanali tempo pieno"
-            name="oreSettimanaliFullTime"
-            type="number"
-            step="0.5"
-            defaultValue={item?.oreSettimanaliFullTime ?? 36}
-            hint="Le ore che il CCNL considera tempo pieno (tipico 36-38 per studi odontoiatrici)."
-          />
-          <Field
-            label="Ferie annue (giorni, tempo pieno)"
-            name="ferieAnnueContrattuali"
-            type="number"
-            step="0.5"
-            defaultValue={item?.ferieAnnueContrattuali ?? 26}
-            hint="Giorni di ferie annui a tempo pieno previsti dal CCNL (valore comune: 26)."
-          />
-          <Field
-            label="ROL annuo (ore, tempo pieno)"
-            name="rolAnnueContrattuali"
-            type="number"
-            step="0.5"
-            defaultValue={item?.rolAnnueContrattuali ?? 32}
-            hint="Ore di permesso ROL annue a tempo pieno previste dal CCNL."
-          />
-        </div>
-        <Field
-          label="Retribuzione lorda annua di riferimento (€)"
-          name="retribuzioneLordaAnnua"
-          type="number"
-          step="0.01"
-          defaultValue={item?.retribuzioneLordaAnnua}
-          placeholder="Es. 24000"
-          hint="Facoltativo. Pre-compila ogni anno la stima TFR, così non devi reinserirla: resta comunque modificabile."
-        />
       </fieldset>
 
       <fieldset className="space-y-4 border-t border-slate-100 pt-6">
