@@ -12,7 +12,7 @@ import { deleteMagazzinoItem } from "@/lib/actions/magazzino";
 export const dynamic = "force-dynamic";
 
 export default async function MagazzinoPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("magazzino");
   const items = await prisma.magazzinoItem.findMany({ where: { studioId: studio.id }, orderBy: { prodotto: "asc" } });
 
   const rows = items.map((i) => ({

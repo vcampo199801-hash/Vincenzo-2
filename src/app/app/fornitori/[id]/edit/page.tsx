@@ -9,7 +9,7 @@ import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "
 export const dynamic = "force-dynamic";
 
 export default async function EditFornitorePage({ params }: { params: Promise<{ id: string }> }) {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("fornitori");
   const { id } = await params;
   const item = await prisma.fornitore.findFirst({ where: { id, studioId: studio.id } });
   if (!item) notFound();

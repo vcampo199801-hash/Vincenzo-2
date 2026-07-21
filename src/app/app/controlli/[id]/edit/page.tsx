@@ -9,7 +9,7 @@ import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui
 export const dynamic = "force-dynamic";
 
 export default async function EditControlloPage({ params }: { params: Promise<{ id: string }> }) {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("controlli");
   const { id } = await params;
 
   const [item, adempimenti] = await Promise.all([

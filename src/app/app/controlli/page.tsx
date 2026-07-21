@@ -11,7 +11,7 @@ import { deleteControllo } from "@/lib/actions/controlli";
 export const dynamic = "force-dynamic";
 
 export default async function ControlliPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("controlli");
 
   const controlli = await prisma.controlloLog.findMany({
     where: { studioId: studio.id },

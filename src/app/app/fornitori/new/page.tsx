@@ -7,7 +7,7 @@ import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "
 export const dynamic = "force-dynamic";
 
 export default async function NewFornitorePage() {
-  await requireActiveSubscription();
+  await requireActiveSubscription("fornitori");
 
   return (
     <div className="max-w-2xl">

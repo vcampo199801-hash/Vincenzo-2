@@ -2,26 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ModuleKey } from "@/lib/modules";
 
-const LINKS = [
-  { href: "/app", label: "Dashboard", icon: "📊" },
-  { href: "/app/scadenzario", label: "Scadenzario", icon: "🗓️" },
-  { href: "/app/controlli", label: "Registro controlli", icon: "🛠️" },
-  { href: "/app/ecm", label: "Formazione ECM", icon: "🎓" },
-  { href: "/app/documenti", label: "Documenti", icon: "📁" },
-  { href: "/app/magazzino", label: "Magazzino", icon: "📦" },
-  { href: "/app/farmaci", label: "Farmaci emergenza", icon: "💊" },
-  { href: "/app/fornitori", label: "Fornitori", icon: "📇" },
-  { href: "/app/report", label: "Report ispezione", icon: "📋" },
-  { href: "/app/abbonamento", label: "Abbonamento", icon: "💳" },
+const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey | null }[] = [
+  { href: "/app", label: "Dashboard", icon: "📊", moduleKey: "dashboard" },
+  { href: "/app/scadenzario", label: "Scadenzario", icon: "🗓️", moduleKey: "scadenzario" },
+  { href: "/app/controlli", label: "Registro controlli", icon: "🛠️", moduleKey: "controlli" },
+  { href: "/app/ecm", label: "Formazione ECM", icon: "🎓", moduleKey: "ecm" },
+  { href: "/app/documenti", label: "Documenti", icon: "📁", moduleKey: "documenti" },
+  { href: "/app/magazzino", label: "Magazzino", icon: "📦", moduleKey: "magazzino" },
+  { href: "/app/farmaci", label: "Farmaci emergenza", icon: "💊", moduleKey: "farmaci" },
+  { href: "/app/fornitori", label: "Fornitori", icon: "📇", moduleKey: "fornitori" },
+  { href: "/app/report", label: "Report ispezione", icon: "📋", moduleKey: "report" },
+  { href: "/app/abbonamento", label: "Abbonamento", icon: "💳", moduleKey: null },
 ];
 
-export function NavLinks() {
+/** allowedKeys null = unrestricted (show everything). */
+export function NavLinks({ allowedKeys }: { allowedKeys: ModuleKey[] | null }) {
   const pathname = usePathname();
+
+  const links = LINKS.filter((link) => !link.moduleKey || allowedKeys === null || allowedKeys.includes(link.moduleKey));
 
   return (
     <>
-      {LINKS.map((link) => {
+      {links.map((link) => {
         const active = link.href === "/app" ? pathname === "/app" : pathname.startsWith(link.href);
         return (
           <Link

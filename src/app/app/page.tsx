@@ -23,7 +23,7 @@ import { STATUS_HEX } from "@/components/charts/colors";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("dashboard");
 
   const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli] = await Promise.all([
     prisma.adempimento.findMany({ where: { studioId: studio.id } }),

@@ -7,7 +7,7 @@ import { Field, SubmitButton } from "@/components/ui/form";
 export const dynamic = "force-dynamic";
 
 export default async function NewEcmPage() {
-  await requireActiveSubscription();
+  await requireActiveSubscription("ecm");
 
   return (
     <div className="max-w-2xl">

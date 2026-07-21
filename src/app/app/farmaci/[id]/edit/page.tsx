@@ -10,7 +10,7 @@ import { BarcodeScanner } from "@/components/app/barcode-scanner";
 export const dynamic = "force-dynamic";
 
 export default async function EditFarmacoPage({ params }: { params: Promise<{ id: string }> }) {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("farmaci");
   const { id } = await params;
   const item = await prisma.farmaco.findFirst({ where: { id, studioId: studio.id } });
   if (!item) notFound();

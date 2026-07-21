@@ -8,7 +8,7 @@ import { buildIcs } from "@/lib/ics";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("scadenzario");
 
   const adempimenti = await prisma.adempimento.findMany({ where: { studioId: studio.id } });
 

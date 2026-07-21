@@ -125,6 +125,17 @@ Se il codice scansionato è un DataMatrix/GS1-128 (il "bollino" anticontraffazio
 confezioni dei farmaci italiani), l'app estrae automaticamente lotto e data di scadenza (`src/lib/barcode.ts`).
 Per un codice a barre semplice (EAN-13, QR generico) viene comunque salvato il codice, da completare a mano.
 
+## Team e permessi per sezione
+
+Ogni studio ha un titolare più un massimo di 2 collaboratori (da Impostazioni → Team dello studio), tutti con
+accesso simultaneo da più dispositivi (telefono, PC, ecc. — è solo una sessione per dispositivo, non un limite
+di accessi contemporanei). Per ogni collaboratore il titolare può scegliere quali sezioni mostrare (Scadenzario,
+Magazzino, Farmaci, ecc.) tramite le caselle nel modulo di invito o nel pannello "Permessi" della riga del
+collaboratore — le sezioni non selezionate (Dashboard inclusa) spariscono dal menu e non sono raggiungibili
+nemmeno via URL diretto (`src/lib/modules.ts`, applicato in `requireStudio`/`requireActiveSubscription`).
+Abbonamento e Impostazioni (dati account, logout) restano sempre fuori da questa lista: Abbonamento è
+owner-only, Impostazioni resta raggiungibile da chiunque per non bloccare mai l'uscita dall'app.
+
 ## Struttura
 
 - `src/app/(marketing)` — landing page e pricing pubblici (`/`, `/login`, `/signup`)

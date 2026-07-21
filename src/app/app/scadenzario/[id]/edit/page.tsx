@@ -10,7 +10,7 @@ import { PeriodicitaFields } from "@/components/app/periodicita-fields";
 export const dynamic = "force-dynamic";
 
 export default async function EditAdempimentoPage({ params }: { params: Promise<{ id: string }> }) {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("scadenzario");
   const { id } = await params;
 
   const item = await prisma.adempimento.findFirst({ where: { id, studioId: studio.id } });

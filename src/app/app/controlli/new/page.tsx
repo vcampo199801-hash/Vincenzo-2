@@ -8,7 +8,7 @@ import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui
 export const dynamic = "force-dynamic";
 
 export default async function NewControlloPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("controlli");
   const adempimenti = await prisma.adempimento.findMany({ where: { studioId: studio.id }, orderBy: { ordine: "asc" } });
 
   return (

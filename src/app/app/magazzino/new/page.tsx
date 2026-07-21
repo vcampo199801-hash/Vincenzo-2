@@ -9,7 +9,7 @@ import { BarcodeScanner } from "@/components/app/barcode-scanner";
 export const dynamic = "force-dynamic";
 
 export default async function NewMagazzinoPage() {
-  await requireActiveSubscription();
+  await requireActiveSubscription("magazzino");
 
   return (
     <div className="max-w-2xl">

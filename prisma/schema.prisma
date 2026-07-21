@@ -61,6 +61,9 @@ model Membership {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   role      String   @default("MEMBER")
+  // JSON array of module keys this member can see (see src/lib/modules.ts).
+  // null = full access (always true for OWNER, and the default for MEMBER too).
+  permessi  String?
   createdAt DateTime @default(now())
 
   @@unique([studioId, userId])

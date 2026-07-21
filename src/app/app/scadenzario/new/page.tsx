@@ -8,7 +8,7 @@ import { PeriodicitaFields } from "@/components/app/periodicita-fields";
 export const dynamic = "force-dynamic";
 
 export default async function NewAdempimentoPage() {
-  await requireActiveSubscription();
+  await requireActiveSubscription("scadenzario");
 
   return (
     <div className="max-w-2xl">

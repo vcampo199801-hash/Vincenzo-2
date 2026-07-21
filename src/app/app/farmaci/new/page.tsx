@@ -8,7 +8,7 @@ import { BarcodeScanner } from "@/components/app/barcode-scanner";
 export const dynamic = "force-dynamic";
 
 export default async function NewFarmacoPage() {
-  await requireActiveSubscription();
+  await requireActiveSubscription("farmaci");
 
   return (
     <div className="max-w-2xl">

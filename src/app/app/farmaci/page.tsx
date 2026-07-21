@@ -13,7 +13,7 @@ import { MonthlyControlRow } from "@/components/app/monthly-control-row";
 export const dynamic = "force-dynamic";
 
 export default async function FarmaciPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("farmaci");
   const anno = new Date().getFullYear();
 
   await ensureControlliAnno(anno);

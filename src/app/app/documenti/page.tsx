@@ -11,7 +11,7 @@ import { DocumentoStatoSelect } from "@/components/app/documento-stato-select";
 export const dynamic = "force-dynamic";
 
 export default async function DocumentiPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("documenti");
   const documenti = await prisma.documento.findMany({ where: { studioId: studio.id }, orderBy: { ordine: "asc" } });
 
   const presenti = documenti.filter((d) => d.stato === "PRESENTE").length;

@@ -10,7 +10,7 @@ import { deleteEcm } from "@/lib/actions/ecm";
 export const dynamic = "force-dynamic";
 
 export default async function EcmPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("ecm");
   const crediti = await prisma.ecmCredito.findMany({ where: { studioId: studio.id }, orderBy: { professionista: "asc" } });
 
   return (

@@ -6,11 +6,15 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Field, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { InviteMemberForm } from "@/components/app/invite-member-form";
+import { MemberPermissionsForm } from "@/components/app/member-permissions-form";
 import { TestDigestButton } from "@/components/app/test-digest-button";
 import { TestSmsButton } from "@/components/app/test-sms-button";
 import { formatDate } from "@/lib/compliance";
 import { isEmailConfigured } from "@/lib/email";
 import { isSmsConfigured } from "@/lib/sms";
+import { parsePermessi, APP_MODULES } from "@/lib/modules";
+
+const MAX_COLLABORATORS = 2;
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -26,6 +30,8 @@ export default async function ImpostazioniPage() {
     orderBy: { createdAt: "asc" },
   });
   const isOwner = memberships.find((m) => m.userId === session.userId)?.role === "OWNER";
+  const collaboratorCount = memberships.filter((m) => m.role === "MEMBER").length;
+  const atCap = collaboratorCount >= MAX_COLLABORATORS;
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -99,8 +105,9 @@ export default async function ImpostazioniPage() {
       <div>
         <h2 className="mb-3 text-lg font-semibold text-slate-900">Team dello studio</h2>
         <p className="mb-3 text-sm text-slate-500">
-          Utenti illimitati inclusi nell&apos;abbonamento: igienisti, assistenti e colleghi possono
-          accedere allo stesso studio con il proprio login.
+          Il titolare più un massimo di {MAX_COLLABORATORS} collaboratori per studio ({collaboratorCount}/
+          {MAX_COLLABORATORS} usati) — tutti possono accedere in contemporanea da telefono e computer. Per ogni
+          collaboratore puoi scegliere quali sezioni può vedere.
         </p>
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -110,31 +117,58 @@ export default async function ImpostazioniPage() {
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Ruolo</th>
                 <th className="px-4 py-3">Membro dal</th>
+                <th className="px-4 py-3">Sezioni</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {memberships.map((m) => (
-                <tr key={m.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{m.user.name ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-600">{m.user.email}</td>
-                  <td className="px-4 py-3 text-slate-600">{ROLE_LABELS[m.role] ?? m.role}</td>
-                  <td className="px-4 py-3 text-slate-600">{formatDate(m.createdAt)}</td>
-                  <td className="px-4 py-3 text-right">
-                    {isOwner && m.role !== "OWNER" && (
-                      <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {memberships.map((m) => {
+                const allowedKeys = parsePermessi(m.permessi);
+                const sectionsLabel =
+                  m.role === "OWNER"
+                    ? "Tutte"
+                    : allowedKeys === null
+                      ? "Tutte"
+                      : allowedKeys.length === 0
+                        ? "Nessuna"
+                        : `${allowedKeys.length}/${APP_MODULES.length}`;
+                return (
+                  <tr key={m.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 font-medium text-slate-900">{m.user.name ?? "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.user.email}</td>
+                    <td className="px-4 py-3 text-slate-600">{ROLE_LABELS[m.role] ?? m.role}</td>
+                    <td className="px-4 py-3 text-slate-600">{formatDate(m.createdAt)}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.role !== "OWNER" ? sectionsLabel : "—"}</td>
+                    <td className="px-4 py-3 text-right">
+                      {isOwner && m.role !== "OWNER" && (
+                        <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
+        {isOwner &&
+          memberships
+            .filter((m) => m.role !== "OWNER")
+            .map((m) => (
+              <details key={m.id} className="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <summary className="cursor-pointer text-sm font-medium text-slate-700">
+                  Permessi di {m.user.name ?? m.user.email}
+                </summary>
+                <div className="mt-3">
+                  <MemberPermissionsForm membershipId={m.id} allowedKeys={parsePermessi(m.permessi)} />
+                </div>
+              </details>
+            ))}
+
         {isOwner && (
           <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="mb-3 text-sm font-medium text-slate-700">Invita un collaboratore</p>
-            <InviteMemberForm />
+            <InviteMemberForm atCap={atCap} />
           </div>
         )}
       </div>

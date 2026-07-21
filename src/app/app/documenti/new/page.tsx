@@ -7,7 +7,7 @@ import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui
 export const dynamic = "force-dynamic";
 
 export default async function NewDocumentoPage() {
-  await requireActiveSubscription();
+  await requireActiveSubscription("documenti");
 
   return (
     <div className="max-w-2xl">

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { hasModuleAccess, firstAccessibleHref, type ModuleKey } from "@/lib/modules";
 
 export async function requireSession() {
   const session = await getSession();
@@ -8,7 +9,7 @@ export async function requireSession() {
   return session;
 }
 
-export async function requireStudio() {
+export async function requireStudio(moduleKey?: ModuleKey) {
   const session = await requireSession();
 
   const membership = await prisma.membership.findUnique({
@@ -22,13 +23,17 @@ export async function requireStudio() {
   });
   if (!studio) redirect("/login");
 
+  if (moduleKey && !hasModuleAccess(membership.permessi, membership.role, moduleKey)) {
+    redirect(firstAccessibleHref(membership.permessi, membership.role));
+  }
+
   return { session, studio, membership };
 }
 
 const ENTITLED_STATUSES = new Set(["ACTIVE", "TRIALING"]);
 
-export async function requireActiveSubscription() {
-  const { session, studio } = await requireStudio();
+export async function requireActiveSubscription(moduleKey?: ModuleKey) {
+  const { session, studio } = await requireStudio(moduleKey);
   const sub = studio.subscription;
 
   const trialExpired =

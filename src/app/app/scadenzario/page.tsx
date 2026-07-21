@@ -8,7 +8,7 @@ import { ScadenzarioRow } from "@/components/app/scadenzario-row";
 export const dynamic = "force-dynamic";
 
 export default async function ScadenzarioPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("scadenzario");
 
   const adempimenti = await prisma.adempimento.findMany({
     where: { studioId: studio.id },

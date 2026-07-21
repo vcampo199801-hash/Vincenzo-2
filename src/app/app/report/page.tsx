@@ -11,7 +11,7 @@ import { STATUS_HEX } from "@/components/charts/colors";
 export const dynamic = "force-dynamic";
 
 export default async function ReportPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("report");
 
   const [adempimenti, magazzino, farmaci, documenti] = await Promise.all([
     prisma.adempimento.findMany({ where: { studioId: studio.id }, orderBy: { ordine: "asc" } }),

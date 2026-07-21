@@ -9,7 +9,7 @@ import { Field, SubmitButton } from "@/components/ui/form";
 export const dynamic = "force-dynamic";
 
 export default async function EditEcmPage({ params }: { params: Promise<{ id: string }> }) {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("ecm");
   const { id } = await params;
   const item = await prisma.ecmCredito.findFirst({ where: { id, studioId: studio.id } });
   if (!item) notFound();

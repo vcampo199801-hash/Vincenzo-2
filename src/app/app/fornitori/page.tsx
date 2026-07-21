@@ -10,7 +10,7 @@ import { deleteFornitore } from "@/lib/actions/fornitori";
 export const dynamic = "force-dynamic";
 
 export default async function FornitoriPage() {
-  const { studio } = await requireActiveSubscription();
+  const { studio } = await requireActiveSubscription("fornitori");
   const fornitori = await prisma.fornitore.findMany({ where: { studioId: studio.id }, orderBy: { ruolo: "asc" } });
 
   const compliance = fornitori.filter((f) => f.tipo === "COMPLIANCE");

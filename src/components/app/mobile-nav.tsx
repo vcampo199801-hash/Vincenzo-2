@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavLinks } from "./nav-links";
+import type { ModuleKey } from "@/lib/modules";
 
 /** Hamburger + slide-in drawer — the sidebar in AppLayout is hidden below md,
  * so this is the only way to reach the module list (Scadenzario, Magazzino, …) on phones. */
-export function MobileNav() {
+export function MobileNav({ allowedKeys }: { allowedKeys: ModuleKey[] | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -48,7 +49,7 @@ export function MobileNav() {
               </button>
             </div>
             <nav className="space-y-1">
-              <NavLinks />
+              <NavLinks allowedKeys={allowedKeys} />
             </nav>
           </div>
         </div>
