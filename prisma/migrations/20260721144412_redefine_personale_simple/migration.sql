@@ -11,7 +11,6 @@
   - You are about to drop the `MovimentoAssenza` table. If the table is not empty, all the data it contains will be lost.
   - You are about to drop the `PersonaleAccessLog` table. If the table is not empty, all the data it contains will be lost.
   - You are about to drop the `SaldoAnnuale` table. If the table is not empty, all the data it contains will be lost.
-  - Made the column `dataAssunzione` on table `Dipendente` required. This step will fail if there are existing NULL values in that column.
 
 */
 -- DropForeignKey
@@ -40,8 +39,7 @@ DROP COLUMN "dataNascita",
 DROP COLUMN "livello",
 ADD COLUMN     "costoAziendaleMensile" DOUBLE PRECISION,
 ADD COLUMN     "dataScadenzaContratto" TIMESTAMP(3),
-ADD COLUMN     "stipendioLordoMensile" DOUBLE PRECISION,
-ALTER COLUMN "dataAssunzione" SET NOT NULL;
+ADD COLUMN     "stipendioLordoMensile" DOUBLE PRECISION;
 
 -- DropTable
 DROP TABLE "AdempimentoPersonale";

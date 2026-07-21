@@ -30,7 +30,7 @@ export default async function EditDipendentePage({ params }: { params: Promise<{
           <SelectField label="Tipo contratto" name="tipoContratto" defaultValue={item.tipoContratto} options={TIPO_CONTRATTO_OPTIONS} />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Data assunzione" name="dataAssunzione" type="date" required defaultValue={item.dataAssunzione.toISOString().slice(0, 10)} />
+          <Field label="Data assunzione" name="dataAssunzione" type="date" required defaultValue={item.dataAssunzione?.toISOString().slice(0, 10)} />
           <Field
             label="Data scadenza contratto"
             name="dataScadenzaContratto"

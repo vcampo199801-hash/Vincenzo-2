@@ -264,7 +264,7 @@ model Dipendente {
   cognome               String
   mansione              String    @default("ALTRO")
   tipoContratto         String    @default("INDETERMINATO")
-  dataAssunzione        DateTime
+  dataAssunzione        DateTime?
   dataScadenzaContratto DateTime?
   finePeriodoProva      DateTime?
   oreSettimanali        Float?
