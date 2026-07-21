@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { hasModuleAccess, firstAccessibleHref, type ModuleKey } from "@/lib/modules";
+import { pianoConsenteModulo } from "@/lib/plans";
 
 export async function requireSession() {
   const session = await getSession();
@@ -43,6 +44,10 @@ export async function requireActiveSubscription(moduleKey?: ModuleKey) {
 
   if (!entitled) {
     redirect("/app/abbonamento");
+  }
+
+  if (moduleKey && !pianoConsenteModulo(sub!.plan, moduleKey)) {
+    redirect(`/app/abbonamento?upgrade=${moduleKey}`);
   }
 
   return { session, studio, subscription: sub! };

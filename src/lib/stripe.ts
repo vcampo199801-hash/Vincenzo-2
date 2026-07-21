@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { PIANI, type PianoKey } from "@/lib/plans";
 
 let stripeClient: Stripe | null = null;
 
@@ -14,5 +15,10 @@ export function getStripe(): Stripe | null {
 }
 
 export function isStripeConfigured() {
-  return Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRICE_ID);
+  return Boolean(process.env.STRIPE_SECRET_KEY);
+}
+
+/** Un piano è acquistabile solo se ha anche il proprio Price ID configurato. */
+export function isPianoConfigured(piano: PianoKey) {
+  return Boolean(process.env.STRIPE_SECRET_KEY && process.env[PIANI[piano].stripePriceEnvVar]);
 }

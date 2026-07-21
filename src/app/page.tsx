@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { PIANI, PIANI_ORDINE } from "@/lib/plans";
 
 const MODULES = [
   { icon: "🗓️", title: "Scadenzario", desc: "24 adempimenti normativi standard già pronti: estintori, autoclave, messa a terra, sorveglianza sanitaria e altro. Stato calcolato in automatico." },
@@ -10,6 +11,8 @@ const MODULES = [
   { icon: "💊", title: "Farmaci emergenza", desc: "Registro del carrello emergenza con avviso 90 giorni prima della scadenza, più controlli mensili." },
   { icon: "📇", title: "Fornitori", desc: "Rubrica dei referenti compliance e dei fornitori di materiali, collegata al magazzino." },
   { icon: "📊", title: "Dashboard", desc: "La fotografia dello studio in un colpo d'occhio: % di compliance, prossime scadenze, sintesi magazzino." },
+  { icon: "👥", title: "Personale", desc: "Anagrafica dei dipendenti e archivio cedolini, senza la complessità di un gestionale HR.", piano: "Plus" },
+  { icon: "🦷", title: "Laboratori", desc: "Registro lavorazioni e dichiarazioni di conformità dei dispositivi su misura, come richiesto dal Reg. UE 2017/745.", piano: "Completo" },
 ];
 
 export default function Home() {
@@ -69,11 +72,16 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-center text-2xl font-semibold text-slate-900">Tutto quello che serve, in un unico posto</h2>
         <p className="mx-auto mt-2 max-w-2xl text-center text-slate-500">
-          Otto moduli pensati per la compliance di uno studio dentistico, pronti all&apos;uso fin dal primo accesso.
+          Moduli pensati per la compliance di uno studio dentistico, pronti all&apos;uso fin dal primo accesso.
         </p>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {MODULES.map((m) => (
-            <div key={m.title} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div key={m.title} className="relative rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              {"piano" in m && m.piano && (
+                <span className="absolute right-4 top-4 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
+                  {m.piano}
+                </span>
+              )}
               <div className="text-2xl">{m.icon}</div>
               <h3 className="mt-3 font-semibold text-slate-900">{m.title}</h3>
               <p className="mt-1 text-sm text-slate-500">{m.desc}</p>
@@ -83,31 +91,42 @@ export default function Home() {
       </section>
 
       <section id="prezzi" className="border-t border-slate-200 bg-slate-50 py-16">
-        <div className="mx-auto max-w-md px-6 text-center">
-          <h2 className="text-2xl font-semibold text-slate-900">Un piano semplice</h2>
+        <div className="mx-auto max-w-5xl px-6 text-center">
+          <h2 className="text-2xl font-semibold text-slate-900">Un piano per ogni esigenza</h2>
           <p className="mt-2 text-slate-500">Nessun vincolo, disdici quando vuoi.</p>
 
-          <div className="mt-8 rounded-2xl border border-brand-200 bg-white p-8 shadow-sm">
-            <p className="text-sm font-medium text-brand-700">Piano Studio</p>
-            <p className="mt-2 text-4xl font-bold text-slate-900">
-              €12<span className="text-base font-medium text-slate-500">/mese</span>
-            </p>
-            <p className="mt-1 text-xs text-slate-400">IVA esclusa · fatturazione mensile</p>
-            <ul className="mt-6 space-y-2 text-left text-sm text-slate-600">
-              <li>✓ Tutti gli 8 moduli di compliance</li>
-              <li>✓ Utenti e team illimitati</li>
-              <li>✓ Checklist standard precompilate</li>
-              <li>✓ Promemoria scadenze automatici</li>
-              <li>✓ Report stampabile per le ispezioni ASL</li>
-              <li>✓ 14 giorni di prova gratuita</li>
-            </ul>
-            <Link
-              href="/signup"
-              className="mt-6 block rounded-lg bg-brand-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
-            >
-              Inizia la prova gratuita
-            </Link>
+          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+            {PIANI_ORDINE.map((key) => {
+              const piano = PIANI[key];
+              return (
+                <div
+                  key={key}
+                  className={`flex flex-col rounded-2xl border p-8 text-left shadow-sm ${
+                    key === "PLUS" ? "border-brand-400 ring-2 ring-brand-100" : "border-slate-200"
+                  } bg-white`}
+                >
+                  <p className="text-sm font-medium text-brand-700">{piano.label}</p>
+                  <p className="mt-2 text-4xl font-bold text-slate-900">
+                    €{piano.prezzoEuro}
+                    <span className="text-base font-medium text-slate-500">/mese</span>
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">IVA esclusa · fatturazione mensile</p>
+                  <p className="mt-4 text-sm text-slate-600">{piano.descrizione}</p>
+                  <Link
+                    href="/signup"
+                    className="mt-6 block rounded-lg bg-brand-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+                  >
+                    Inizia la prova gratuita
+                  </Link>
+                </div>
+              );
+            })}
           </div>
+
+          <p className="mt-8 text-sm text-slate-500">
+            Ogni piano include 14 giorni di prova gratuita, utenti e team illimitati, promemoria scadenze automatici e
+            report stampabile per le ispezioni ASL.
+          </p>
 
           <p className="mt-6 text-sm text-slate-500">
             Hai acquistato su Shopify?{" "}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { normalizzaPiano } from "@/lib/plans";
 
 export async function POST(req: NextRequest) {
   const stripe = getStripe();
@@ -81,12 +82,14 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
   const currentPeriodEnd = item?.current_period_end
     ? new Date(item.current_period_end * 1000)
     : null;
+  const plan = normalizzaPiano(stripeSub.metadata?.piano);
 
   await prisma.subscription.upsert({
     where: { studioId },
     update: {
       stripeCustomerId: customerId,
       stripeSubscriptionId: stripeSub.id,
+      plan,
       status: mapStatus(stripeSub.status),
       currentPeriodEnd,
       cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
@@ -95,6 +98,7 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
       studioId,
       stripeCustomerId: customerId,
       stripeSubscriptionId: stripeSub.id,
+      plan,
       status: mapStatus(stripeSub.status),
       currentPeriodEnd,
       cancelAtPeriodEnd: stripeSub.cancel_at_period_end,

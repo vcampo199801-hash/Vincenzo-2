@@ -127,13 +127,21 @@ export function CheckboxField({
   );
 }
 
-export function SubmitButton({ children = "Salva" }: { children?: React.ReactNode }) {
+export function SubmitButton({
+  children = "Salva",
+  disabled = false,
+  className = "",
+}: {
+  children?: React.ReactNode;
+  disabled?: boolean;
+  className?: string;
+}) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
-      disabled={pending}
-      className="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700 disabled:opacity-60"
+      disabled={pending || disabled}
+      className={`inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700 disabled:opacity-60 ${className}`}
     >
       {pending ? "Salvataggio…" : children}
     </button>

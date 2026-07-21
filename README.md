@@ -53,18 +53,38 @@ Il modo più veloce per ottenere un link pubblico da aprire nel browser:
 Da quel momento l'app è raggiungibile all'indirizzo che Vercel assegna (tipo
 `https://tuo-progetto.vercel.app`), aggiornato automaticamente a ogni push sul branch collegato.
 
-## Abbonamento (Stripe)
+## Abbonamento (Stripe) — tre piani
+
+L'app ha tre piani, definiti in `src/lib/plans.ts`:
+
+| Piano    | Prezzo   | Moduli inclusi                                                         |
+| -------- | -------- | ----------------------------------------------------------------------|
+| Base     | €14/mese | scadenzario, controlli, ECM, documenti, magazzino, farmaci, fornitori, report |
+| Plus     | €18/mese | Base + Personale                                                       |
+| Completo | €23/mese | Plus + Laboratori                                                       |
 
 L'app funziona in locale senza Stripe configurato (mostra un avviso nella pagina Abbonamento).
 Per abilitare i pagamenti reali:
 
-1. Crea un prodotto ricorrente mensile (es. €12/mese) nella Stripe Dashboard (modalità test).
-2. Imposta in `.env`: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`.
+1. Crea tre prodotti ricorrenti mensili nella Stripe Dashboard (modalità test): Base (€14),
+   Plus (€18), Completo (€23).
+2. Imposta in `.env`: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID_BASE`, `STRIPE_PRICE_ID_PLUS`,
+   `STRIPE_PRICE_ID_COMPLETO`, `STRIPE_WEBHOOK_SECRET`.
 3. Inoltra gli eventi webhook in locale con `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
+
+Il piano scelto viaggia nei metadata della subscription Stripe (`metadata.piano`) ed è quello che
+il webhook (`src/app/api/stripe/webhook/route.ts`) salva su `Subscription.plan`. Un valore di piano
+sconosciuto o mancante (es. abbonamenti creati prima dei piani) viene considerato "Completo" per non
+togliere accesso a chi lo aveva già (`normalizzaPiano` in `src/lib/plans.ts`). Il cambio piano di un
+abbonamento già attivo (upgrade/downgrade) aggiorna la subscription Stripe esistente invece di
+aprirne una nuova (`changePlan` in `src/lib/actions/billing.ts`).
 
 Ogni nuovo studio riceve 14 giorni di prova gratuita (`TRIAL_DAYS` in `.env`); allo scadere della
 prova l'accesso ai moduli viene bloccato finché non si attiva l'abbonamento dalla pagina
-"Abbonamento".
+"Abbonamento". L'accesso a un modulo specifico (es. Personale, Laboratori) è inoltre condizionato
+al piano dello studio (`requireActiveSubscription` in `src/lib/auth-guards.ts`); chi tenta di
+aprire un modulo non incluso nel proprio piano viene rimandato alla pagina "Abbonamento" con
+l'indicazione del piano minimo richiesto.
 
 ## Codici di attivazione (vendita via Shopify)
 
