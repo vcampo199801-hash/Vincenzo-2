@@ -262,6 +262,14 @@ model Dipendente {
   finePeriodoProva  DateTime?
   stato             String    @default("ATTIVO")
   note              String?
+
+  // Parametri facoltativi usati per calcolare in automatico ferie/ROL maturati
+  // e per pre-compilare la stima TFR. Valori di default comuni per il settore,
+  // sempre modificabili: non sostituiscono il dato ufficiale del consulente.
+  oreSettimanaliFullTime  Float  @default(36)
+  ferieAnnueContrattuali  Float  @default(26)
+  rolAnnueContrattuali    Float  @default(32)
+  retribuzioneLordaAnnua  Float?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

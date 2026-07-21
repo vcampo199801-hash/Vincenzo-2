@@ -14,6 +14,7 @@ import {
   scadenzaPersonaleStato,
   peggiore,
   stimaTfrAnnuale,
+  calcolaMaturazioneAnno,
   optionLabel,
   MANSIONE_OPTIONS,
   TIPO_CONTRATTO_OPTIONS,
@@ -22,6 +23,7 @@ import {
   TIPOLOGIA_ADEMPIMENTO_OPTIONS,
   TFR_DISCLAIMER,
   COMPORTO_DISCLAIMER,
+  MATURAZIONE_DISCLAIMER,
 } from "@/lib/personale";
 import { formatDate, formatCurrency } from "@/lib/compliance";
 import { isAttachmentStorageConfigured } from "@/lib/attachments";
@@ -29,6 +31,7 @@ import { StatoBadge } from "@/components/ui/badge";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { DipendenteTabs } from "@/components/app/dipendente-tabs";
+import { MaturazioneFields } from "@/components/app/maturazione-fields";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -51,6 +54,15 @@ export default async function DipendentePage({ params }: { params: Promise<{ id:
 
   const annoCorrente = new Date().getFullYear();
   const saldoCorrente = dipendente.saldiAnnuali.find((s) => s.anno === annoCorrente) ?? null;
+  const maturazioneSuggerita = calcolaMaturazioneAnno({
+    anno: annoCorrente,
+    dataAssunzione: dipendente.dataAssunzione,
+    dataFineContratto: dipendente.dataFineContratto,
+    oreSettimanali: dipendente.oreSettimanali,
+    oreSettimanaliFullTime: dipendente.oreSettimanaliFullTime,
+    ferieAnnueContrattuali: dipendente.ferieAnnueContrattuali,
+    rolAnnueContrattuali: dipendente.rolAnnueContrattuali,
+  });
   const tfr = saldoCorrente
     ? stimaTfrAnnuale({
         retribuzioneUtileAnnua: saldoCorrente.retribuzioneUtileAnnua,
@@ -96,6 +108,7 @@ export default async function DipendentePage({ params }: { params: Promise<{ id:
           <AssenzeTab
             dipendente={dipendente}
             saldoCorrente={saldoCorrente}
+            maturazioneSuggerita={maturazioneSuggerita}
             tfr={tfr}
             annoCorrente={annoCorrente}
           />
@@ -119,6 +132,10 @@ type AnagraficaFields = {
   finePeriodoProva: Date | null;
   stato: string;
   note: string | null;
+  oreSettimanaliFullTime: number;
+  ferieAnnueContrattuali: number;
+  rolAnnueContrattuali: number;
+  retribuzioneLordaAnnua: number | null;
 };
 
 function AnagraficaTab({ dipendente: d }: { dipendente: AnagraficaFields }) {
@@ -143,6 +160,15 @@ function AnagraficaTab({ dipendente: d }: { dipendente: AnagraficaFields }) {
           <p className="mt-1 text-sm text-slate-700">{d.note}</p>
         </div>
       )}
+      <div className="mt-6 border-t border-slate-100 pt-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Parametri per il calcolo automatico</p>
+        <dl className="mt-2 grid grid-cols-2 gap-6 text-sm sm:grid-cols-4">
+          <Field2 label="Ore tempo pieno" value={d.oreSettimanaliFullTime} />
+          <Field2 label="Ferie annue (gg)" value={d.ferieAnnueContrattuali} />
+          <Field2 label="ROL annuo (h)" value={d.rolAnnueContrattuali} />
+          <Field2 label="Retribuzione di riferimento" value={d.retribuzioneLordaAnnua ? formatCurrency(d.retribuzioneLordaAnnua) : "—"} />
+        </dl>
+      </div>
     </div>
   );
 }
@@ -159,10 +185,15 @@ function Field2({ label, value }: { label: string; value: string | number | null
 function AssenzeTab({
   dipendente,
   saldoCorrente,
+  maturazioneSuggerita,
   tfr,
   annoCorrente,
 }: {
-  dipendente: { id: string; movimentiAssenza: Array<Record<string, unknown> & { id: string; tipo: string; dataInizio: Date; dataFine: Date | null; giorni: number | null; ore: number | null; note: string | null }> };
+  dipendente: {
+    id: string;
+    retribuzioneLordaAnnua: number | null;
+    movimentiAssenza: Array<Record<string, unknown> & { id: string; tipo: string; dataInizio: Date; dataFine: Date | null; giorni: number | null; ore: number | null; note: string | null }>;
+  };
   saldoCorrente: (Record<string, unknown> & {
     ferieMaturate: number;
     ferieGodute: number;
@@ -176,6 +207,7 @@ function AssenzeTab({
     retribuzioneUtileAnnua: number | null;
     indiceRivalutazioneIstat: number | null;
   }) | null;
+  maturazioneSuggerita: ReturnType<typeof calcolaMaturazioneAnno>;
   tfr: ReturnType<typeof stimaTfrAnnuale>;
   annoCorrente: number;
 }) {
@@ -190,19 +222,18 @@ function AssenzeTab({
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-base font-semibold text-slate-900">Saldo annuale {annoCorrente}</h2>
         <p className="mb-4 mt-1 text-sm text-slate-500">
-          Aggiorna questi numeri quando li ricevi dal consulente del lavoro (es. dal cedolino paga o dal prospetto
-          ferie/ROL). Non serve compilare tutto: lascia a 0 quello che non conosci e correggilo più avanti.
+          Ferie e ROL maturati sono già pre-compilati con una stima calcolata da tipo di contratto, ore settimanali
+          e periodo lavorato: correggili se il consulente ti comunica un numero diverso. Aggiorna anche gli altri
+          campi quando ricevi i dati dal consulente del lavoro. {MATURAZIONE_DISCLAIMER}
         </p>
         <form action={upsertSaldo} className="space-y-4">
           <input type="hidden" name="anno" value={annoCorrente} />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Field
-              label="Ferie maturate"
-              name="ferieMaturate"
-              type="number"
-              step="0.5"
-              defaultValue={saldoCorrente?.ferieMaturate ?? 0}
-              hint="Giorni di ferie accumulati quest'anno."
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+            <MaturazioneFields
+              ferieIniziale={saldoCorrente?.ferieMaturate ?? maturazioneSuggerita?.ferieMaturate ?? 0}
+              rolIniziale={saldoCorrente?.rolMaturati ?? maturazioneSuggerita?.rolMaturati ?? 0}
+              ferieSuggerito={maturazioneSuggerita?.ferieMaturate ?? null}
+              rolSuggerito={maturazioneSuggerita?.rolMaturati ?? null}
             />
             <Field
               label="Ferie godute"
@@ -211,14 +242,6 @@ function AssenzeTab({
               step="0.5"
               defaultValue={saldoCorrente?.ferieGodute ?? 0}
               hint="Giorni di ferie già presi."
-            />
-            <Field
-              label="ROL maturati"
-              name="rolMaturati"
-              type="number"
-              step="0.5"
-              defaultValue={saldoCorrente?.rolMaturati ?? 0}
-              hint="Permessi/riduzione orario di lavoro accumulati."
             />
             <Field
               label="ROL goduti"
@@ -272,8 +295,8 @@ function AssenzeTab({
                 name="retribuzioneUtileAnnua"
                 type="number"
                 step="0.01"
-                defaultValue={saldoCorrente?.retribuzioneUtileAnnua ?? undefined}
-                hint="La retribuzione lorda annua su cui si calcola il TFR (dal cedolino/CU)."
+                defaultValue={saldoCorrente?.retribuzioneUtileAnnua ?? dipendente.retribuzioneLordaAnnua ?? undefined}
+                hint="La retribuzione lorda annua su cui si calcola il TFR (dal cedolino/CU). Pre-compilata dai dati del contratto, se inseriti in anagrafica."
               />
               <Field
                 label="TFR accantonato inizio anno (€)"
