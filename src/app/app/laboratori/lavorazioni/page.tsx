@@ -1,6 +1,6 @@
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
+import { CATEGORIA_DICHIARAZIONE_CONFORMITA, isLavorazioneInCorso } from "@/lib/laboratori";
 import { PageHeader } from "@/components/ui/page-header";
 import { LavorazioniTable, type LavorazioneRow } from "@/components/app/lavorazioni-table";
 
@@ -34,6 +34,9 @@ export default async function LavorazioniPage() {
     hasDichiarazione: l.allegati.some((a) => a.categoria === CATEGORIA_DICHIARAZIONE_CONFORMITA),
   }));
 
+  const inCorso = rows.filter((r) => isLavorazioneInCorso(r.stato)).length;
+  const consegnate = rows.length - inCorso;
+
   return (
     <div>
       <PageHeader
@@ -42,6 +45,14 @@ export default async function LavorazioniPage() {
         action="Nuova lavorazione"
         actionHref="/app/laboratori/lavorazioni/new"
       />
+      <div className="mb-4 flex flex-wrap gap-3 text-sm">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 font-medium text-brand-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-brand-500" /> {inCorso} in corso presso il laboratorio
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {consegnate} consegnate
+        </span>
+      </div>
       <LavorazioniTable lavorazioni={rows} laboratori={laboratori.map((l) => ({ id: l.id, ragioneSociale: l.ragioneSociale }))} />
     </div>
   );

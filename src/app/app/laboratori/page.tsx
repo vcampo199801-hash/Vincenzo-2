@@ -53,18 +53,33 @@ export default async function LaboratoriPage() {
             >
               <div className="mb-2 flex items-start justify-between gap-2">
                 <h2 className="font-semibold text-slate-900">{lab.ragioneSociale}</h2>
-                {lab.stato === "NON_ATTIVO" && (
-                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
-                    {optionLabel(STATO_LABORATORIO_OPTIONS, lab.stato)}
-                  </span>
-                )}
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                    lab.stato === "ATTIVO" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  {optionLabel(STATO_LABORATORIO_OPTIONS, lab.stato)}
+                </span>
               </div>
               {tipologie.length > 0 && (
                 <p className="mb-3 text-xs text-slate-500">
                   {tipologie.map((t) => optionLabel(TIPOLOGIA_LAVORAZIONE_OPTIONS, t)).join(" · ")}
                 </p>
               )}
-              <dl className="grid grid-cols-2 gap-3 text-sm">
+              <div className="mb-3">
+                {indicatori.lavoriInCorso > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-2.5 py-1 text-xs font-medium text-brand-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
+                    {indicatori.lavoriInCorso} lavor{indicatori.lavoriInCorso === 1 ? "azione" : "azioni"} in corso
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                    Nessun lavoro in corso
+                  </span>
+                )}
+              </div>
+              <dl className="grid grid-cols-2 gap-3 border-t border-slate-100 pt-3 text-sm">
                 <div>
                   <dt className="text-xs text-slate-500">Lavori nell&apos;anno</dt>
                   <dd className="font-medium text-slate-900">{indicatori.lavoriAnno}</dd>

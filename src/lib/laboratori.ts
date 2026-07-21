@@ -24,6 +24,20 @@ export const STATO_LAVORAZIONE_OPTIONS = [
   { value: "CONSEGNATO_PAZIENTE", label: "Consegnato al paziente" },
 ];
 
+/** Stile del badge di stato lavorazione: avanzamento neutro (grigio → teal),
+ * verde solo quando la lavorazione è arrivata al paziente. */
+export const STATO_LAVORAZIONE_STYLE: Record<string, string> = {
+  INVIATO: "bg-slate-100 text-slate-600",
+  IN_LAVORAZIONE: "bg-brand-100 text-brand-700",
+  CONSEGNATO_STUDIO: "bg-sky-100 text-sky-700",
+  CONSEGNATO_PAZIENTE: "bg-emerald-100 text-emerald-700",
+};
+
+/** Lavorazioni ancora "in corso" presso il laboratorio, cioè non ancora arrivate allo studio. */
+export function isLavorazioneInCorso(stato: string): boolean {
+  return stato === "INVIATO" || stato === "IN_LAVORAZIONE";
+}
+
 export const CATEGORIA_DOCUMENTO_LABORATORIO_OPTIONS = [
   { value: "VISURA", label: "Visura camerale" },
   { value: "AUTORIZZAZIONE_SANITARIA", label: "Autorizzazione sanitaria" },
@@ -111,6 +125,7 @@ export function calcolaIndicatoriLaboratorio(lavorazioni: LavorazioneIndicatoreI
   return {
     totaleLavorazioni: lavorazioni.length,
     lavoriAnno: delAnno.length,
+    lavoriInCorso: lavorazioni.filter((l) => isLavorazioneInCorso(l.stato)).length,
     spesaAnno: delAnno.reduce((s, l) => s + (l.costo ?? 0), 0),
     percentualeConsegnePuntuali: consegnate.length > 0 ? Math.round((puntuali.length / consegnate.length) * 100) : null,
     percentualeDichiarazioni: daDichiarare.length > 0 ? Math.round((conDichiarazione.length / daDichiarare.length) * 100) : null,

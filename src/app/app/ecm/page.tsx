@@ -5,13 +5,25 @@ import { ecmPercent } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { deleteEcm } from "@/lib/actions/ecm";
+import { StatusDonut } from "@/components/charts/donut";
+import { BarList } from "@/components/charts/bar-list";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
+const ECM_BUCKET_HEX = { completo: "#10b981", inCorso: "#5a9da5", daRecuperare: "#f59e0b" };
+
 export default async function EcmPage() {
   const { studio } = await requireActiveSubscription("ecm");
   const crediti = await prisma.ecmCredito.findMany({ where: { studioId: studio.id }, orderBy: { professionista: "asc" } });
+
+  const conPercentuale = crediti.map((e) => ({ ...e, ...ecmPercent(e.crediti2026, e.crediti2027, e.crediti2028, e.target) }));
+  const completo = conPercentuale.filter((e) => e.percentuale >= 1).length;
+  const inCorso = conPercentuale.filter((e) => e.percentuale >= 0.6 && e.percentuale < 1).length;
+  const daRecuperare = conPercentuale.filter((e) => e.percentuale < 0.6).length;
+  const rankedPerTotale = [...conPercentuale]
+    .sort((a, b) => b.totale - a.totale)
+    .map((e) => ({ label: e.professionista, value: e.totale }));
 
   return (
     <div>
@@ -21,6 +33,29 @@ export default async function EcmPage() {
         action="Aggiungi professionista"
         actionHref="/app/ecm/new"
       />
+
+      {crediti.length > 0 && (
+        <div className="mb-6 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-3 text-sm font-semibold text-slate-900">Team per stato di completamento</h2>
+            <StatusDonut
+              size={120}
+              strokeWidth={16}
+              centerValue={String(crediti.length)}
+              centerLabel="professionisti"
+              segments={[
+                { label: "Completo (100%+)", value: completo, color: ECM_BUCKET_HEX.completo },
+                { label: "In corso (60-99%)", value: inCorso, color: ECM_BUCKET_HEX.inCorso },
+                { label: "Da recuperare (<60%)", value: daRecuperare, color: ECM_BUCKET_HEX.daRecuperare },
+              ]}
+            />
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-3 text-sm font-semibold text-slate-900">Crediti totali per professionista</h2>
+            <BarList items={rankedPerTotale} formatValue={(v) => `${v} cr.`} />
+          </div>
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -38,8 +73,8 @@ export default async function EcmPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {crediti.map((e) => {
-              const { totale, mancanti, percentuale } = ecmPercent(e.crediti2026, e.crediti2027, e.crediti2028, e.target);
+            {conPercentuale.map((e) => {
+              const { totale, mancanti, percentuale } = e;
               return (
                 <tr key={e.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">{e.professionista}</td>

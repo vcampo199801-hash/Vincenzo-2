@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { updateCampoLavorazione } from "@/lib/actions/laboratori";
-import { consegnaStato, optionLabel, STATO_LAVORAZIONE_OPTIONS, TIPOLOGIA_LAVORAZIONE_OPTIONS } from "@/lib/laboratori";
+import { consegnaStato, optionLabel, STATO_LAVORAZIONE_OPTIONS, STATO_LAVORAZIONE_STYLE, TIPOLOGIA_LAVORAZIONE_OPTIONS } from "@/lib/laboratori";
 import { formatDate } from "@/lib/compliance";
 
 export type LavorazioneRow = {
@@ -145,6 +145,15 @@ export function LavorazioniTable({
         />
       </div>
 
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-amber-100" /> Consegna scaduta o entro 7 giorni
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-red-100" /> Consegnata senza dichiarazione di conformità
+        </span>
+      </div>
+
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -202,7 +211,7 @@ export function LavorazioniTable({
                     <select
                       defaultValue={r.stato}
                       onChange={(e) => aggiorna(r.id, "stato", e.target.value)}
-                      className="rounded border border-slate-200 bg-white px-2 py-1 text-sm"
+                      className={`rounded border-0 px-2 py-1 text-sm font-medium ${STATO_LAVORAZIONE_STYLE[r.stato] ?? "bg-slate-100 text-slate-600"}`}
                     >
                       {STATO_LAVORAZIONE_OPTIONS.map((s) => (
                         <option key={s.value} value={s.value}>
