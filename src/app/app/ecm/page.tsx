@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { deleteEcm } from "@/lib/actions/ecm";
 import { StatusDonut } from "@/components/charts/donut";
-import { BarList } from "@/components/charts/bar-list";
+import { TargetProgressBars } from "@/components/charts/target-progress-bars";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -21,9 +21,12 @@ export default async function EcmPage() {
   const completo = conPercentuale.filter((e) => e.percentuale >= 1).length;
   const inCorso = conPercentuale.filter((e) => e.percentuale >= 0.6 && e.percentuale < 1).length;
   const daRecuperare = conPercentuale.filter((e) => e.percentuale < 0.6).length;
-  const rankedPerTotale = [...conPercentuale]
-    .sort((a, b) => b.totale - a.totale)
-    .map((e) => ({ label: e.professionista, value: e.totale }));
+  const targetVsRaggiunto = conPercentuale.map((e) => ({
+    label: e.professionista,
+    target: e.target,
+    raggiunto: e.totale,
+    tono: e.percentuale >= 1 ? ("completo" as const) : e.percentuale >= 0.6 ? ("inCorso" as const) : ("daRecuperare" as const),
+  }));
 
   return (
     <div>
@@ -35,8 +38,8 @@ export default async function EcmPage() {
       />
 
       {crediti.length > 0 && (
-        <div className="mb-6 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-6 grid gap-4 lg:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
             <h2 className="mb-3 text-sm font-semibold text-slate-900">Team per stato di completamento</h2>
             <StatusDonut
               size={120}
@@ -50,9 +53,9 @@ export default async function EcmPage() {
               ]}
             />
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-3 text-sm font-semibold text-slate-900">Crediti totali per professionista</h2>
-            <BarList items={rankedPerTotale} formatValue={(v) => `${v} cr.`} />
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
+            <h2 className="mb-3 text-sm font-semibold text-slate-900">Target vs crediti raggiunti per professionista</h2>
+            <TargetProgressBars items={targetVsRaggiunto} />
           </div>
         </div>
       )}
