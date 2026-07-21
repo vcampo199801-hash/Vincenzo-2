@@ -35,6 +35,9 @@ model Studio {
   notificheSms    Boolean @default(false)
   telefonoSms     String?
   createdAt DateTime @default(now())
+  // Fase 2 (modulo Laboratori): testo modificabile che finirà nel PDF "Consegna
+  // dispositivo al paziente" — il PDF non è ancora generato, il campo è già pronto.
+  templateIstruzioniManutenzione String?
 
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -52,6 +55,9 @@ model Studio {
   memberships          Membership[]
   dipendenti           Dipendente[]
   cedolini             Cedolino[]
+  laboratori           Laboratorio[]
+  lavorazioni          Lavorazione[]
+  allegatiLaboratorio  AllegatoLaboratorio[]
 }
 
 // Team members with access to a studio (the practice owner plus invited
@@ -289,6 +295,92 @@ model Cedolino {
   @@unique([dipendenteId, mese, anno])
   @@index([studioId])
   @@index([dipendenteId])
+}
+
+// ---------- Laboratori ----------
+// Modulo a uso esclusivo dello studio: il laboratorio odontotecnico non è mai un
+// utente dell'app, non ha login né accesso. Tracciabilità delle dichiarazioni di
+// conformità dei dispositivi su misura (Reg. UE 2017/745, Allegato XIII).
+
+// TipologiaLavorazione (condivisa da Laboratorio.tipologieLavorazione e
+// Lavorazione.tipoLavorazione): PROTESI_FISSA | PROTESI_MOBILE | ORTODONZIA |
+// IMPLANTOLOGIA | CAD_CAM | ALTRO
+model Laboratorio {
+  id                              String    @id @default(cuid())
+  studioId                        String
+  studio                          Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  ragioneSociale                  String
+  partitaIva                      String?
+  indirizzo                       String?
+  referente                       String?
+  telefono                        String?
+  email                           String?
+  numeroRegistrazioneMinisteriale String?
+  dataUltimaVerificaRegistrazione DateTime?
+  // JSON array di TipologiaLavorazione — vedi src/lib/laboratori.ts.
+  tipologieLavorazione            String?
+  stato                           String    @default("ATTIVO") // ATTIVO | NON_ATTIVO
+  note                            String?
+  createdAt                       DateTime  @default(now())
+  updatedAt                       DateTime  @updatedAt
+
+  lavorazioni Lavorazione[]
+  allegati    AllegatoLaboratorio[]
+
+  @@index([studioId])
+}
+
+model Lavorazione {
+  id                    String      @id @default(cuid())
+  studioId              String
+  studio                Studio      @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  laboratorioId         String
+  laboratorio           Laboratorio @relation(fields: [laboratorioId], references: [id], onDelete: Cascade)
+  riferimentoPaziente   String
+  tipoLavorazione       String      @default("ALTRO")
+  elementiDentali       String?
+  dataInvio             DateTime
+  dataConsegnaPrevista  DateTime?
+  dataConsegnaEffettiva DateTime?
+  // StatoLavorazione: INVIATO | IN_LAVORAZIONE | CONSEGNATO_STUDIO | CONSEGNATO_PAZIENTE
+  stato                     String   @default("INVIATO")
+  costo                     Float?
+  dataConsegnaCopiaPaziente DateTime?
+  // Fase 2 (PDF "Consegna dispositivo al paziente"): override facoltativo del
+  // template istruzioni manutenzione di Studio, per questa singola lavorazione.
+  istruzioniManutenzione String?
+  note                   String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  allegati AllegatoLaboratorio[]
+
+  @@index([studioId])
+  @@index([laboratorioId])
+}
+
+// Modello unico per tutti gli allegati del modulo (documenti laboratorio +
+// dichiarazione di conformità + DDT/prescrizione/foto della lavorazione),
+// distinti da categoria — mai serviti da URL pubblico diretto, solo tramite
+// /api/laboratori/file/[id] (vedi src/lib/actions/laboratori.ts).
+// categoria: VISURA | AUTORIZZAZIONE_SANITARIA | CERTIFICAZIONE (su Laboratorio) |
+//   DICHIARAZIONE_CONFORMITA | DDT | PRESCRIZIONE | FOTO | ALTRO (su Lavorazione)
+model AllegatoLaboratorio {
+  id              String       @id @default(cuid())
+  studioId        String
+  studio          Studio       @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  laboratorioId   String?
+  laboratorio     Laboratorio? @relation(fields: [laboratorioId], references: [id], onDelete: Cascade)
+  lavorazioneId   String?
+  lavorazione     Lavorazione? @relation(fields: [lavorazioneId], references: [id], onDelete: Cascade)
+  categoria       String       @default("ALTRO")
+  nomeFile        String
+  fileUrl         String
+  dataCaricamento DateTime     @default(now())
+
+  @@index([studioId])
+  @@index([laboratorioId])
+  @@index([lavorazioneId])
 }
 
 // ---------- Fornitori ----------

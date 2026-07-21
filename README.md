@@ -153,6 +153,32 @@ del consulente del lavoro.
 - Come gli altri moduli, il titolare può nascondere "Personale" ai singoli collaboratori dal pannello permessi
   in Impostazioni.
 
+## Laboratori
+
+Modulo per i rapporti con i laboratori odontotecnici e la tracciabilità documentale dei dispositivi su misura
+(Reg. UE 2017/745, Allegato XIII). **Il laboratorio non è un utente dell'app**: non ha login né accesso, tutti
+i dati e i documenti li carica lo studio. Il laboratorio è il fabbricante e rilascia la dichiarazione di
+conformità; lo studio, come prescrittore, deve conservarla e consegnarne copia al paziente — l'obiettivo del
+modulo è che non ne manchi nessuna.
+
+- **Elenco laboratori** con indicatori calcolati automaticamente (lavori e spesa dell'anno, % consegne
+  puntuali, % lavorazioni con dichiarazione allegata) e **Registro lavorazioni**: tabella filtrabile,
+  ordinabile, con ricerca testuale ed editing inline a salvataggio automatico sulle celle operative (stato,
+  date, costo). Righe rosse = consegnate senza dichiarazione di conformità, gialle = consegna scaduta o entro
+  7 giorni.
+- **Box di alert** in cima al modulo (assente se non c'è nulla da segnalare): consegne scadute/imminenti,
+  dichiarazioni di conformità mancanti, laboratori con registrazione ministeriale da verificare da oltre 12
+  mesi — ogni voce collegata alla riga o alla scheda corrispondente.
+- **Card in dashboard**: lavorazioni in corso, consegne nei prossimi 7 giorni, badge rosso con le dichiarazioni
+  mancanti, spesa laboratori del mese.
+- **Documenti**: mai serviti da URL pubblico diretto — solo tramite una route autenticata
+  (`/api/laboratori/file/[id]`) che verifica sessione e appartenenza allo studio prima di scaricare. Richiede
+  `BLOB_READ_WRITE_TOKEN` come per Personale; senza, l'upload resta disabilitato.
+- **Eliminazione**: conferma dedicata che ricorda l'obbligo di conservazione decennale, sia per la lavorazione
+  che per la dichiarazione di conformità.
+- Predisposto per la Fase 2 (non ancora costruita): grafici interattivi e generazione PDF "Consegna al
+  paziente" — vedi `Studio.templateIstruzioniManutenzione` nello schema.
+
 ## Struttura
 
 - `src/app/(marketing)` — landing page e pricing pubblici (`/`, `/login`, `/signup`)

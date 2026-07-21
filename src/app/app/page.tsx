@@ -12,6 +12,7 @@ import {
   MESI_LABELS,
 } from "@/lib/compliance";
 import { contrattoStato, optionLabel, MANSIONE_OPTIONS } from "@/lib/personale";
+import { consegnaStato, CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
 import { StatusDonut } from "@/components/charts/donut";
@@ -26,7 +27,7 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const { studio } = await requireActiveSubscription("dashboard");
 
-  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti] = await Promise.all([
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab] = await Promise.all([
     prisma.adempimento.findMany({ where: { studioId: studio.id } }),
     prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
     prisma.farmaco.findMany({ where: { studioId: studio.id } }),
@@ -34,6 +35,7 @@ export default async function DashboardPage() {
     prisma.ecmCredito.findMany({ where: { studioId: studio.id } }),
     prisma.controlloLog.findMany({ where: { studioId: studio.id } }),
     prisma.dipendente.findMany({ where: { studioId: studio.id } }),
+    prisma.lavorazione.findMany({ where: { studioId: studio.id }, include: { allegati: true } }),
   ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -122,6 +124,23 @@ export default async function DashboardPage() {
       color: BRAND_SEQUENTIAL[i % BRAND_SEQUENTIAL.length],
     }))
     .sort((a, b) => b.value - a.value);
+
+  // Laboratori: lavorazioni in corso, consegne imminenti, dichiarazioni di
+  // conformità mancanti e spesa del mese corrente (per data di invio).
+  const lavorazioniInCorso = lavorazioniLab.filter((l) => l.stato === "INVIATO" || l.stato === "IN_LAVORAZIONE").length;
+  const consegneImminentiCount = lavorazioniLab.filter((l) => {
+    const { stato } = consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva);
+    return stato === "IN_SCADENZA" || stato === "SCADUTO";
+  }).length;
+  const dichiarazioniMancantiCount = lavorazioniLab.filter(
+    (l) =>
+      (l.stato === "CONSEGNATO_STUDIO" || l.stato === "CONSEGNATO_PAZIENTE") &&
+      !l.allegati.some((a) => a.categoria === CATEGORIA_DICHIARAZIONE_CONFORMITA)
+  ).length;
+  const oggiLab = new Date();
+  const spesaMeseCorrente = lavorazioniLab
+    .filter((l) => l.dataInvio.getFullYear() === oggiLab.getFullYear() && l.dataInvio.getMonth() === oggiLab.getMonth())
+    .reduce((s, l) => s + (l.costo ?? 0), 0);
 
   return (
     <div className="space-y-8">
@@ -277,6 +296,26 @@ export default async function DashboardPage() {
             </p>
           )}
         </section>
+
+        <Link
+          href="/app/laboratori"
+          className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <h2 className="text-base font-semibold text-slate-900">Laboratori</h2>
+            {dichiarazioniMancantiCount > 0 && (
+              <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                {dichiarazioniMancantiCount}
+              </span>
+            )}
+          </div>
+          <dl className="grid grid-cols-2 gap-4 text-sm">
+            <DashRow label="Lavorazioni in corso" value={lavorazioniInCorso} />
+            <DashRow label="Consegne previste nei prossimi 7gg" value={consegneImminentiCount} bad={consegneImminentiCount > 0} />
+            <DashRow label="Dichiarazioni mancanti" value={dichiarazioniMancantiCount} bad={dichiarazioniMancantiCount > 0} />
+            <DashRow label="Spesa laboratori questo mese" value={formatCurrency(spesaMeseCorrente)} />
+          </dl>
+        </Link>
 
         {farmaci.length > 0 && (
           <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
