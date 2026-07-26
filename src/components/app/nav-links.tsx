@@ -17,7 +17,7 @@ const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey |
   { href: "/app/kpi", label: "KPI Studio", icon: "📈", moduleKey: "kpi" },
   { href: "/app/personale", label: "Personale", icon: "🧑‍⚕️", moduleKey: "personale" },
   { href: "/app/laboratori", label: "Laboratori", icon: "🧪", moduleKey: "laboratori" },
-  { href: "/app/modulistica", label: "Modulistica", icon: "📝", moduleKey: "modulistica" },
+  { href: "/app/comunicazione", label: "Comunicazione Pazienti", icon: "🎬", moduleKey: "comunicazione" },
   { href: "/app/abbonamento", label: "Abbonamento", icon: "💳", moduleKey: null },
   {
     href: "https://www.sorrisiinregola.com",

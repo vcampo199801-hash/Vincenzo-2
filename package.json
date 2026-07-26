@@ -15,9 +15,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@cantoo/pdf-lib": "^2.7.4",
     "@prisma/client": "^5.22.0",
-    "@react-pdf/renderer": "^4.5.1",
     "@vercel/blob": "^2.6.1",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.3",

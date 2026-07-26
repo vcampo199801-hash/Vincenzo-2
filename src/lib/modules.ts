@@ -16,7 +16,7 @@ export const APP_MODULES = [
   { key: "kpi", label: "KPI Studio", href: "/app/kpi" },
   { key: "personale", label: "Personale", href: "/app/personale" },
   { key: "laboratori", label: "Laboratori", href: "/app/laboratori" },
-  { key: "modulistica", label: "Modulistica", href: "/app/modulistica" },
+  { key: "comunicazione", label: "Comunicazione Pazienti", href: "/app/comunicazione" },
 ] as const;
 
 export type ModuleKey = (typeof APP_MODULES)[number]["key"];
