@@ -199,6 +199,32 @@ modulo è che non ne manchi nessuna.
 - Predisposto per la Fase 2 (non ancora costruita): grafici interattivi e generazione PDF "Consegna al
   paziente" — vedi `Studio.templateIstruzioniManutenzione` nello schema.
 
+## Modulo KPI Studio
+
+Inserimento giornaliero di pochi numeri chiave (prime visite, appuntamenti, fatturato, preventivi presentati
+e accettati), con riepilogo mensile (fatturato per giorno, grafico a colonne) e annuale (fatturato per mese),
+tasso di conversione dei preventivi, e una card dedicata in dashboard con l'andamento degli ultimi 7 giorni.
+
+## Modulo Modulistica
+
+Anagrafica pazienti minima (solo dati identificativi, non una cartella clinica) e 18 template di consenso
+informato/documentazione precaricati (`src/lib/modulistica-templates.ts`): Privacy/GDPR, Scheda anamnestica,
+Consenso generale, e i consensi specifici per trattamento (chirurgia orale, implantologia, endodonzia,
+protesi, ortodonzia, parodontologia, anestesia locale, pedodonzia, sbiancamento, sedazione, liberatoria
+foto/video, gnatologia/bite, faccette, MRONJ, dissenso informato).
+
+- **Compilazione**: pagina dinamica generata dal template (testo informativo, checkbox e campi specifici,
+  scelta di consenso, blocco minorenne se previsto).
+- **Firma**: riquadro touch/mouse su schermo (firma elettronica semplice, non firma digitale qualificata —
+  per un consenso legalmente qualificato servirebbe un provider certificato esterno, fuori scope). Si può
+  anche lasciare vuoto e stampare il PDF per la firma a penna.
+- **PDF**: generato con `@react-pdf/renderer`, protetto opzionalmente da password con `@cantoo/pdf-lib`
+  (convenzione: data di nascita del paziente GGMMAAAA + un numero scelto dall'operatore al momento
+  dell'invio). File (PDF e immagini di firma) mai serviti da URL pubblico diretto, solo tramite
+  `/api/modulistica/file/[id]` autenticato. Richiede `BLOB_READ_WRITE_TOKEN` come Personale/Laboratori.
+- **Invio**: bottone "Invia via email" che allega il PDF firmato al paziente (richiede `RESEND_API_KEY` /
+  `EMAIL_FROM` come per il digest scadenze) e segna il modulo come inviato.
+
 ## Struttura
 
 - `src/app/(marketing)` — landing page e pricing pubblici (`/`, `/login`, `/signup`)
