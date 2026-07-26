@@ -9,6 +9,7 @@ import { requireStudio } from "@/lib/auth-guards";
 import { getTemplate } from "@/lib/modulistica-templates";
 import { idCampiTemplate, isModulisticaStorageConfigured, costruisciPasswordPdf } from "@/lib/modulistica";
 import { generateModuloPdfBuffer } from "@/lib/modulistica-pdf";
+import { isEmailConfigured, sendEmail } from "@/lib/email";
 
 export type ModulisticaFormState = { error?: string } | undefined;
 
@@ -192,4 +193,45 @@ export async function deleteModuloCompilato(id: string, pazienteId: string) {
     await prisma.moduloCompilato.deleteMany({ where: { id, studioId: studio.id } });
   }
   revalidatePath(`/app/modulistica/pazienti/${pazienteId}`);
+}
+
+export async function inviaModuloViaEmail(id: string, pazienteId: string) {
+  const { studio } = await requireStudio();
+
+  if (!isEmailConfigured()) {
+    redirect(`/app/modulistica/pazienti/${pazienteId}?errore=email-non-configurata`);
+  }
+
+  const record = await prisma.moduloCompilato.findFirst({
+    where: { id, studioId: studio.id },
+    include: { paziente: true },
+  });
+  if (!record || !record.pdfFileUrl) {
+    redirect(`/app/modulistica/pazienti/${pazienteId}?errore=modulo-non-trovato`);
+  }
+  if (!record.paziente.email) {
+    redirect(`/app/modulistica/pazienti/${pazienteId}?errore=email-paziente-mancante`);
+  }
+
+  const template = getTemplate(record.templateKey);
+  const res = await fetch(record.pdfFileUrl);
+  if (!res.ok) {
+    redirect(`/app/modulistica/pazienti/${pazienteId}?errore=download-fallito`);
+  }
+  const pdfBuffer = Buffer.from(await res.arrayBuffer());
+
+  try {
+    await sendEmail({
+      to: record.paziente.email,
+      subject: `${studio.name} — ${template?.titolo ?? "Documento"}`,
+      html: `<p>Gentile ${record.paziente.nome},</p><p>in allegato trova il documento "${template?.titolo ?? record.templateKey}" firmato presso ${studio.name}.</p><p>Cordiali saluti,<br/>${studio.name}</p>`,
+      attachments: [{ filename: `${template?.key ?? "documento"}.pdf`, content: pdfBuffer }],
+    });
+  } catch {
+    redirect(`/app/modulistica/pazienti/${pazienteId}?errore=invio-fallito`);
+  }
+
+  await prisma.moduloCompilato.update({ where: { id }, data: { stato: "INVIATO" } });
+  revalidatePath(`/app/modulistica/pazienti/${pazienteId}`);
+  redirect(`/app/modulistica/pazienti/${pazienteId}?inviato=1`);
 }

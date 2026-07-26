@@ -17,12 +17,22 @@ export function isEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 }
 
-export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  attachments,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  attachments?: { filename: string; content: Buffer }[];
+}) {
   const resend = getResend();
   const from = process.env.EMAIL_FROM;
   if (!resend || !from) {
     throw new Error("Email non configurata: imposta RESEND_API_KEY e EMAIL_FROM.");
   }
-  const { error } = await resend.emails.send({ from, to, subject, html });
+  const { error } = await resend.emails.send({ from, to, subject, html, attachments });
   if (error) throw new Error(error.message);
 }

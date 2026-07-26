@@ -5,16 +5,31 @@ import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/compliance";
 import { MODULO_TEMPLATES } from "@/lib/modulistica-templates";
 import { STATO_MODULO_OPTIONS, optionLabel } from "@/lib/modulistica";
-import { deletePaziente, deleteModuloCompilato } from "@/lib/actions/modulistica";
+import { deletePaziente, deleteModuloCompilato, inviaModuloViaEmail } from "@/lib/actions/modulistica";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-export default async function SchedaPazientePage({ params }: { params: Promise<{ id: string }> }) {
+const ERRORE_LABEL: Record<string, string> = {
+  "email-non-configurata": "L'invio email non è ancora configurato su questa istanza.",
+  "modulo-non-trovato": "Modulo non trovato.",
+  "email-paziente-mancante": "Questo paziente non ha un indirizzo email registrato.",
+  "download-fallito": "Impossibile recuperare il PDF dallo storage.",
+  "invio-fallito": "Invio dell'email non riuscito. Riprova.",
+};
+
+export default async function SchedaPazientePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ errore?: string; inviato?: string }>;
+}) {
   const { studio } = await requireActiveSubscription("modulistica");
   const { id } = await params;
+  const query = await searchParams;
   const paziente = await prisma.paziente.findFirst({
     where: { id, studioId: studio.id },
     include: { moduliCompilati: { orderBy: { createdAt: "desc" } } },
@@ -27,6 +42,17 @@ export default async function SchedaPazientePage({ params }: { params: Promise<{
         title={`${paziente.cognome} ${paziente.nome}`}
         description="Dati identificativi e moduli compilati per questo paziente."
       />
+
+      {query.inviato && (
+        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          Documento inviato via email al paziente.
+        </p>
+      )}
+      {query.errore && (
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {ERRORE_LABEL[query.errore] ?? "Si è verificato un errore."}
+        </p>
+      )}
 
       <div className="mb-6 grid gap-6 lg:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
@@ -123,6 +149,13 @@ export default async function SchedaPazientePage({ params }: { params: Promise<{
                         >
                           Apri PDF
                         </a>
+                      )}
+                      {m.pdfFileUrl && paziente.email && (
+                        <form action={inviaModuloViaEmail.bind(null, m.id, paziente.id)}>
+                          <button type="submit" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                            Invia via email
+                          </button>
+                        </form>
                       )}
                       <DeleteButton
                         action={deleteModuloCompilato.bind(null, m.id, paziente.id)}
