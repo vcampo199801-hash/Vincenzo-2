@@ -32,7 +32,7 @@ function toIsoDate(d: Date) {
 export default async function DashboardPage() {
   const { studio } = await requireActiveSubscription("dashboard");
 
-  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri] = await Promise.all([
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount] = await Promise.all([
     prisma.adempimento.findMany({ where: { studioId: studio.id } }),
     prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
     prisma.farmaco.findMany({ where: { studioId: studio.id } }),
@@ -42,6 +42,7 @@ export default async function DashboardPage() {
     prisma.dipendente.findMany({ where: { studioId: studio.id } }),
     prisma.lavorazione.findMany({ where: { studioId: studio.id }, include: { allegati: true } }),
     prisma.kpiGiornaliero.findMany({ where: { studioId: studio.id } }),
+    prisma.materialeInformativo.count({ where: { studioId: studio.id } }),
   ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -389,6 +390,20 @@ export default async function DashboardPage() {
             tone={documentiCompletezza >= 80 ? "good" : documentiCompletezza >= 50 ? "warn" : "bad"}
           />
         </section>
+
+        <Link
+          href="/app/comunicazione"
+          className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-slate-900">Comunicazione Pazienti</h2>
+            <span className="text-sm font-medium text-brand-600">Vedi tutto →</span>
+          </div>
+          <p className="text-sm text-slate-600">
+            {materialiCount} material{materialiCount === 1 ? "e" : "i"} informativ{materialiCount === 1 ? "o" : "i"} per i
+            pazienti, pronti da mostrare in studio o condividere con un link.
+          </p>
+        </Link>
       </div>
 
       <p className="rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-800">

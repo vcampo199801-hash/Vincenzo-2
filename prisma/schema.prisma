@@ -31,8 +31,6 @@ model Studio {
   telefono  String?
   email     String?
   logoUrl   String?
-  // Per l'intestazione dei documenti di Modulistica (consensi informati):
-  // indirizzo completo dello studio e n. di iscrizione all'Albo del titolare.
   indirizzo           String?
   numeroAlboTitolare  String?
   notificheAttive Boolean @default(true)
@@ -65,6 +63,7 @@ model Studio {
   kpiGiornalieri       KpiGiornaliero[]
   pazienti             Paziente[]
   moduliCompilati      ModuloCompilato[]
+  materialiInformativi MaterialeInformativo[]
 }
 
 // Team members with access to a studio (the practice owner plus invited
@@ -491,4 +490,31 @@ model ModuloCompilato {
 
   @@index([studioId])
   @@index([pazienteId])
+}
+
+// ---------- Comunicazione Pazienti ----------
+
+// Libreria di materiale informativo per pazienti (immagini esplicative,
+// video esterni tipo YouTube/Vimeo, testo in linguaggio semplice), organizzata
+// per tipo di trattamento. Da mostrare in studio (tablet/schermo) o condividere
+// con un link pubblico prima dell'appuntamento — vedi /m/[id].
+// Categoria (string): IGIENE_PREVENZIONE | CONSERVATIVA | ENDODONZIA |
+//   CHIRURGIA_ORALE | IMPLANTOLOGIA | PROTESI | ORTODONZIA | PARODONTOLOGIA |
+//   SBIANCAMENTO | PEDODONZIA | GNATOLOGIA_BITE | FACCETTE_ESTETICHE | ALTRO
+// A differenza degli altri allegati dell'app, l'immagine è pensata per essere
+// vista dal paziente senza login: fileUrl pubblico su Vercel Blob, non dietro
+// proxy autenticato (qui non ci sono dati sanitari, solo materiale divulgativo).
+model MaterialeInformativo {
+  id          String   @id @default(cuid())
+  studioId    String
+  studio      Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  categoria   String   @default("ALTRO")
+  titolo      String
+  descrizione String?
+  immagineUrl String?
+  videoUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([studioId])
 }
