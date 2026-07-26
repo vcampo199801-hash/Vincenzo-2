@@ -31,6 +31,10 @@ model Studio {
   telefono  String?
   email     String?
   logoUrl   String?
+  // Per l'intestazione dei documenti di Modulistica (consensi informati):
+  // indirizzo completo dello studio e n. di iscrizione all'Albo del titolare.
+  indirizzo           String?
+  numeroAlboTitolare  String?
   notificheAttive Boolean @default(true)
   notificheSms    Boolean @default(false)
   telefonoSms     String?

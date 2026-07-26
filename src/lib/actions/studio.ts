@@ -20,6 +20,8 @@ export async function updateStudioInfo(formData: FormData) {
       citta: String(formData.get("citta") ?? "").trim() || null,
       telefono: String(formData.get("telefono") ?? "").trim() || null,
       email: String(formData.get("email") ?? "").trim() || null,
+      indirizzo: String(formData.get("indirizzo") ?? "").trim() || null,
+      numeroAlboTitolare: String(formData.get("numeroAlboTitolare") ?? "").trim() || null,
       notificheAttive: formData.get("notificheAttive") === "on",
       notificheSms: formData.get("notificheSms") === "on",
       telefonoSms: normalizePhoneForSms(telefonoSmsRaw),
