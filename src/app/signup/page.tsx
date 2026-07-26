@@ -18,7 +18,7 @@ export default function SignupPage() {
         </Link>
         <h1 className="mt-4 text-2xl font-semibold text-slate-900">Crea il tuo account</h1>
         <p className="mt-1 text-sm text-slate-500">
-          14 giorni di prova gratuita, nessuna carta richiesta.
+          7 giorni di prova gratuita, nessuna carta richiesta.
         </p>
 
         <form action={formAction} className="mt-6 space-y-4">

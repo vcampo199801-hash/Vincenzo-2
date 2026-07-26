@@ -13,6 +13,7 @@ import {
 } from "@/lib/compliance";
 import { contrattoStato, optionLabel, MANSIONE_OPTIONS } from "@/lib/personale";
 import { consegnaStato, CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
+import { sommaKpi, tassoConversionePreventivi } from "@/lib/kpi";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
 import { StatusDonut } from "@/components/charts/donut";
@@ -24,10 +25,14 @@ import { STATUS_HEX, BRAND_SEQUENTIAL } from "@/components/charts/colors";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
+function toIsoDate(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
 export default async function DashboardPage() {
   const { studio } = await requireActiveSubscription("dashboard");
 
-  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab] = await Promise.all([
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri] = await Promise.all([
     prisma.adempimento.findMany({ where: { studioId: studio.id } }),
     prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
     prisma.farmaco.findMany({ where: { studioId: studio.id } }),
@@ -36,6 +41,7 @@ export default async function DashboardPage() {
     prisma.controlloLog.findMany({ where: { studioId: studio.id } }),
     prisma.dipendente.findMany({ where: { studioId: studio.id } }),
     prisma.lavorazione.findMany({ where: { studioId: studio.id }, include: { allegati: true } }),
+    prisma.kpiGiornaliero.findMany({ where: { studioId: studio.id } }),
   ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -141,6 +147,18 @@ export default async function DashboardPage() {
   const spesaMeseCorrente = lavorazioniLab
     .filter((l) => l.dataInvio.getFullYear() === oggiLab.getFullYear() && l.dataInvio.getMonth() === oggiLab.getMonth())
     .reduce((s, l) => s + (l.costo ?? 0), 0);
+
+  // KPI Studio: fatturato di oggi, riepilogo del mese corrente e andamento ultimi 7 giorni.
+  const oggiIso = toIsoDate(new Date());
+  const kpiOggi = kpiGiornalieri.find((k) => toIsoDate(k.data) === oggiIso);
+  const kpiMeseCorrente = sommaKpi(kpiGiornalieri.filter((k) => k.data.getFullYear() === now.getFullYear() && k.data.getMonth() === now.getMonth()));
+  const conversioneMeseKpi = tassoConversionePreventivi(kpiMeseCorrente.valorePreventiviPresentati, kpiMeseCorrente.valorePreventiviAccettati);
+  const ultimi7Giorni = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (6 - i));
+    const iso = toIsoDate(d);
+    const riga = kpiGiornalieri.find((k) => toIsoDate(k.data) === iso);
+    return { label: String(d.getDate()), value: riga?.fatturato ?? 0 };
+  });
 
   return (
     <div className="space-y-8">
@@ -264,6 +282,26 @@ export default async function DashboardPage() {
             {ecmCrediti.length === 0 && <p className="text-sm text-slate-500">Nessun professionista censito.</p>}
           </div>
         </section>
+
+        <Link
+          href="/app/kpi"
+          className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-slate-900">KPI Studio</h2>
+            <span className="text-sm font-medium text-brand-600">Vedi tutto →</span>
+          </div>
+          <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
+            <DashRow label="Fatturato di oggi" value={formatCurrency(kpiOggi?.fatturato ?? 0)} />
+            <DashRow label="Fatturato questo mese" value={formatCurrency(kpiMeseCorrente.fatturato)} />
+            <DashRow label="Prime visite questo mese" value={kpiMeseCorrente.numeroPrimeVisite} />
+            <DashRow label="Conversione preventivi" value={conversioneMeseKpi === null ? "—" : `${conversioneMeseKpi}%`} />
+          </div>
+          <div className="border-t border-slate-100 pt-4">
+            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Fatturato ultimi 7 giorni</p>
+            <TrendBars items={ultimi7Giorni} formatValue={formatCurrency} barAreaHeight={64} />
+          </div>
+        </Link>
 
         <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">

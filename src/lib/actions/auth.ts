@@ -9,8 +9,8 @@ import { provisionStudioDefaults } from "@/lib/seed-data";
 export type FormState = { error?: string } | undefined;
 
 function trialDays() {
-  const raw = Number(process.env.TRIAL_DAYS ?? "14");
-  return Number.isFinite(raw) && raw > 0 ? raw : 14;
+  const raw = Number(process.env.TRIAL_DAYS ?? "7");
+  return Number.isFinite(raw) && raw > 0 ? raw : 7;
 }
 
 export async function signupAction(_prev: FormState, formData: FormData): Promise<FormState> {

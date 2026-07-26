@@ -35,7 +35,7 @@ export default function Home() {
               href="/signup"
               className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
             >
-              Prova gratis 14 giorni
+              Prova gratis 7 giorni
             </Link>
           </nav>
         </div>
@@ -65,7 +65,7 @@ export default function Home() {
               Vedi i prezzi
             </a>
           </div>
-          <p className="mt-3 text-xs text-slate-400">14 giorni gratis, nessuna carta richiesta.</p>
+          <p className="mt-3 text-xs text-slate-400">7 giorni gratis, nessuna carta richiesta.</p>
         </div>
       </section>
 
@@ -124,7 +124,7 @@ export default function Home() {
           </div>
 
           <p className="mt-8 text-sm text-slate-500">
-            Ogni piano include 14 giorni di prova gratuita, utenti e team illimitati, promemoria scadenze automatici e
+            Ogni piano include 7 giorni di prova gratuita, utenti e team illimitati, promemoria scadenze automatici e
             report stampabile per le ispezioni ASL.
           </p>
 

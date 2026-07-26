@@ -14,6 +14,8 @@ const MODULI_BASE: ModuleKey[] = [
   "farmaci",
   "fornitori",
   "report",
+  "kpi",
+  "modulistica",
 ];
 
 export const PIANI: Record<
@@ -34,7 +36,7 @@ export const PIANI: Record<
     stripePriceEnvVar: "STRIPE_PRICE_ID_BASE",
     moduli: MODULI_BASE,
     descrizione:
-      "Gli otto moduli di compliance essenziali: scadenzario, registro controlli, formazione ECM, documenti, magazzino, farmaci emergenza, fornitori e report ispezione.",
+      "Tutti i moduli di compliance e gestione: scadenzario, registro controlli, formazione ECM, documenti, magazzino, farmaci emergenza, fornitori, report ispezione, KPI dello studio e modulistica per i pazienti.",
   },
   PLUS: {
     key: "PLUS",

@@ -58,6 +58,9 @@ model Studio {
   laboratori           Laboratorio[]
   lavorazioni          Lavorazione[]
   allegatiLaboratorio  AllegatoLaboratorio[]
+  kpiGiornalieri       KpiGiornaliero[]
+  pazienti             Paziente[]
+  moduliCompilati      ModuloCompilato[]
 }
 
 // Team members with access to a studio (the practice owner plus invited
@@ -402,4 +405,86 @@ model Fornitore {
   updatedAt         DateTime @updatedAt
 
   @@index([studioId])
+}
+
+// ---------- KPI Studio ----------
+
+// Una riga per giorno per studio: valori inseriti manualmente dal titolare.
+// Non è un gestionale di cassa/agenda — solo un registro sintetico per i grafici
+// di andamento mensile/annuale.
+model KpiGiornaliero {
+  id                         String   @id @default(cuid())
+  studioId                   String
+  studio                     Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  data                       DateTime
+  numeroPrimeVisite          Int      @default(0)
+  numeroAppuntamenti         Int      @default(0)
+  fatturato                  Float    @default(0)
+  valorePreventiviPresentati Float    @default(0)
+  valorePreventiviAccettati  Float    @default(0)
+  note                       String?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@unique([studioId, data])
+  @@index([studioId])
+}
+
+// ---------- Modulistica ----------
+
+// Anagrafica paziente minima: solo i dati identificativi che compaiono nei
+// moduli (intestazione documento), non è una cartella clinica. Dati di
+// categoria particolare (art. 9 GDPR) — stessa cautela già usata altrove
+// nell'app per dati sensibili (accesso solo autenticato e scoped allo studio).
+model Paziente {
+  id            String    @id @default(cuid())
+  studioId      String
+  studio        Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  nome          String
+  cognome       String
+  dataNascita   DateTime?
+  luogoNascita  String?
+  codiceFiscale String?
+  residenza     String?
+  telefono      String?
+  email         String?
+  medicoCurante String?
+  professione   String?
+  note          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  moduliCompilati ModuloCompilato[]
+
+  @@index([studioId])
+  @@index([studioId, cognome, nome])
+}
+
+// Un modulo compilato per un paziente, a partire da uno dei template statici
+// definiti in src/lib/modulistica-templates.ts (templateKey). "dati" è un JSON
+// serializzato con le risposte ai campi/checkbox specifici del template.
+// StatoModulo (string): BOZZA | FIRMATO | INVIATO
+// Le immagini di firma e il PDF finale sono su Vercel Blob, mai serviti da URL
+// pubblico diretto — solo tramite proxy autenticato, come in AllegatoLaboratorio.
+model ModuloCompilato {
+  id                  String    @id @default(cuid())
+  studioId            String
+  studio              Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  pazienteId          String
+  paziente            Paziente  @relation(fields: [pazienteId], references: [id], onDelete: Cascade)
+  templateKey         String
+  dati                String
+  luogo               String?
+  data                DateTime?
+  firmaPazienteUrl    String?
+  firmaGenitore1Url   String?
+  firmaGenitore2Url   String?
+  firmaOdontoiatraUrl String?
+  stato               String    @default("BOZZA")
+  pdfFileUrl          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([studioId])
+  @@index([pazienteId])
 }

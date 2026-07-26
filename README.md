@@ -79,7 +79,7 @@ togliere accesso a chi lo aveva già (`normalizzaPiano` in `src/lib/plans.ts`). 
 abbonamento già attivo (upgrade/downgrade) aggiorna la subscription Stripe esistente invece di
 aprirne una nuova (`changePlan` in `src/lib/actions/billing.ts`).
 
-Ogni nuovo studio riceve 14 giorni di prova gratuita (`TRIAL_DAYS` in `.env`); allo scadere della
+Ogni nuovo studio riceve 7 giorni di prova gratuita (`TRIAL_DAYS` in `.env`); allo scadere della
 prova l'accesso ai moduli viene bloccato finché non si attiva l'abbonamento dalla pagina
 "Abbonamento". L'accesso a un modulo specifico (es. Personale, Laboratori) è inoltre condizionato
 al piano dello studio (`requireActiveSubscription` in `src/lib/auth-guards.ts`); chi tenta di
