@@ -12,8 +12,10 @@ import {
   MESI_LABELS,
 } from "@/lib/compliance";
 import { contrattoStato, optionLabel, MANSIONE_OPTIONS } from "@/lib/personale";
-import { consegnaStato, CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
-import { sommaKpi, tassoConversionePreventivi } from "@/lib/kpi";
+import { consegnaStato, contaStatiLavorazione, CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
+import { sommaKpi, tassoConversionePreventivi, fatturatoUltimiGiorni, toIsoDate } from "@/lib/kpi";
+import { CATEGORIA_SPESA_OPTIONS, optionLabel as optionLabelSpesa, totaleSpese, sommaPerCategoria, speseDelMese, speseDellAnno } from "@/lib/spese";
+import { ultimoControlloPerTipo, contaAnomalie } from "@/lib/manutenzione";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
 import { StatusDonut } from "@/components/charts/donut";
@@ -25,25 +27,24 @@ import { STATUS_HEX, BRAND_SEQUENTIAL } from "@/components/charts/colors";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-function toIsoDate(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
-
 export default async function DashboardPage() {
   const { studio } = await requireActiveSubscription("dashboard");
 
-  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount] = await Promise.all([
-    prisma.adempimento.findMany({ where: { studioId: studio.id } }),
-    prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
-    prisma.farmaco.findMany({ where: { studioId: studio.id } }),
-    prisma.documento.findMany({ where: { studioId: studio.id } }),
-    prisma.ecmCredito.findMany({ where: { studioId: studio.id } }),
-    prisma.controlloLog.findMany({ where: { studioId: studio.id } }),
-    prisma.dipendente.findMany({ where: { studioId: studio.id } }),
-    prisma.lavorazione.findMany({ where: { studioId: studio.id }, include: { allegati: true } }),
-    prisma.kpiGiornaliero.findMany({ where: { studioId: studio.id } }),
-    prisma.materialeInformativo.count({ where: { studioId: studio.id } }),
-  ]);
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni] =
+    await Promise.all([
+      prisma.adempimento.findMany({ where: { studioId: studio.id } }),
+      prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
+      prisma.farmaco.findMany({ where: { studioId: studio.id } }),
+      prisma.documento.findMany({ where: { studioId: studio.id } }),
+      prisma.ecmCredito.findMany({ where: { studioId: studio.id } }),
+      prisma.controlloLog.findMany({ where: { studioId: studio.id } }),
+      prisma.dipendente.findMany({ where: { studioId: studio.id } }),
+      prisma.lavorazione.findMany({ where: { studioId: studio.id }, include: { allegati: true } }),
+      prisma.kpiGiornaliero.findMany({ where: { studioId: studio.id } }),
+      prisma.materialeInformativo.count({ where: { studioId: studio.id } }),
+      prisma.spesaStudio.findMany({ where: { studioId: studio.id } }),
+      prisma.manutenzioneLog.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } }),
+    ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
   const okCount = scadenze.filter((s) => s.stato === "OK").length;
@@ -134,7 +135,7 @@ export default async function DashboardPage() {
 
   // Laboratori: lavorazioni in corso, consegne imminenti, dichiarazioni di
   // conformità mancanti e spesa del mese corrente (per data di invio).
-  const lavorazioniInCorso = lavorazioniLab.filter((l) => l.stato === "INVIATO" || l.stato === "IN_LAVORAZIONE").length;
+  const statiLavorazioniLab = contaStatiLavorazione(lavorazioniLab);
   const consegneImminentiCount = lavorazioniLab.filter((l) => {
     const { stato } = consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva);
     return stato === "IN_SCADENZA" || stato === "SCADUTO";
@@ -150,16 +151,27 @@ export default async function DashboardPage() {
     .reduce((s, l) => s + (l.costo ?? 0), 0);
 
   // KPI Studio: fatturato di oggi, riepilogo del mese corrente e andamento ultimi 7 giorni.
-  const oggiIso = toIsoDate(new Date());
+  const oggiIso = toIsoDate(now);
   const kpiOggi = kpiGiornalieri.find((k) => toIsoDate(k.data) === oggiIso);
-  const kpiMeseCorrente = sommaKpi(kpiGiornalieri.filter((k) => k.data.getFullYear() === now.getFullYear() && k.data.getMonth() === now.getMonth()));
+  const kpiMeseCorrente = sommaKpi(kpiGiornalieri.filter((k) => k.data.getUTCFullYear() === now.getUTCFullYear() && k.data.getUTCMonth() === now.getUTCMonth()));
   const conversioneMeseKpi = tassoConversionePreventivi(kpiMeseCorrente.valorePreventiviPresentati, kpiMeseCorrente.valorePreventiviAccettati);
-  const ultimi7Giorni = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (6 - i));
-    const iso = toIsoDate(d);
-    const riga = kpiGiornalieri.find((k) => toIsoDate(k.data) === iso);
-    return { label: String(d.getDate()), value: riga?.fatturato ?? 0 };
-  });
+  const ultimi7Giorni = fatturatoUltimiGiorni(kpiGiornalieri, 7, now);
+
+  // Spese: totale del mese/anno corrente e ripartizione per categoria del mese.
+  const speseDelMeseCorrente = speseDelMese(spese, now.getUTCFullYear(), now.getUTCMonth());
+  const speseDellAnnoCorrente = speseDellAnno(spese, now.getUTCFullYear());
+  const ripartizioneSpeseMese = sommaPerCategoria(speseDelMeseCorrente)
+    .slice(0, 5)
+    .map((s, i) => ({
+      label: optionLabelSpesa(CATEGORIA_SPESA_OPTIONS, s.categoria),
+      value: s.importo,
+      color: BRAND_SEQUENTIAL[i % BRAND_SEQUENTIAL.length],
+    }));
+
+  // Manutenzione staff: quanti tipi di controllo sono in ritardo e anomalie totali.
+  const manutenzionePerTipo = ultimoControlloPerTipo(manutenzioni);
+  const manutenzioneInRitardo = manutenzionePerTipo.filter((t) => t.inRitardo).length;
+  const manutenzioneAnomalie = contaAnomalie(manutenzioni);
 
   return (
     <div className="space-y-8">
@@ -349,7 +361,9 @@ export default async function DashboardPage() {
             )}
           </div>
           <dl className="grid grid-cols-2 gap-4 text-sm">
-            <DashRow label="Lavorazioni in corso" value={lavorazioniInCorso} />
+            <DashRow label="In attesa dal laboratorio" value={statiLavorazioniLab.inAttesa} />
+            <DashRow label="In lavorazione" value={statiLavorazioniLab.inLavorazione} />
+            <DashRow label="Arrivati" value={statiLavorazioniLab.arrivati} />
             <DashRow label="Consegne previste nei prossimi 7gg" value={consegneImminentiCount} bad={consegneImminentiCount > 0} />
             <DashRow label="Dichiarazioni mancanti" value={dichiarazioniMancantiCount} bad={dichiarazioniMancantiCount > 0} />
             <DashRow label="Spesa laboratori questo mese" value={formatCurrency(spesaMeseCorrente)} />
@@ -403,6 +417,46 @@ export default async function DashboardPage() {
             {materialiCount} material{materialiCount === 1 ? "e" : "i"} informativ{materialiCount === 1 ? "o" : "i"} per i
             pazienti, pronti da mostrare in studio o condividere con un link.
           </p>
+        </Link>
+
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-slate-900">Spese</h2>
+            <Link href="/app/spese" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+              Vedi tutto →
+            </Link>
+          </div>
+          <dl className="mb-4 grid grid-cols-2 gap-4 text-sm">
+            <DashRow label="Spese questo mese" value={formatCurrency(totaleSpese(speseDelMeseCorrente))} />
+            <DashRow label="Spese quest'anno" value={formatCurrency(totaleSpese(speseDellAnnoCorrente))} />
+          </dl>
+          {ripartizioneSpeseMese.length > 0 ? (
+            <div className="border-t border-slate-100 pt-4">
+              <StatusDonut segments={ripartizioneSpeseMese} formatValue={formatCurrency} size={112} strokeWidth={16} />
+            </div>
+          ) : (
+            <p className="border-t border-slate-100 pt-4 text-sm text-slate-500">
+              Aggiungi le tue voci di spesa (affitto, utenze...) per vedere il riepilogo qui.
+            </p>
+          )}
+        </section>
+
+        <Link
+          href="/app/manutenzione"
+          className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
+        >
+          <div className="mb-4 flex items-center gap-2">
+            <h2 className="text-base font-semibold text-slate-900">Manutenzione staff</h2>
+            {(manutenzioneInRitardo > 0 || manutenzioneAnomalie > 0) && (
+              <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                {manutenzioneInRitardo + manutenzioneAnomalie}
+              </span>
+            )}
+          </div>
+          <dl className="grid grid-cols-2 gap-4 text-sm">
+            <DashRow label="Tipi di controllo in ritardo" value={manutenzioneInRitardo} bad={manutenzioneInRitardo > 0} />
+            <DashRow label="Anomalie riscontrate" value={manutenzioneAnomalie} bad={manutenzioneAnomalie > 0} />
+          </dl>
         </Link>
       </div>
 

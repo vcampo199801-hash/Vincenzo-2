@@ -38,6 +38,17 @@ export function isLavorazioneInCorso(stato: string): boolean {
   return stato === "INVIATO" || stato === "IN_LAVORAZIONE";
 }
 
+/** Riepilogo a 3 stati (invece del generico "in corso") per capire a colpo
+ * d'occhio cosa aspetta ancora di partire, cosa il laboratorio sta lavorando
+ * davvero e cosa è già arrivato (in studio o già consegnato al paziente). */
+export function contaStatiLavorazione(lavorazioni: { stato: string }[]) {
+  return {
+    inAttesa: lavorazioni.filter((l) => l.stato === "INVIATO").length,
+    inLavorazione: lavorazioni.filter((l) => l.stato === "IN_LAVORAZIONE").length,
+    arrivati: lavorazioni.filter((l) => l.stato === "CONSEGNATO_STUDIO" || l.stato === "CONSEGNATO_PAZIENTE").length,
+  };
+}
+
 export const CATEGORIA_DOCUMENTO_LABORATORIO_OPTIONS = [
   { value: "VISURA", label: "Visura camerale" },
   { value: "AUTORIZZAZIONE_SANITARIA", label: "Autorizzazione sanitaria" },

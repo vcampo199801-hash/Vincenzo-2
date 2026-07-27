@@ -1,7 +1,7 @@
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDate } from "@/lib/compliance";
-import { fatturatoPerGiorno, riepilogoPerMese, sommaKpi, tassoConversionePreventivi, MESI_LABELS } from "@/lib/kpi";
+import { fatturatoUltimiGiorni, riepilogoPerMese, sommaKpi, tassoConversionePreventivi, MESI_LABELS, toIsoDate } from "@/lib/kpi";
 import { salvaKpiGiorno, deleteKpiGiorno } from "@/lib/actions/kpi";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, TextAreaField, SubmitButton } from "@/components/ui/form";
@@ -10,10 +10,6 @@ import { TrendBars } from "@/components/charts/trend-bars";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
-
-function toIsoDate(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
 
 export default async function KpiPage({ searchParams }: { searchParams: Promise<{ data?: string }> }) {
   const { studio } = await requireActiveSubscription("kpi");
@@ -29,15 +25,15 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
   ]);
 
   const righe = righeGrezze;
-  const anno = oggi.getFullYear();
-  const mese = oggi.getMonth();
+  const anno = oggi.getUTCFullYear();
+  const mese = oggi.getUTCMonth();
 
-  const perGiornoMese = fatturatoPerGiorno(righe, anno, mese);
-  const totaleMese = sommaKpi(righe.filter((r) => r.data.getFullYear() === anno && r.data.getMonth() === mese));
+  const ultimi14Giorni = fatturatoUltimiGiorni(righe, 14, oggi);
+  const totaleMese = sommaKpi(righe.filter((r) => r.data.getUTCFullYear() === anno && r.data.getUTCMonth() === mese));
   const conversioneMese = tassoConversionePreventivi(totaleMese.valorePreventiviPresentati, totaleMese.valorePreventiviAccettati);
 
   const perMeseAnno = riepilogoPerMese(righe, anno);
-  const totaleAnno = sommaKpi(righe.filter((r) => r.data.getFullYear() === anno));
+  const totaleAnno = sommaKpi(righe.filter((r) => r.data.getUTCFullYear() === anno));
   const conversioneAnno = tassoConversionePreventivi(totaleAnno.valorePreventiviPresentati, totaleAnno.valorePreventiviAccettati);
 
   return (
@@ -82,9 +78,11 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-1 text-sm font-semibold text-slate-900">Fatturato giornaliero — {MESI_LABELS[mese]} {anno}</h2>
-          <p className="mb-4 text-xs text-slate-500">Totale mese: {formatCurrency(totaleMese.fatturato)}</p>
-          <TrendBars items={perGiornoMese} formatValue={formatCurrency} />
+          <h2 className="mb-1 text-sm font-semibold text-slate-900">Fatturato giornaliero — ultimi 14 giorni</h2>
+          <p className="mb-4 text-xs text-slate-500">
+            Totale {MESI_LABELS[mese]} {anno}: {formatCurrency(totaleMese.fatturato)}
+          </p>
+          <TrendBars items={ultimi14Giorni} formatValue={formatCurrency} />
           <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-4">
             <div>
               <dt className="text-xs text-slate-500">Prime visite</dt>

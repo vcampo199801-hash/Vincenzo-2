@@ -10,6 +10,12 @@ import { DocumentoStatoSelect } from "@/components/app/documento-stato-select";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
+const ROW_TONE: Record<string, string> = {
+  PRESENTE: "bg-emerald-50/60 hover:bg-emerald-50",
+  DA_AGGIORNARE: "bg-amber-50/60 hover:bg-amber-50",
+  MANCANTE: "bg-red-50/60 hover:bg-red-50",
+};
+
 export default async function DocumentiPage() {
   const { studio } = await requireActiveSubscription("documenti");
   const documenti = await prisma.documento.findMany({ where: { studioId: studio.id }, orderBy: { ordine: "asc" } });
@@ -47,7 +53,7 @@ export default async function DocumentiPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {documenti.map((d) => (
-              <tr key={d.id} className="hover:bg-slate-50">
+              <tr key={d.id} className={ROW_TONE[d.stato] ?? "hover:bg-slate-50"}>
                 <td className="px-4 py-3 font-medium text-slate-900">{d.nome}</td>
                 <td className="px-4 py-3">
                   <DocumentoStatoSelect id={d.id} stato={d.stato} />

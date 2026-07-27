@@ -2,7 +2,15 @@ import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/compliance";
-import { optionLabel, parseTipologie, calcolaIndicatoriLaboratorio, STATO_LABORATORIO_OPTIONS, TIPOLOGIA_LAVORAZIONE_OPTIONS, CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
+import {
+  optionLabel,
+  parseTipologie,
+  calcolaIndicatoriLaboratorio,
+  contaStatiLavorazione,
+  STATO_LABORATORIO_OPTIONS,
+  TIPOLOGIA_LAVORAZIONE_OPTIONS,
+  CATEGORIA_DICHIARAZIONE_CONFORMITA,
+} from "@/lib/laboratori";
 import { PageHeader } from "@/components/ui/page-header";
 
 // Session-dependent, must never be prerendered or cached.
@@ -44,6 +52,7 @@ export default async function LaboratoriPage() {
             }))
           );
           const tipologie = parseTipologie(lab.tipologieLavorazione);
+          const stati = contaStatiLavorazione(lab.lavorazioni);
 
           return (
             <Link
@@ -66,16 +75,29 @@ export default async function LaboratoriPage() {
                   {tipologie.map((t) => optionLabel(TIPOLOGIA_LAVORAZIONE_OPTIONS, t)).join(" · ")}
                 </p>
               )}
-              <div className="mb-3">
-                {indicatori.lavoriInCorso > 0 ? (
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                {stati.inAttesa > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                    {stati.inAttesa} in attesa
+                  </span>
+                )}
+                {stati.inLavorazione > 0 && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-2.5 py-1 text-xs font-medium text-brand-700">
                     <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
-                    {indicatori.lavoriInCorso} lavor{indicatori.lavoriInCorso === 1 ? "azione" : "azioni"} in corso
+                    {stati.inLavorazione} in lavorazione
                   </span>
-                ) : (
+                )}
+                {stati.arrivati > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {stati.arrivati} arrivat{stati.arrivati === 1 ? "o" : "i"}
+                  </span>
+                )}
+                {stati.inAttesa === 0 && stati.inLavorazione === 0 && stati.arrivati === 0 && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
                     <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                    Nessun lavoro in corso
+                    Nessuna lavorazione registrata
                   </span>
                 )}
               </div>

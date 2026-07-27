@@ -7,6 +7,7 @@ import {
   optionLabel,
   parseTipologie,
   calcolaIndicatoriLaboratorio,
+  contaStatiLavorazione,
   consegnaStato,
   isLaboratoriStorageConfigured,
   STATO_LABORATORIO_OPTIONS,
@@ -50,6 +51,7 @@ export default async function LaboratorioPage({ params }: { params: Promise<{ id
     }))
   );
   const tipologie = parseTipologie(laboratorio.tipologieLavorazione);
+  const stati = contaStatiLavorazione(laboratorio.lavorazioni);
   const storageConfigured = isLaboratoriStorageConfigured();
 
   return (
@@ -95,6 +97,20 @@ export default async function LaboratorioPage({ params }: { params: Promise<{ id
 
         <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-base font-semibold text-slate-900">Indicatori</h2>
+          <dl className="mb-4 grid grid-cols-3 gap-4 border-b border-slate-100 pb-4 text-sm">
+            <div>
+              <dt className="text-xs text-slate-500">In attesa dal laboratorio</dt>
+              <dd className="text-lg font-semibold text-slate-900">{stati.inAttesa}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-slate-500">In lavorazione</dt>
+              <dd className="text-lg font-semibold text-brand-700">{stati.inLavorazione}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-slate-500">Arrivati</dt>
+              <dd className="text-lg font-semibold text-emerald-700">{stati.arrivati}</dd>
+            </div>
+          </dl>
           <dl className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
             <div>
               <dt className="text-xs text-slate-500">Lavori nell&apos;anno</dt>
