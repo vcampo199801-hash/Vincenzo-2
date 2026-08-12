@@ -128,3 +128,45 @@ export function serieAnnuale(righe: KpiRiga[], metrica: KpiMetricaKey) {
     value: righe.filter((r) => r.data.getUTCFullYear() === anno).reduce((s, r) => s + r[metrica], 0),
   }));
 }
+
+function etichettaGiorno(d: Date, multiMese: boolean) {
+  const giorno = d.getUTCDate();
+  if (multiMese && giorno === 1) return `${giorno} ${MESI_LABELS_BREVI[d.getUTCMonth()]}`;
+  return String(giorno);
+}
+
+/** Serie giornaliera (un valore per ogni giorno) tra dataInizio e dataFine incluse,
+ * per una singola metrica — usata per mostrare sempre l'andamento giorno per giorno
+ * anche su periodi lunghi (mese/semestre/anno), non solo sugli ultimi 14 giorni. */
+export function serieGiornalieraIntervallo(righe: KpiRiga[], dataInizio: Date, dataFine: Date, metrica: KpiMetricaKey) {
+  const perData = new Map(righe.map((r) => [toIsoDate(r.data), r]));
+  const multiMese = (dataFine.getTime() - dataInizio.getTime()) / 86400000 > 31;
+  const giorni: { label: string; value: number }[] = [];
+  const cursor = new Date(dataInizio);
+  while (cursor.getTime() <= dataFine.getTime()) {
+    const iso = toIsoDate(cursor);
+    const r = perData.get(iso);
+    giorni.push({ label: etichettaGiorno(cursor, multiMese), value: r ? r[metrica] : 0 });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return giorni;
+}
+
+export function inizioMese(anno: number, mese: number) {
+  return new Date(Date.UTC(anno, mese, 1));
+}
+export function fineMese(anno: number, mese: number) {
+  return new Date(Date.UTC(anno, mese + 1, 0));
+}
+export function inizioSemestre(anno: number, semestre: 1 | 2) {
+  return new Date(Date.UTC(anno, semestre === 1 ? 0 : 6, 1));
+}
+export function fineSemestre(anno: number, semestre: 1 | 2) {
+  return new Date(Date.UTC(anno, semestre === 1 ? 5 : 11, semestre === 1 ? 30 : 31));
+}
+export function inizioAnno(anno: number) {
+  return new Date(Date.UTC(anno, 0, 1));
+}
+export function fineAnno(anno: number) {
+  return new Date(Date.UTC(anno, 11, 31));
+}

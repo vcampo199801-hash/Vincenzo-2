@@ -4,12 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDate } from "@/lib/compliance";
 import {
   serieUltimiGiorni,
-  serieMensile,
-  serieSemestrale,
-  serieAnnuale,
+  serieGiornalieraIntervallo,
   tassoConversionePreventivi,
   KPI_METRICHE,
   toIsoDate,
+  inizioMese,
+  fineMese,
+  inizioSemestre,
+  fineSemestre,
+  inizioAnno,
+  fineAnno,
   type KpiMetricaKey,
   type KpiRiga,
 } from "@/lib/kpi";
@@ -30,17 +34,40 @@ const PERIODI = [
 ] as const;
 type Periodo = (typeof PERIODI)[number]["value"];
 
-function serieMetrica(righe: KpiRiga[], periodo: Periodo, metrica: KpiMetricaKey, anno: number, oggi: Date) {
-  if (periodo === "mese") return serieMensile(righe, anno, metrica);
-  if (periodo === "semestre") return serieSemestrale(righe, anno, metrica);
-  if (periodo === "anno") return serieAnnuale(righe, metrica);
-  return serieUltimiGiorni(righe, 14, metrica, oggi);
+/** Intervallo di date del periodo scelto: sempre giorno per giorno, il
+ * periodo cambia solo l'ampiezza dell'intervallo mostrato (non aggrega più
+ * in barre mensili/semestrali — ogni colonna resta un giorno). */
+function intervalloPeriodo(periodo: Periodo, oggi: Date): { inizio: Date; fine: Date } {
+  const anno = oggi.getUTCFullYear();
+  if (periodo === "mese") {
+    return { inizio: inizioMese(anno, oggi.getUTCMonth()), fine: minData(fineMese(anno, oggi.getUTCMonth()), oggi) };
+  }
+  if (periodo === "semestre") {
+    const semestre = oggi.getUTCMonth() < 6 ? 1 : 2;
+    return { inizio: inizioSemestre(anno, semestre), fine: minData(fineSemestre(anno, semestre), oggi) };
+  }
+  if (periodo === "anno") {
+    return { inizio: inizioAnno(anno), fine: minData(fineAnno(anno), oggi) };
+  }
+  const inizio = new Date(oggi);
+  inizio.setUTCDate(inizio.getUTCDate() - 13);
+  return { inizio, fine: oggi };
+}
+
+function minData(a: Date, b: Date) {
+  return a.getTime() < b.getTime() ? a : b;
+}
+
+function serieMetrica(righe: KpiRiga[], periodo: Periodo, metrica: KpiMetricaKey, oggi: Date) {
+  if (periodo === "giorni") return serieUltimiGiorni(righe, 14, metrica, oggi);
+  const { inizio, fine } = intervalloPeriodo(periodo, oggi);
+  return serieGiornalieraIntervallo(righe, inizio, fine, metrica);
 }
 
 function titoloPeriodo(periodo: Periodo, anno: number) {
-  if (periodo === "mese") return `Andamento mensile — anno ${anno}`;
-  if (periodo === "semestre") return `Andamento semestrale — anno ${anno}`;
-  if (periodo === "anno") return "Andamento annuale";
+  if (periodo === "mese") return `Giorno per giorno — mese corrente ${anno}`;
+  if (periodo === "semestre") return `Giorno per giorno — semestre corrente ${anno}`;
+  if (periodo === "anno") return `Giorno per giorno — anno ${anno}`;
   return "Ultimi 14 giorni";
 }
 
@@ -61,7 +88,7 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
 
   const serieVisibili = KPI_METRICHE.map((m) => ({
     ...m,
-    serie: serieMetrica(righe, periodo, m.key, anno, oggi),
+    serie: serieMetrica(righe, periodo, m.key, oggi),
   }));
   const totalePresentati = serieVisibili.find((m) => m.key === "valorePreventiviPresentati")!.serie.reduce((s, x) => s + x.value, 0);
   const totaleAccettati = serieVisibili.find((m) => m.key === "valorePreventiviAccettati")!.serie.reduce((s, x) => s + x.value, 0);
@@ -121,25 +148,28 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
         ))}
       </div>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
         {serieVisibili.map((m) => {
           const totale = m.serie.reduce((s, x) => s + x.value, 0);
           const formatValue = m.isCurrency ? formatCurrency : (v: number) => String(v);
           return (
-            <div key={m.key} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="mb-1 text-sm font-semibold text-slate-900">{m.label}</h2>
-              <p className="mb-4 text-xs text-slate-500">
-                {titoloPeriodo(periodo, anno)} — Totale: {formatValue(totale)}
-              </p>
+            <div key={m.key} className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <h2 className="text-sm font-semibold text-slate-900">{m.label}</h2>
+                <div className="text-right">
+                  <p className="text-2xl font-bold tabular-nums text-slate-900">{formatValue(totale)}</p>
+                  <p className="text-xs text-slate-500">{titoloPeriodo(periodo, anno)}</p>
+                </div>
+              </div>
               <TrendBars items={m.serie} formatValue={formatValue} barAreaHeight={72} />
             </div>
           );
         })}
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-1 text-sm font-semibold text-slate-900">Tasso di conversione</h2>
           <p className="mb-4 text-xs text-slate-500">{titoloPeriodo(periodo, anno)}</p>
-          <p className="text-3xl font-semibold text-slate-900">{conversionePeriodo === null ? "—" : `${conversionePeriodo}%`}</p>
+          <p className="text-3xl font-bold text-slate-900">{conversionePeriodo === null ? "—" : `${conversionePeriodo}%`}</p>
           <p className="mt-2 text-xs text-slate-500">Preventivi accettati sul totale presentato nel periodo selezionato.</p>
         </div>
       </div>
