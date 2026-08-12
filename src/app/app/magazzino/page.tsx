@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
 import { DeleteButton } from "@/components/ui/delete-button";
-import { deleteMagazzinoItem } from "@/lib/actions/magazzino";
+import { deleteMagazzinoItem, regolaQuantita } from "@/lib/actions/magazzino";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -49,7 +49,7 @@ export default async function MagazzinoPage() {
             <tr>
               <th className="px-4 py-3">Prodotto</th>
               <th className="px-4 py-3">Categoria</th>
-              <th className="px-4 py-3">Scorta min. / attuale</th>
+              <th className="px-4 py-3">Scorta attuale / min.</th>
               <th className="px-4 py-3">Stato scorta</th>
               <th className="px-4 py-3">Scadenza lotto</th>
               <th className="px-4 py-3">Stato lotto</th>
@@ -66,7 +66,30 @@ export default async function MagazzinoPage() {
                 </td>
                 <td className="px-4 py-3 text-slate-600">{i.categoria}</td>
                 <td className="px-4 py-3 text-slate-600">
-                  {i.scortaMinima} / {i.quantitaAttuale} {i.unita}
+                  <div className="flex items-center gap-1.5">
+                    <form action={regolaQuantita.bind(null, i.id, -1)}>
+                      <button
+                        type="submit"
+                        disabled={i.quantitaAttuale <= 0}
+                        aria-label={`Diminuisci scorta di ${i.prodotto}`}
+                        className="flex h-6 w-6 items-center justify-center rounded border border-slate-300 text-slate-500 hover:bg-slate-100 disabled:opacity-40"
+                      >
+                        −
+                      </button>
+                    </form>
+                    <span className="min-w-[6.5rem] text-center tabular-nums">
+                      {i.quantitaAttuale} / {i.scortaMinima} {i.unita}
+                    </span>
+                    <form action={regolaQuantita.bind(null, i.id, 1)}>
+                      <button
+                        type="submit"
+                        aria-label={`Aumenta scorta di ${i.prodotto}`}
+                        className="flex h-6 w-6 items-center justify-center rounded border border-slate-300 text-slate-500 hover:bg-slate-100"
+                      >
+                        +
+                      </button>
+                    </form>
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <StatoBadge stato={stato} />

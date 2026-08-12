@@ -243,7 +243,8 @@ model FarmacoControlloMensile {
   mese          Int // 1-12
   dataControllo DateTime?
   operatore     String?
-  esito         String?
+  fatto         Boolean   @default(false)
+  note          String?
 
   @@unique([studioId, anno, mese])
   @@index([studioId])

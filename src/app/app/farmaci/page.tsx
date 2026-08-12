@@ -109,7 +109,8 @@ export default async function FarmaciPage() {
                 <th className="px-4 py-2">Mese</th>
                 <th className="px-2 py-2">Data controllo</th>
                 <th className="px-2 py-2">Operatore</th>
-                <th className="px-2 py-2">Esito / Note</th>
+                <th className="px-2 py-2 text-center">Fatto</th>
+                <th className="px-2 py-2">Note</th>
                 <th className="px-2 py-2" />
               </tr>
             </thead>
@@ -121,7 +122,8 @@ export default async function FarmaciPage() {
                   mese={MESI_LABELS[c.mese - 1]}
                   dataControllo={c.dataControllo?.toISOString().slice(0, 10) ?? ""}
                   operatore={c.operatore ?? ""}
-                  esito={c.esito ?? ""}
+                  fatto={c.fatto}
+                  note={c.note ?? ""}
                 />
               ))}
             </tbody>

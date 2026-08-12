@@ -48,7 +48,7 @@ export async function deleteFarmaco(id: string) {
 
 export async function updateControlloMensile(
   id: string,
-  data: { dataControllo: string; operatore: string; esito: string }
+  data: { dataControllo: string; operatore: string; fatto: boolean; note: string }
 ) {
   const { studio } = await requireStudio();
   await prisma.farmacoControlloMensile.updateMany({
@@ -56,7 +56,8 @@ export async function updateControlloMensile(
     data: {
       dataControllo: data.dataControllo ? new Date(data.dataControllo) : null,
       operatore: data.operatore.trim() || null,
-      esito: data.esito.trim() || null,
+      fatto: data.fatto,
+      note: data.note.trim() || null,
     },
   });
   revalidatePath("/app/farmaci");

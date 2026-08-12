@@ -47,3 +47,17 @@ export async function deleteMagazzinoItem(id: string) {
   revalidatePath("/app/magazzino");
   revalidatePath("/app");
 }
+
+/** Regola rapidamente la quantità attuale dall'elenco, senza aprire la scheda
+ * dell'articolo (frecce +/- nella tabella). Non scende mai sotto zero. */
+export async function regolaQuantita(id: string, delta: number) {
+  const { studio } = await requireStudio();
+  const item = await prisma.magazzinoItem.findFirst({ where: { id, studioId: studio.id } });
+  if (!item) return;
+  await prisma.magazzinoItem.update({
+    where: { id },
+    data: { quantitaAttuale: Math.max(0, item.quantitaAttuale + delta) },
+  });
+  revalidatePath("/app/magazzino");
+  revalidatePath("/app");
+}
