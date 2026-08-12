@@ -19,7 +19,7 @@ import {
   optionLabel as optionLabelSpesa,
   totaleSpese,
   sommaPerCategoria,
-  speseDelMese,
+  speseEffettiveDelMese,
   speseDellAnno,
   costoAnnuoProiettato,
 } from "@/lib/spese";
@@ -166,7 +166,7 @@ export default async function DashboardPage() {
   const ultimi7Giorni = fatturatoUltimiGiorni(kpiGiornalieri, 7, now);
 
   // Spese: totale del mese/anno corrente e ripartizione per categoria del mese.
-  const speseDelMeseCorrente = speseDelMese(spese, now.getUTCFullYear(), now.getUTCMonth());
+  const speseDelMeseCorrente = speseEffettiveDelMese(spese, now.getUTCFullYear(), now.getUTCMonth());
   const speseDellAnnoCorrente = speseDellAnno(spese, now.getUTCFullYear());
   const ripartizioneSpeseMese = sommaPerCategoria(speseDelMeseCorrente)
     .slice(0, 5)

@@ -7,7 +7,7 @@ import {
   optionLabel,
   totaleSpese,
   sommaPerCategoria,
-  speseDelMese,
+  speseEffettiveDelMese,
   speseDellAnno,
   ricorrenzaLabel,
   costoAnnualizzato,
@@ -32,7 +32,7 @@ export default async function SpesePage() {
   const anno = oggi.getUTCFullYear();
   const mese = oggi.getUTCMonth();
 
-  const delMese = speseDelMese(spese, anno, mese);
+  const delMese = speseEffettiveDelMese(spese, anno, mese);
   const dellAnno = speseDellAnno(spese, anno);
   const ripartizioneMese = sommaPerCategoria(delMese).map((s, i) => ({
     label: optionLabel(CATEGORIA_SPESA_OPTIONS, s.categoria),

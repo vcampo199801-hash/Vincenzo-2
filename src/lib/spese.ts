@@ -58,6 +58,25 @@ export function speseDelMese(righe: SpesaRiga[], anno: number, mese: number) {
   return righe.filter((r) => r.data.getUTCFullYear() === anno && r.data.getUTCMonth() === mese);
 }
 
+/** Una spesa ricorrente "conta" in ogni mese in cui ricade la sua cadenza a
+ * partire dal mese in cui è stata registrata (nessuna data di fine: resta
+ * attiva finché non viene modificata o cancellata) — non solo nel mese in
+ * cui è stata inserita la prima volta. Una spesa una tantum conta solo nel
+ * suo mese. */
+export function spesaAttivaNelMese(spesa: SpesaRiga, anno: number, mese: number): boolean {
+  const target = anno * 12 + mese;
+  const inizio = spesa.data.getUTCFullYear() * 12 + spesa.data.getUTCMonth();
+  if (target < inizio) return false;
+  if (!spesa.ricorrenzaMesi) return target === inizio;
+  return (target - inizio) % spesa.ricorrenzaMesi === 0;
+}
+
+/** Come speseDelMese, ma per le spese ricorrenti guarda alla cadenza invece
+ * che alla data di inserimento originale — vedi spesaAttivaNelMese. */
+export function speseEffettiveDelMese(righe: SpesaRiga[], anno: number, mese: number) {
+  return righe.filter((r) => spesaAttivaNelMese(r, anno, mese));
+}
+
 export function speseDellAnno(righe: SpesaRiga[], anno: number) {
   return righe.filter((r) => r.data.getUTCFullYear() === anno);
 }
