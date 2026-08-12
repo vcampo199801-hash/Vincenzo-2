@@ -14,7 +14,15 @@ import {
 import { contrattoStato, optionLabel, MANSIONE_OPTIONS } from "@/lib/personale";
 import { consegnaStato, contaStatiLavorazione, CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
 import { sommaKpi, tassoConversionePreventivi, fatturatoUltimiGiorni, toIsoDate } from "@/lib/kpi";
-import { CATEGORIA_SPESA_OPTIONS, optionLabel as optionLabelSpesa, totaleSpese, sommaPerCategoria, speseDelMese, speseDellAnno } from "@/lib/spese";
+import {
+  CATEGORIA_SPESA_OPTIONS,
+  optionLabel as optionLabelSpesa,
+  totaleSpese,
+  sommaPerCategoria,
+  speseDelMese,
+  speseDellAnno,
+  costoAnnuoProiettato,
+} from "@/lib/spese";
 import { ultimoControlloPerTipo, contaAnomalie } from "@/lib/manutenzione";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
@@ -173,6 +181,27 @@ export default async function DashboardPage() {
   const manutenzioneInRitardo = manutenzionePerTipo.filter((t) => t.inRitardo).length;
   const manutenzioneAnomalie = contaAnomalie(manutenzioni);
 
+  // Bilancio dell'attività: confronta i ricavi dell'anno (fatturato KPI) con
+  // la stima di tutti i costi dell'anno raccolti nell'app — spese del
+  // titolare (proiettate sulla loro cadenza), personale, interventi del
+  // registro controlli e lavorazioni di laboratorio.
+  const anno = now.getUTCFullYear();
+  const ricaviAnnui = kpiGiornalieri.filter((k) => k.data.getUTCFullYear() === anno).reduce((s, k) => s + k.fatturato, 0);
+  const costoAnnuoSpese = costoAnnuoProiettato(spese, anno);
+  const costoAnnuoPersonale = costoMensileTotale * 12;
+  const costoAnnuoControlli = controlli.filter((c) => c.dataIntervento.getUTCFullYear() === anno).reduce((s, c) => s + c.costo, 0);
+  const costoAnnuoLaboratori = lavorazioniLab.filter((l) => l.dataInvio.getUTCFullYear() === anno).reduce((s, l) => s + (l.costo ?? 0), 0);
+  const costoAnnuoTotale = costoAnnuoSpese + costoAnnuoPersonale + costoAnnuoControlli + costoAnnuoLaboratori;
+  const bilancioAnnuo = ricaviAnnui - costoAnnuoTotale;
+  const ripartizioneCosti = [
+    { label: "Spese", value: costoAnnuoSpese },
+    { label: "Personale", value: costoAnnuoPersonale },
+    { label: "Registro controlli", value: costoAnnuoControlli },
+    { label: "Laboratori", value: costoAnnuoLaboratori },
+  ]
+    .filter((c) => c.value > 0)
+    .sort((a, b) => b.value - a.value);
+
   return (
     <div className="space-y-8">
       <div>
@@ -189,6 +218,36 @@ export default async function DashboardPage() {
         <StatCard label="Da compilare" value={daCompilareCount} />
         <StatCard label="% Compliance" value={`${compliancePct}%`} tone={compliancePct >= 80 ? "good" : compliancePct >= 50 ? "warn" : "bad"} />
       </div>
+
+      <section className="min-w-0 rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Bilancio dell&apos;attività — anno {anno}</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Ricavi da KPI Studio meno la stima di tutti i costi dell&apos;anno (spese, personale, registro
+              controlli, laboratori). È una stima indicativa, non sostituisce la contabilità.
+            </p>
+          </div>
+          <span className={`shrink-0 text-2xl font-bold ${bilancioAnnuo >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            {bilancioAnnuo >= 0 ? "+" : ""}
+            {formatCurrency(bilancioAnnuo)}
+          </span>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <dl className="grid grid-cols-2 gap-4 text-sm">
+            <DashRow label="Ricavi dell'anno (fatturato KPI)" value={formatCurrency(ricaviAnnui)} />
+            <DashRow label="Costi totali stimati" value={formatCurrency(costoAnnuoTotale)} bad={costoAnnuoTotale > ricaviAnnui} />
+          </dl>
+          {ripartizioneCosti.length > 0 ? (
+            <div>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Ripartizione dei costi</p>
+              <BarList items={ripartizioneCosti} formatValue={formatCurrency} />
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">Aggiungi spese, personale, interventi o lavorazioni per vedere la ripartizione dei costi.</p>
+          )}
+        </div>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="min-w-0 rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">

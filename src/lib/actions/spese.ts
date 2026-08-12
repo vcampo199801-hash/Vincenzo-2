@@ -7,17 +7,15 @@ import { requireStudio } from "@/lib/auth-guards";
 
 function payload(formData: FormData) {
   const dataRaw = String(formData.get("data") ?? "");
-  const ricorrenzaTipo = String(formData.get("ricorrenzaTipo") ?? "");
-  const ricorrenza =
-    ricorrenzaTipo === "PERSONALIZZATA"
-      ? String(formData.get("ricorrenzaPersonalizzata") ?? "").trim() || null
-      : ricorrenzaTipo || null;
+  const ricorrenzaMesiRaw = String(formData.get("ricorrenzaMesi") ?? "").trim();
+  const ricorrenzaMesiParsed = ricorrenzaMesiRaw ? Math.round(Number(ricorrenzaMesiRaw)) : NaN;
+  const ricorrenzaMesi = Number.isFinite(ricorrenzaMesiParsed) && ricorrenzaMesiParsed > 0 ? ricorrenzaMesiParsed : null;
   return {
     data: dataRaw ? new Date(dataRaw) : new Date(),
     categoria: String(formData.get("categoria") ?? "ALTRO"),
     descrizione: String(formData.get("descrizione") ?? "").trim() || null,
     importo: Number(formData.get("importo") ?? 0) || 0,
-    ricorrenza,
+    ricorrenzaMesi,
   };
 }
 

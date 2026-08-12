@@ -2,7 +2,17 @@ import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate, formatCurrency } from "@/lib/compliance";
-import { CATEGORIA_SPESA_OPTIONS, optionLabel, totaleSpese, sommaPerCategoria, speseDelMese, speseDellAnno, ricorrenzaLabel } from "@/lib/spese";
+import {
+  CATEGORIA_SPESA_OPTIONS,
+  optionLabel,
+  totaleSpese,
+  sommaPerCategoria,
+  speseDelMese,
+  speseDellAnno,
+  ricorrenzaLabel,
+  costoAnnualizzato,
+  costoAnnuoProiettato,
+} from "@/lib/spese";
 import { eliminaSpesa } from "@/lib/actions/spese";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
@@ -39,11 +49,16 @@ export default async function SpesePage() {
         actionHref="/app/spese/new"
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Spese questo mese" value={formatCurrency(totaleSpese(delMese))} />
-        <StatCard label="Spese quest'anno" value={formatCurrency(totaleSpese(dellAnno))} />
+        <StatCard label="Spese registrate quest'anno" value={formatCurrency(totaleSpese(dellAnno))} />
+        <StatCard label="Costo annuo stimato" value={formatCurrency(costoAnnuoProiettato(spese, anno))} />
         <StatCard label="Voci registrate" value={spese.length} />
       </div>
+      <p className="mb-6 -mt-3 text-xs text-slate-400">
+        Il &laquo;costo annuo stimato&raquo; proietta le spese ricorrenti sull&apos;intero anno in base alla loro
+        cadenza (es. 100€ ogni 2 mesi = 600€/anno) e somma le spese una tantum dell&apos;anno.
+      </p>
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-sm font-semibold text-slate-900">Ripartizione per categoria — questo mese</h2>
@@ -63,6 +78,7 @@ export default async function SpesePage() {
               <th className="px-4 py-3">Descrizione</th>
               <th className="px-4 py-3">Importo</th>
               <th className="px-4 py-3">Ricorrenza</th>
+              <th className="px-4 py-3">Costo annuo</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -73,7 +89,10 @@ export default async function SpesePage() {
                 <td className="px-4 py-3 font-medium text-slate-900">{optionLabel(CATEGORIA_SPESA_OPTIONS, s.categoria)}</td>
                 <td className="px-4 py-3 max-w-xs truncate text-slate-500">{s.descrizione ?? "—"}</td>
                 <td className="px-4 py-3 text-slate-600">{formatCurrency(s.importo)}</td>
-                <td className="px-4 py-3 text-slate-500">{ricorrenzaLabel(s.ricorrenza)}</td>
+                <td className="px-4 py-3 text-slate-500">{ricorrenzaLabel(s.ricorrenzaMesi)}</td>
+                <td className="px-4 py-3 text-slate-500">
+                  {s.ricorrenzaMesi ? formatCurrency(costoAnnualizzato(s.importo, s.ricorrenzaMesi)) : "—"}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-3">
                     <Link href={`/app/spese/${s.id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">
@@ -86,7 +105,7 @@ export default async function SpesePage() {
             ))}
             {spese.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                   Nessuna spesa registrata finora.
                 </td>
               </tr>

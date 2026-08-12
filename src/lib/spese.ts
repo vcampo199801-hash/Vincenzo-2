@@ -1,5 +1,5 @@
 // Modulo Spese / Diario titolare: voci di spesa libere (affitto, utenze, ecc.)
-// inserite manualmente, usate solo per il riepilogo in dashboard — non è una
+// inserite manualmente, usate per il riepilogo in dashboard — non è una
 // contabilità o fatturazione.
 
 export const CATEGORIA_SPESA_OPTIONS = [
@@ -18,25 +18,26 @@ export function optionLabel(options: { value: string; label: string }[], value: 
   return options.find((o) => o.value === value)?.label ?? value;
 }
 
-// Valore convenzionale per la ricorrenza mensile; qualsiasi altro valore
-// non nullo è testo libero inserito dall'utente (ricorrenza personalizzata).
-export const RICORRENZA_MENSILE = "MENSILE";
-
-export const RICORRENZA_TIPO_OPTIONS = [
-  { value: "", label: "Nessuna ricorrenza" },
-  { value: RICORRENZA_MENSILE, label: "Mensile" },
-  { value: "PERSONALIZZATA", label: "Personalizzata" },
-];
-
-/** Etichetta da mostrare per la ricorrenza salvata: null -> "—", "MENSILE" ->
- * "Mensile", qualsiasi altro testo -> mostrato così com'è (ricorrenza personalizzata). */
-export function ricorrenzaLabel(ricorrenza: string | null | undefined): string {
-  if (!ricorrenza) return "—";
-  if (ricorrenza === RICORRENZA_MENSILE) return "Mensile";
-  return ricorrenza;
+/** Etichetta leggibile per la cadenza: null -> "—", altrimenti "Mensile" /
+ * "Trimestrale" / "Semestrale" / "Annuale" per i valori più comuni, o "Ogni N mesi". */
+export function ricorrenzaLabel(ricorrenzaMesi: number | null | undefined): string {
+  if (!ricorrenzaMesi) return "—";
+  if (ricorrenzaMesi === 1) return "Mensile";
+  if (ricorrenzaMesi === 3) return "Trimestrale";
+  if (ricorrenzaMesi === 6) return "Semestrale";
+  if (ricorrenzaMesi === 12) return "Annuale";
+  return `Ogni ${ricorrenzaMesi} mesi`;
 }
 
-export type SpesaRiga = { data: Date; categoria: string; importo: number };
+/** Costo annuo di una spesa ricorrente proiettato dalla sua cadenza
+ * (es. 100€ ogni 2 mesi -> 100 * 12/2 = 600€/anno). Una spesa una tantum
+ * "costa" semplicemente il suo importo. */
+export function costoAnnualizzato(importo: number, ricorrenzaMesi: number | null | undefined): number {
+  if (!ricorrenzaMesi || ricorrenzaMesi <= 0) return importo;
+  return importo * (12 / ricorrenzaMesi);
+}
+
+export type SpesaRiga = { data: Date; categoria: string; importo: number; ricorrenzaMesi?: number | null };
 
 export function totaleSpese(righe: SpesaRiga[]) {
   return righe.reduce((sum, r) => sum + r.importo, 0);
@@ -59,4 +60,20 @@ export function speseDelMese(righe: SpesaRiga[], anno: number, mese: number) {
 
 export function speseDellAnno(righe: SpesaRiga[], anno: number) {
   return righe.filter((r) => r.data.getUTCFullYear() === anno);
+}
+
+/** Stima di quanto costerà l'anno "a regime": le spese ricorrenti vengono
+ * proiettate sull'intero anno in base alla loro cadenza (inserite una sola
+ * volta come definizione, non una riga per ogni occorrenza); le spese una
+ * tantum contano per l'importo effettivo se datate nell'anno indicato. */
+export function costoAnnuoProiettato(righe: SpesaRiga[], anno: number): number {
+  let totale = 0;
+  for (const r of righe) {
+    if (r.ricorrenzaMesi) {
+      totale += costoAnnualizzato(r.importo, r.ricorrenzaMesi);
+    } else if (r.data.getUTCFullYear() === anno) {
+      totale += r.importo;
+    }
+  }
+  return totale;
 }

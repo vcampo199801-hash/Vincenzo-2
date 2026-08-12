@@ -527,19 +527,20 @@ model MaterialeInformativo {
 // diario per il riepilogo in dashboard, non sostituisce contabilità/fatturazione.
 // categoria (string): AFFITTO | UTENZE | PERSONALE_ESTERNO | MATERIALI_NON_SANITARI |
 //   MANUTENZIONE_ATTREZZATURE | ASSICURAZIONI | TASSE_CONTRIBUTI | MARKETING | ALTRO
-// ricorrenza: null = non ricorrente, "MENSILE" = ogni mese, qualsiasi altro
-//   testo = descrizione libera di una ricorrenza personalizzata (es. "Ogni 3 mesi").
+// ricorrenzaMesi: null = spesa una tantum; altrimenti la spesa si ripete ogni N mesi
+//   (1 = mensile, 3 = trimestrale, ecc.) — numerico apposta per poter calcolare il
+//   costo annuo proiettato (importo * 12 / ricorrenzaMesi), vedi src/lib/spese.ts.
 model SpesaStudio {
-  id          String   @id @default(cuid())
-  studioId    String
-  studio      Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  data        DateTime
-  categoria   String   @default("ALTRO")
-  descrizione String?
-  importo     Float
-  ricorrenza  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  studioId       String
+  studio         Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  data           DateTime
+  categoria      String   @default("ALTRO")
+  descrizione    String?
+  importo        Float
+  ricorrenzaMesi Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([studioId])
 }

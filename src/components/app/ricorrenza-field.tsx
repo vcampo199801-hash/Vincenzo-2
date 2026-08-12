@@ -1,28 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { RICORRENZA_TIPO_OPTIONS, RICORRENZA_MENSILE } from "@/lib/spese";
 
-export function RicorrenzaField({
-  defaultRicorrenza,
-}: {
-  defaultRicorrenza?: string | null;
-}) {
-  const initialTipo =
-    !defaultRicorrenza ? "" : defaultRicorrenza === RICORRENZA_MENSILE ? RICORRENZA_MENSILE : "PERSONALIZZATA";
-  const [tipo, setTipo] = useState(initialTipo);
+const PRESET_OPTIONS = [
+  { value: "", label: "Nessuna ricorrenza" },
+  { value: "1", label: "Mensile" },
+  { value: "3", label: "Trimestrale (ogni 3 mesi)" },
+  { value: "6", label: "Semestrale (ogni 6 mesi)" },
+  { value: "12", label: "Annuale" },
+  { value: "custom", label: "Personalizzata" },
+];
+const PRESET_VALUES = new Set(["1", "3", "6", "12"]);
+
+export function RicorrenzaField({ defaultRicorrenzaMesi }: { defaultRicorrenzaMesi?: number | null }) {
+  const initial = !defaultRicorrenzaMesi
+    ? ""
+    : PRESET_VALUES.has(String(defaultRicorrenzaMesi))
+      ? String(defaultRicorrenzaMesi)
+      : "custom";
+  const [selezione, setSelezione] = useState(initial);
 
   return (
     <div className="space-y-3">
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-slate-700">Ricorrenza</span>
         <select
-          name="ricorrenzaTipo"
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
+          value={selezione}
+          onChange={(e) => setSelezione(e.target.value)}
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         >
-          {RICORRENZA_TIPO_OPTIONS.map((o) => (
+          {PRESET_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>
@@ -30,17 +37,24 @@ export function RicorrenzaField({
         </select>
       </label>
 
-      {tipo === "PERSONALIZZATA" && (
+      {selezione === "custom" ? (
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Descrivi la ricorrenza</span>
+          <span className="mb-1 block font-medium text-slate-700">Ogni quanti mesi si ripete?</span>
           <input
-            name="ricorrenzaPersonalizzata"
-            type="text"
-            defaultValue={defaultRicorrenza && defaultRicorrenza !== RICORRENZA_MENSILE ? defaultRicorrenza : ""}
-            placeholder="Es. Ogni 3 mesi, Annuale a gennaio, Ogni 2 settimane..."
+            name="ricorrenzaMesi"
+            type="number"
+            min={1}
+            step={1}
+            defaultValue={defaultRicorrenzaMesi ?? ""}
+            placeholder="Es. 2"
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
+          <span className="mt-1 block text-xs text-slate-400">
+            Usato per calcolare il costo annuo stimato (importo × 12 / mesi).
+          </span>
         </label>
+      ) : (
+        <input type="hidden" name="ricorrenzaMesi" value={selezione} />
       )}
     </div>
   );
