@@ -11,7 +11,6 @@ import {
   TIPOLOGIA_LAVORAZIONE_OPTIONS,
   CATEGORIA_DICHIARAZIONE_CONFORMITA,
 } from "@/lib/laboratori";
-import { PageHeader } from "@/components/ui/page-header";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -27,12 +26,29 @@ export default async function LaboratoriPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Laboratori"
-        description="Anagrafica dei laboratori odontotecnici e tracciabilità delle dichiarazioni di conformità (Reg. UE 2017/745, Allegato XIII)."
-        action="Nuovo laboratorio"
-        actionHref="/app/laboratori/new"
-      />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">Laboratori</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Anagrafica dei laboratori odontotecnici e tracciabilità delle dichiarazioni di conformità (Reg. UE
+            2017/745, Allegato XIII).
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/app/laboratori/lavorazioni/new"
+            className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Nuova lavorazione
+          </Link>
+          <Link
+            href="/app/laboratori/new"
+            className="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
+          >
+            Nuovo laboratorio
+          </Link>
+        </div>
+      </div>
       <p className="mb-6 max-w-3xl text-sm text-slate-500">
         Il laboratorio non è un utente di questa app: tutti i dati e i documenti li carichi tu. Lo studio, come
         prescrittore, ha l&apos;obbligo di conservare la dichiarazione di conformità di ogni dispositivo su misura

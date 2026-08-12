@@ -18,6 +18,24 @@ export function optionLabel(options: { value: string; label: string }[], value: 
   return options.find((o) => o.value === value)?.label ?? value;
 }
 
+// Valore convenzionale per la ricorrenza mensile; qualsiasi altro valore
+// non nullo è testo libero inserito dall'utente (ricorrenza personalizzata).
+export const RICORRENZA_MENSILE = "MENSILE";
+
+export const RICORRENZA_TIPO_OPTIONS = [
+  { value: "", label: "Nessuna ricorrenza" },
+  { value: RICORRENZA_MENSILE, label: "Mensile" },
+  { value: "PERSONALIZZATA", label: "Personalizzata" },
+];
+
+/** Etichetta da mostrare per la ricorrenza salvata: null -> "—", "MENSILE" ->
+ * "Mensile", qualsiasi altro testo -> mostrato così com'è (ricorrenza personalizzata). */
+export function ricorrenzaLabel(ricorrenza: string | null | undefined): string {
+  if (!ricorrenza) return "—";
+  if (ricorrenza === RICORRENZA_MENSILE) return "Mensile";
+  return ricorrenza;
+}
+
 export type SpesaRiga = { data: Date; categoria: string; importo: number };
 
 export function totaleSpese(righe: SpesaRiga[]) {

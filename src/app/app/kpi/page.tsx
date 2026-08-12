@@ -1,7 +1,18 @@
+import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDate } from "@/lib/compliance";
-import { fatturatoUltimiGiorni, riepilogoPerMese, sommaKpi, tassoConversionePreventivi, MESI_LABELS, toIsoDate } from "@/lib/kpi";
+import {
+  serieUltimiGiorni,
+  serieMensile,
+  serieSemestrale,
+  serieAnnuale,
+  tassoConversionePreventivi,
+  KPI_METRICHE,
+  toIsoDate,
+  type KpiMetricaKey,
+  type KpiRiga,
+} from "@/lib/kpi";
 import { salvaKpiGiorno, deleteKpiGiorno } from "@/lib/actions/kpi";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, TextAreaField, SubmitButton } from "@/components/ui/form";
@@ -11,30 +22,50 @@ import { TrendBars } from "@/components/charts/trend-bars";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-export default async function KpiPage({ searchParams }: { searchParams: Promise<{ data?: string }> }) {
+const PERIODI = [
+  { value: "giorni", label: "Ultimi 14 giorni" },
+  { value: "mese", label: "Mensile" },
+  { value: "semestre", label: "Semestrale" },
+  { value: "anno", label: "Annuale" },
+] as const;
+type Periodo = (typeof PERIODI)[number]["value"];
+
+function serieMetrica(righe: KpiRiga[], periodo: Periodo, metrica: KpiMetricaKey, anno: number, oggi: Date) {
+  if (periodo === "mese") return serieMensile(righe, anno, metrica);
+  if (periodo === "semestre") return serieSemestrale(righe, anno, metrica);
+  if (periodo === "anno") return serieAnnuale(righe, metrica);
+  return serieUltimiGiorni(righe, 14, metrica, oggi);
+}
+
+function titoloPeriodo(periodo: Periodo, anno: number) {
+  if (periodo === "mese") return `Andamento mensile — anno ${anno}`;
+  if (periodo === "semestre") return `Andamento semestrale — anno ${anno}`;
+  if (periodo === "anno") return "Andamento annuale";
+  return "Ultimi 14 giorni";
+}
+
+export default async function KpiPage({ searchParams }: { searchParams: Promise<{ data?: string; periodo?: string }> }) {
   const { studio } = await requireActiveSubscription("kpi");
   const params = await searchParams;
 
   const oggi = new Date();
   const dataSelezionata = params.data ? new Date(params.data) : oggi;
   const isModifica = Boolean(params.data);
+  const periodo: Periodo = PERIODI.some((p) => p.value === params.periodo) ? (params.periodo as Periodo) : "giorni";
+  const anno = oggi.getUTCFullYear();
 
-  const [righeGrezze, righeGiornoSelezionato] = await Promise.all([
+  const [righe, righeGiornoSelezionato] = await Promise.all([
     prisma.kpiGiornaliero.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } }),
     prisma.kpiGiornaliero.findFirst({ where: { studioId: studio.id, data: dataSelezionata } }),
   ]);
 
-  const righe = righeGrezze;
-  const anno = oggi.getUTCFullYear();
-  const mese = oggi.getUTCMonth();
-
-  const ultimi14Giorni = fatturatoUltimiGiorni(righe, 14, oggi);
-  const totaleMese = sommaKpi(righe.filter((r) => r.data.getUTCFullYear() === anno && r.data.getUTCMonth() === mese));
-  const conversioneMese = tassoConversionePreventivi(totaleMese.valorePreventiviPresentati, totaleMese.valorePreventiviAccettati);
-
-  const perMeseAnno = riepilogoPerMese(righe, anno);
-  const totaleAnno = sommaKpi(righe.filter((r) => r.data.getUTCFullYear() === anno));
-  const conversioneAnno = tassoConversionePreventivi(totaleAnno.valorePreventiviPresentati, totaleAnno.valorePreventiviAccettati);
+  const serieVisibili = KPI_METRICHE.map((m) => ({
+    ...m,
+    serie: serieMetrica(righe, periodo, m.key, anno, oggi),
+  }));
+  const totalePresentati = serieVisibili.find((m) => m.key === "valorePreventiviPresentati")!.serie.reduce((s, x) => s + x.value, 0);
+  const totaleAccettati = serieVisibili.find((m) => m.key === "valorePreventiviAccettati")!.serie.reduce((s, x) => s + x.value, 0);
+  const conversionePeriodo = tassoConversionePreventivi(totalePresentati, totaleAccettati);
 
   return (
     <div>
@@ -76,55 +107,40 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
         </form>
       </div>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-1 text-sm font-semibold text-slate-900">Fatturato giornaliero — ultimi 14 giorni</h2>
-          <p className="mb-4 text-xs text-slate-500">
-            Totale {MESI_LABELS[mese]} {anno}: {formatCurrency(totaleMese.fatturato)}
-          </p>
-          <TrendBars items={ultimi14Giorni} formatValue={formatCurrency} />
-          <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-4">
-            <div>
-              <dt className="text-xs text-slate-500">Prime visite</dt>
-              <dd className="font-medium text-slate-900">{totaleMese.numeroPrimeVisite}</dd>
+      <div className="mb-4 flex flex-wrap gap-2">
+        {PERIODI.map((p) => (
+          <Link
+            key={p.value}
+            href={`/app/kpi?periodo=${p.value}`}
+            className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
+              periodo === p.value ? "bg-brand-600 text-white" : "border border-slate-300 text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            {p.label}
+          </Link>
+        ))}
+      </div>
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {serieVisibili.map((m) => {
+          const totale = m.serie.reduce((s, x) => s + x.value, 0);
+          const formatValue = m.isCurrency ? formatCurrency : (v: number) => String(v);
+          return (
+            <div key={m.key} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h2 className="mb-1 text-sm font-semibold text-slate-900">{m.label}</h2>
+              <p className="mb-4 text-xs text-slate-500">
+                {titoloPeriodo(periodo, anno)} — Totale: {formatValue(totale)}
+              </p>
+              <TrendBars items={m.serie} formatValue={formatValue} barAreaHeight={72} />
             </div>
-            <div>
-              <dt className="text-xs text-slate-500">Appuntamenti</dt>
-              <dd className="font-medium text-slate-900">{totaleMese.numeroAppuntamenti}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">Preventivi presentati</dt>
-              <dd className="font-medium text-slate-900">{formatCurrency(totaleMese.valorePreventiviPresentati)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">Tasso di conversione</dt>
-              <dd className="font-medium text-slate-900">{conversioneMese === null ? "—" : `${conversioneMese}%`}</dd>
-            </div>
-          </dl>
-        </div>
+          );
+        })}
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-1 text-sm font-semibold text-slate-900">Fatturato mensile — anno {anno}</h2>
-          <p className="mb-4 text-xs text-slate-500">Totale anno: {formatCurrency(totaleAnno.fatturato)}</p>
-          <TrendBars items={perMeseAnno.map((m) => ({ label: m.label, value: m.fatturato }))} formatValue={formatCurrency} />
-          <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-4">
-            <div>
-              <dt className="text-xs text-slate-500">Prime visite</dt>
-              <dd className="font-medium text-slate-900">{totaleAnno.numeroPrimeVisite}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">Appuntamenti</dt>
-              <dd className="font-medium text-slate-900">{totaleAnno.numeroAppuntamenti}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">Preventivi presentati</dt>
-              <dd className="font-medium text-slate-900">{formatCurrency(totaleAnno.valorePreventiviPresentati)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">Tasso di conversione</dt>
-              <dd className="font-medium text-slate-900">{conversioneAnno === null ? "—" : `${conversioneAnno}%`}</dd>
-            </div>
-          </dl>
+          <h2 className="mb-1 text-sm font-semibold text-slate-900">Tasso di conversione</h2>
+          <p className="mb-4 text-xs text-slate-500">{titoloPeriodo(periodo, anno)}</p>
+          <p className="text-3xl font-semibold text-slate-900">{conversionePeriodo === null ? "—" : `${conversionePeriodo}%`}</p>
+          <p className="mt-2 text-xs text-slate-500">Preventivi accettati sul totale presentato nel periodo selezionato.</p>
         </div>
       </div>
 

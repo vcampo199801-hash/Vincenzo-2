@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate, formatCurrency } from "@/lib/compliance";
-import { CATEGORIA_SPESA_OPTIONS, optionLabel, totaleSpese, sommaPerCategoria, speseDelMese, speseDellAnno } from "@/lib/spese";
+import { CATEGORIA_SPESA_OPTIONS, optionLabel, totaleSpese, sommaPerCategoria, speseDelMese, speseDellAnno, ricorrenzaLabel } from "@/lib/spese";
 import { eliminaSpesa } from "@/lib/actions/spese";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
@@ -62,7 +62,7 @@ export default async function SpesePage() {
               <th className="px-4 py-3">Categoria</th>
               <th className="px-4 py-3">Descrizione</th>
               <th className="px-4 py-3">Importo</th>
-              <th className="px-4 py-3">Ricorrente</th>
+              <th className="px-4 py-3">Ricorrenza</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -73,7 +73,7 @@ export default async function SpesePage() {
                 <td className="px-4 py-3 font-medium text-slate-900">{optionLabel(CATEGORIA_SPESA_OPTIONS, s.categoria)}</td>
                 <td className="px-4 py-3 max-w-xs truncate text-slate-500">{s.descrizione ?? "—"}</td>
                 <td className="px-4 py-3 text-slate-600">{formatCurrency(s.importo)}</td>
-                <td className="px-4 py-3 text-slate-500">{s.ricorrente ? "Sì" : "—"}</td>
+                <td className="px-4 py-3 text-slate-500">{ricorrenzaLabel(s.ricorrenza)}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-3">
                     <Link href={`/app/spese/${s.id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">

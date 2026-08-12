@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { aggiornaSpesa } from "@/lib/actions/spese";
 import { CATEGORIA_SPESA_OPTIONS } from "@/lib/spese";
 import { PageHeader } from "@/components/ui/page-header";
-import { Field, SelectField, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
+import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { RicorrenzaField } from "@/components/app/ricorrenza-field";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export default async function ModificaSpesaPage({ params }: { params: Promise<{ 
         <SelectField label="Categoria" name="categoria" options={CATEGORIA_SPESA_OPTIONS} defaultValue={spesa.categoria} required />
         <Field label="Importo (€)" name="importo" type="number" step="0.01" required defaultValue={spesa.importo} />
         <TextAreaField label="Descrizione" name="descrizione" defaultValue={spesa.descrizione} />
-        <CheckboxField label="Spesa ricorrente (es. ogni mese)" name="ricorrente" defaultChecked={spesa.ricorrente} />
+        <RicorrenzaField defaultRicorrenza={spesa.ricorrenza} />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
     </div>

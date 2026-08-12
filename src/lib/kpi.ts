@@ -81,3 +81,50 @@ export function fatturatoUltimiGiorni(righe: KpiRiga[], giorni: number, oggi: Da
     return { label: String(d.getUTCDate()), value: r?.fatturato ?? 0, isOggi: iso === oggiIso };
   });
 }
+
+export type KpiMetricaKey = keyof ReturnType<typeof sommaKpi>;
+
+export const KPI_METRICHE: { key: KpiMetricaKey; label: string; isCurrency: boolean }[] = [
+  { key: "fatturato", label: "Fatturato", isCurrency: true },
+  { key: "valorePreventiviPresentati", label: "Preventivi presentati", isCurrency: true },
+  { key: "valorePreventiviAccettati", label: "Preventivi accettati", isCurrency: true },
+  { key: "numeroPrimeVisite", label: "Prime visite", isCurrency: false },
+  { key: "numeroAppuntamenti", label: "Appuntamenti", isCurrency: false },
+];
+
+/** Come fatturatoUltimiGiorni, ma per una qualsiasi metrica KPI. */
+export function serieUltimiGiorni(righe: KpiRiga[], giorni: number, metrica: KpiMetricaKey, oggi: Date = new Date()) {
+  const perData = new Map(righe.map((r) => [toIsoDate(r.data), r]));
+  return Array.from({ length: giorni }, (_, i) => {
+    const d = new Date(oggi);
+    d.setUTCDate(d.getUTCDate() - (giorni - 1 - i));
+    const iso = toIsoDate(d);
+    const r = perData.get(iso);
+    return { label: String(d.getUTCDate()), value: r ? r[metrica] : 0 };
+  });
+}
+
+/** Andamento sui 12 mesi dell'anno per una singola metrica. */
+export function serieMensile(righe: KpiRiga[], anno: number, metrica: KpiMetricaKey) {
+  return riepilogoPerMese(righe, anno).map((m) => ({ label: m.label, value: m[metrica] }));
+}
+
+/** Andamento sui due semestri dell'anno per una singola metrica. */
+export function serieSemestrale(righe: KpiRiga[], anno: number, metrica: KpiMetricaKey) {
+  const perMese = riepilogoPerMese(righe, anno);
+  const h1 = perMese.slice(0, 6).reduce((s, m) => s + m[metrica], 0);
+  const h2 = perMese.slice(6, 12).reduce((s, m) => s + m[metrica], 0);
+  return [
+    { label: "1° semestre", value: h1 },
+    { label: "2° semestre", value: h2 },
+  ];
+}
+
+/** Un valore per ciascun anno con almeno una registrazione, per vedere la crescita anno su anno. */
+export function serieAnnuale(righe: KpiRiga[], metrica: KpiMetricaKey) {
+  const anni = [...new Set(righe.map((r) => r.data.getUTCFullYear()))].sort((a, b) => a - b);
+  return anni.map((anno) => ({
+    label: String(anno),
+    value: righe.filter((r) => r.data.getUTCFullYear() === anno).reduce((s, r) => s + r[metrica], 0),
+  }));
+}

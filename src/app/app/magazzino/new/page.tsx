@@ -1,7 +1,9 @@
 import { requireActiveSubscription } from "@/lib/auth-guards";
+import { prisma } from "@/lib/prisma";
 import { createMagazzinoItem } from "@/lib/actions/magazzino";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { FornitoreField } from "@/components/ui/fornitore-field";
 import { MAGAZZINO_CATEGORIE } from "@/lib/compliance";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
 
@@ -9,7 +11,13 @@ import { BarcodeScanner } from "@/components/app/barcode-scanner";
 export const dynamic = "force-dynamic";
 
 export default async function NewMagazzinoPage() {
-  await requireActiveSubscription("magazzino");
+  const { studio } = await requireActiveSubscription("magazzino");
+
+  const fornitoriMateriali = await prisma.fornitore.findMany({
+    where: { studioId: studio.id, tipo: "MATERIALI", nome: { not: null } },
+    orderBy: { nome: "asc" },
+  });
+  const opzioniFornitore = [...new Set(fornitoriMateriali.map((f) => f.nome!).filter(Boolean))];
 
   return (
     <div className="max-w-2xl">
@@ -19,7 +27,7 @@ export default async function NewMagazzinoPage() {
         <Field label="Prodotto" name="prodotto" required placeholder="Es. Guanti nitrile taglia M" />
         <div className="grid grid-cols-2 gap-4">
           <SelectField label="Categoria" name="categoria" defaultValue="Altro" options={MAGAZZINO_CATEGORIE.map((c) => ({ value: c, label: c }))} />
-          <Field label="Fornitore" name="fornitore" placeholder="Es. Depot Dentale" />
+          <FornitoreField opzioni={opzioniFornitore} />
         </div>
         <div className="grid grid-cols-3 gap-4">
           <Field label="Unità" name="unita" defaultValue="pz" />

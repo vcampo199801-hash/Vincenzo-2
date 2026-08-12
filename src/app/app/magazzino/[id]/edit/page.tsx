@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { updateMagazzinoItem } from "@/lib/actions/magazzino";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { FornitoreField } from "@/components/ui/fornitore-field";
 import { MAGAZZINO_CATEGORIE } from "@/lib/compliance";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
 
@@ -13,8 +14,12 @@ export const dynamic = "force-dynamic";
 export default async function EditMagazzinoPage({ params }: { params: Promise<{ id: string }> }) {
   const { studio } = await requireActiveSubscription("magazzino");
   const { id } = await params;
-  const item = await prisma.magazzinoItem.findFirst({ where: { id, studioId: studio.id } });
+  const [item, fornitoriMateriali] = await Promise.all([
+    prisma.magazzinoItem.findFirst({ where: { id, studioId: studio.id } }),
+    prisma.fornitore.findMany({ where: { studioId: studio.id, tipo: "MATERIALI", nome: { not: null } }, orderBy: { nome: "asc" } }),
+  ]);
   if (!item) notFound();
+  const opzioniFornitore = [...new Set(fornitoriMateriali.map((f) => f.nome!).filter(Boolean))];
 
   const updateWithId = updateMagazzinoItem.bind(null, item.id);
 
@@ -26,7 +31,7 @@ export default async function EditMagazzinoPage({ params }: { params: Promise<{ 
         <Field label="Prodotto" name="prodotto" required defaultValue={item.prodotto} />
         <div className="grid grid-cols-2 gap-4">
           <SelectField label="Categoria" name="categoria" defaultValue={item.categoria} options={MAGAZZINO_CATEGORIE.map((c) => ({ value: c, label: c }))} />
-          <Field label="Fornitore" name="fornitore" defaultValue={item.fornitore} />
+          <FornitoreField defaultValue={item.fornitore} opzioni={opzioniFornitore} />
         </div>
         <div className="grid grid-cols-3 gap-4">
           <Field label="Unità" name="unita" defaultValue={item.unita} />
