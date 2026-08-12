@@ -2,17 +2,17 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/compliance";
 import {
-  TIPO_MANUTENZIONE_OPTIONS,
   ESITO_MANUTENZIONE_OPTIONS,
   optionLabel,
   ultimoControlloPerTipo,
   contaAnomalie,
 } from "@/lib/manutenzione";
-import { creaManutenzione, eliminaManutenzione } from "@/lib/actions/manutenzione";
+import { creaManutenzione, eliminaManutenzione, aggiornaCadenzaTipo, ensureTipiManutenzione } from "@/lib/actions/manutenzione";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { TipoManutenzioneField } from "@/components/app/tipo-manutenzione-field";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -29,16 +29,21 @@ const ESITO_STYLE: Record<string, string> = {
 
 export default async function ManutenzionePage() {
   const { studio } = await requireActiveSubscription("manutenzione");
+  await ensureTipiManutenzione();
 
-  const registrazioni = await prisma.manutenzioneLog.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } });
-  const perTipo = ultimoControlloPerTipo(registrazioni);
+  const [registrazioni, tipi] = await Promise.all([
+    prisma.manutenzioneLog.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } }),
+    prisma.tipoManutenzione.findMany({ where: { studioId: studio.id }, orderBy: { createdAt: "asc" } }),
+  ]);
+  const perTipo = ultimoControlloPerTipo(registrazioni, tipi);
   const anomalie = contaAnomalie(registrazioni);
+  const tipiLabel: Record<string, string> = Object.fromEntries(tipi.map((t) => [t.chiave, t.nome]));
 
   return (
     <div>
       <PageHeader
         title="Manutenzione staff"
-        description="Controlli di routine eseguiti dal personale: autoclave, lubrificazione manipoli, pulizia aspiratori. Ogni voce riporta l'operatore che l'ha eseguita."
+        description="Controlli di routine eseguiti dal personale: autoclave, lubrificazione manipoli, pulizia aspiratori, o tipi personalizzati. Ogni voce riporta l'operatore che l'ha eseguita."
       />
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -47,7 +52,7 @@ export default async function ManutenzionePage() {
         <StatCard label="Tipi di controllo in ritardo" value={perTipo.filter((t) => t.inRitardo).length} tone={perTipo.some((t) => t.inRitardo) ? "warn" : "good"} />
       </div>
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {perTipo.map((t) => (
           <div key={t.tipo} className={`rounded-xl border p-4 ${t.inRitardo ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-white"} shadow-sm`}>
             <p className="text-sm font-semibold text-slate-900">{t.label}</p>
@@ -59,6 +64,23 @@ export default async function ManutenzionePage() {
             ) : (
               <p className="mt-1 text-xs text-slate-500">Nessuna registrazione ancora.</p>
             )}
+            <form action={aggiornaCadenzaTipo.bind(null, tipi.find((x) => x.chiave === t.tipo)!.id)} className="mt-3 flex items-center gap-2">
+              <label className="flex items-center gap-1.5 text-xs text-slate-500">
+                Cadenza (giorni)
+                <input
+                  type="number"
+                  name="cadenzaGiorni"
+                  min={1}
+                  step={1}
+                  defaultValue={t.cadenzaGiorni ?? ""}
+                  placeholder="—"
+                  className="w-16 rounded-lg border border-slate-300 px-2 py-1 text-xs"
+                />
+              </label>
+              <button type="submit" className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200">
+                Salva
+              </button>
+            </form>
           </div>
         ))}
       </div>
@@ -67,7 +89,7 @@ export default async function ManutenzionePage() {
         <h2 className="mb-4 text-sm font-semibold text-slate-900">Registra un controllo</h2>
         <form action={creaManutenzione} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField label="Tipo di controllo" name="tipo" options={TIPO_MANUTENZIONE_OPTIONS} defaultValue="AUTOCLAVE" required />
+            <TipoManutenzioneField tipi={tipi.map((t) => ({ chiave: t.chiave, nome: t.nome }))} />
             <Field label="Data" name="data" type="date" required defaultValue={toIsoDate(new Date())} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -95,7 +117,7 @@ export default async function ManutenzionePage() {
             {registrazioni.map((r) => (
               <tr key={r.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3 text-slate-600">{formatDate(r.data)}</td>
-                <td className="px-4 py-3 font-medium text-slate-900">{optionLabel(TIPO_MANUTENZIONE_OPTIONS, r.tipo)}</td>
+                <td className="px-4 py-3 font-medium text-slate-900">{tipiLabel[r.tipo] ?? r.tipo}</td>
                 <td className="px-4 py-3 text-slate-600">{r.operatore}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${ESITO_STYLE[r.esito] ?? "bg-slate-100 text-slate-600"}`}>

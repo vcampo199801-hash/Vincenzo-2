@@ -13,7 +13,16 @@ import {
 } from "@/lib/compliance";
 import { contrattoStato, optionLabel, MANSIONE_OPTIONS } from "@/lib/personale";
 import { consegnaStato, contaStatiLavorazione, CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
-import { sommaKpi, tassoConversionePreventivi, fatturatoUltimiGiorni, toIsoDate } from "@/lib/kpi";
+import {
+  sommaKpi,
+  tassoConversionePreventivi,
+  fatturatoUltimiGiorni,
+  toIsoDate,
+  inizioMese,
+  fineMese,
+  inizioAnno,
+  fineAnno,
+} from "@/lib/kpi";
 import {
   CATEGORIA_SPESA_OPTIONS,
   optionLabel as optionLabelSpesa,
@@ -24,6 +33,7 @@ import {
   costoAnnuoProiettato,
 } from "@/lib/spese";
 import { ultimoControlloPerTipo, contaAnomalie } from "@/lib/manutenzione";
+import { DraggableSections } from "@/components/app/draggable-sections";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
 import { StatusDonut } from "@/components/charts/donut";
@@ -35,10 +45,42 @@ import { STATUS_HEX, BRAND_SEQUENTIAL } from "@/components/charts/colors";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
-  const { studio } = await requireActiveSubscription("dashboard");
+const PERIODI_BILANCIO = [
+  { value: "annuale", label: "Annuale" },
+  { value: "mensile", label: "Mensile" },
+  { value: "personalizzato", label: "Personalizzato" },
+] as const;
+type PeriodoBilancio = (typeof PERIODI_BILANCIO)[number]["value"];
 
-  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni] =
+/** Elenco {anno, mese} di ogni mese compreso tra dataInizio e dataFine
+ * (estremi inclusi), usato per sommare mese per mese le spese ricorrenti e
+ * il costo del personale su un intervallo di bilancio mensile/personalizzato. */
+function meseIterator(dataInizio: Date, dataFine: Date): { anno: number; mese: number }[] {
+  const risultato: { anno: number; mese: number }[] = [];
+  let anno = dataInizio.getUTCFullYear();
+  let mese = dataInizio.getUTCMonth();
+  const annoFine = dataFine.getUTCFullYear();
+  const meseFine = dataFine.getUTCMonth();
+  while (anno < annoFine || (anno === annoFine && mese <= meseFine)) {
+    risultato.push({ anno, mese });
+    mese += 1;
+    if (mese > 11) {
+      mese = 0;
+      anno += 1;
+    }
+  }
+  return risultato;
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ bilancio?: string; bilancioDa?: string; bilancioA?: string }>;
+}) {
+  const { studio } = await requireActiveSubscription("dashboard");
+  const params = await searchParams;
+
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni, tipiManutenzione] =
     await Promise.all([
       prisma.adempimento.findMany({ where: { studioId: studio.id } }),
       prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
@@ -52,6 +94,7 @@ export default async function DashboardPage() {
       prisma.materialeInformativo.count({ where: { studioId: studio.id } }),
       prisma.spesaStudio.findMany({ where: { studioId: studio.id } }),
       prisma.manutenzioneLog.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } }),
+      prisma.tipoManutenzione.findMany({ where: { studioId: studio.id } }),
     ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -177,27 +220,69 @@ export default async function DashboardPage() {
     }));
 
   // Manutenzione staff: quanti tipi di controllo sono in ritardo e anomalie totali.
-  const manutenzionePerTipo = ultimoControlloPerTipo(manutenzioni);
+  const manutenzionePerTipo = ultimoControlloPerTipo(manutenzioni, tipiManutenzione);
   const manutenzioneInRitardo = manutenzionePerTipo.filter((t) => t.inRitardo).length;
   const manutenzioneAnomalie = contaAnomalie(manutenzioni);
 
-  // Bilancio dell'attività: confronta i ricavi dell'anno (fatturato KPI) con
-  // la stima di tutti i costi dell'anno raccolti nell'app — spese del
-  // titolare (proiettate sulla loro cadenza), personale, interventi del
-  // registro controlli e lavorazioni di laboratorio.
+  // Bilancio dell'attività: confronta i ricavi del periodo scelto (fatturato
+  // KPI) con la stima di tutti i costi dello stesso periodo raccolti
+  // nell'app — spese del titolare (proiettate sulla loro cadenza), personale,
+  // interventi del registro controlli e lavorazioni di laboratorio. Periodo
+  // scelto rapidamente dallo studio: annuale, mensile o un intervallo
+  // personalizzato.
   const anno = now.getUTCFullYear();
-  const ricaviAnnui = kpiGiornalieri.filter((k) => k.data.getUTCFullYear() === anno).reduce((s, k) => s + k.fatturato, 0);
-  const costoAnnuoSpese = costoAnnuoProiettato(spese, anno);
-  const costoAnnuoPersonale = costoMensileTotale * 12;
-  const costoAnnuoControlli = controlli.filter((c) => c.dataIntervento.getUTCFullYear() === anno).reduce((s, c) => s + c.costo, 0);
-  const costoAnnuoLaboratori = lavorazioniLab.filter((l) => l.dataInvio.getUTCFullYear() === anno).reduce((s, l) => s + (l.costo ?? 0), 0);
-  const costoAnnuoTotale = costoAnnuoSpese + costoAnnuoPersonale + costoAnnuoControlli + costoAnnuoLaboratori;
-  const bilancioAnnuo = ricaviAnnui - costoAnnuoTotale;
+  const periodoBilancio: PeriodoBilancio = PERIODI_BILANCIO.some((p) => p.value === params.bilancio)
+    ? (params.bilancio as PeriodoBilancio)
+    : "annuale";
+  const bilancioDaDefault = toIsoDate(inizioAnno(anno));
+  const bilancioADefault = toIsoDate(now);
+  const bilancioDaIso = params.bilancioDa || bilancioDaDefault;
+  const bilancioAIso = params.bilancioA || bilancioADefault;
+
+  let dataInizioBilancio: Date;
+  let dataFineBilancio: Date;
+  let titoloBilancio: string;
+  if (periodoBilancio === "mensile") {
+    dataInizioBilancio = inizioMese(anno, now.getUTCMonth());
+    dataFineBilancio = fineMese(anno, now.getUTCMonth());
+    titoloBilancio = `mese di ${MESI_LABELS[now.getUTCMonth()]} ${anno}`;
+  } else if (periodoBilancio === "personalizzato") {
+    dataInizioBilancio = new Date(bilancioDaIso);
+    dataFineBilancio = new Date(bilancioAIso);
+    titoloBilancio = `dal ${formatDate(dataInizioBilancio)} al ${formatDate(dataFineBilancio)}`;
+  } else {
+    dataInizioBilancio = inizioAnno(anno);
+    dataFineBilancio = fineAnno(anno);
+    titoloBilancio = `anno ${anno}`;
+  }
+
+  const ricaviPeriodo = kpiGiornalieri
+    .filter((k) => k.data.getTime() >= dataInizioBilancio.getTime() && k.data.getTime() <= dataFineBilancio.getTime())
+    .reduce((s, k) => s + k.fatturato, 0);
+
+  let costoSpesePeriodo: number;
+  let costoPersonalePeriodo: number;
+  if (periodoBilancio === "annuale") {
+    costoSpesePeriodo = costoAnnuoProiettato(spese, anno);
+    costoPersonalePeriodo = costoMensileTotale * 12;
+  } else {
+    const mesiPeriodo = meseIterator(dataInizioBilancio, dataFineBilancio);
+    costoSpesePeriodo = mesiPeriodo.reduce((s, { anno: a, mese: m }) => s + totaleSpese(speseEffettiveDelMese(spese, a, m)), 0);
+    costoPersonalePeriodo = costoMensileTotale * mesiPeriodo.length;
+  }
+  const costoControlliPeriodo = controlli
+    .filter((c) => c.dataIntervento.getTime() >= dataInizioBilancio.getTime() && c.dataIntervento.getTime() <= dataFineBilancio.getTime())
+    .reduce((s, c) => s + c.costo, 0);
+  const costoLaboratoriPeriodo = lavorazioniLab
+    .filter((l) => l.dataInvio.getTime() >= dataInizioBilancio.getTime() && l.dataInvio.getTime() <= dataFineBilancio.getTime())
+    .reduce((s, l) => s + (l.costo ?? 0), 0);
+  const costoPeriodoTotale = costoSpesePeriodo + costoPersonalePeriodo + costoControlliPeriodo + costoLaboratoriPeriodo;
+  const bilancioPeriodo = ricaviPeriodo - costoPeriodoTotale;
   const ripartizioneCosti = [
-    { label: "Spese", value: costoAnnuoSpese },
-    { label: "Personale", value: costoAnnuoPersonale },
-    { label: "Registro controlli", value: costoAnnuoControlli },
-    { label: "Laboratori", value: costoAnnuoLaboratori },
+    { label: "Spese", value: costoSpesePeriodo },
+    { label: "Personale", value: costoPersonalePeriodo },
+    { label: "Registro controlli", value: costoControlliPeriodo },
+    { label: "Laboratori", value: costoLaboratoriPeriodo },
   ]
     .filter((c) => c.value > 0)
     .sort((a, b) => b.value - a.value);
@@ -222,21 +307,57 @@ export default async function DashboardPage() {
       <section className="min-w-0 rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Bilancio dell&apos;attività — anno {anno}</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Bilancio dell&apos;attività — {titoloBilancio}</h2>
             <p className="mt-1 text-xs text-slate-500">
-              Ricavi da KPI Studio meno la stima di tutti i costi dell&apos;anno (spese, personale, registro
+              Ricavi da KPI Studio meno la stima di tutti i costi del periodo (spese, personale, registro
               controlli, laboratori). È una stima indicativa, non sostituisce la contabilità.
             </p>
           </div>
-          <span className={`shrink-0 text-2xl font-bold ${bilancioAnnuo >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-            {bilancioAnnuo >= 0 ? "+" : ""}
-            {formatCurrency(bilancioAnnuo)}
+          <span className={`shrink-0 text-2xl font-bold ${bilancioPeriodo >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            {bilancioPeriodo >= 0 ? "+" : ""}
+            {formatCurrency(bilancioPeriodo)}
           </span>
         </div>
+
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {PERIODI_BILANCIO.map((p) => (
+            <Link
+              key={p.value}
+              href={`/app?bilancio=${p.value}`}
+              className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
+                periodoBilancio === p.value ? "bg-brand-600 text-white" : "border border-slate-300 text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {p.label}
+            </Link>
+          ))}
+          {periodoBilancio === "personalizzato" && (
+            <form method="get" className="flex flex-wrap items-center gap-2">
+              <input type="hidden" name="bilancio" value="personalizzato" />
+              <input
+                type="date"
+                name="bilancioDa"
+                defaultValue={bilancioDaIso}
+                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+              />
+              <span className="text-sm text-slate-400">—</span>
+              <input
+                type="date"
+                name="bilancioA"
+                defaultValue={bilancioAIso}
+                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+              />
+              <button type="submit" className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
+                Applica
+              </button>
+            </form>
+          )}
+        </div>
+
         <div className="grid gap-6 sm:grid-cols-2">
           <dl className="grid grid-cols-2 gap-4 text-sm">
-            <DashRow label="Ricavi dell'anno (fatturato KPI)" value={formatCurrency(ricaviAnnui)} />
-            <DashRow label="Costi totali stimati" value={formatCurrency(costoAnnuoTotale)} bad={costoAnnuoTotale > ricaviAnnui} />
+            <DashRow label="Ricavi del periodo (fatturato KPI)" value={formatCurrency(ricaviPeriodo)} />
+            <DashRow label="Costi totali stimati" value={formatCurrency(costoPeriodoTotale)} bad={costoPeriodoTotale > ricaviPeriodo} />
           </dl>
           {ripartizioneCosti.length > 0 ? (
             <div>
@@ -289,235 +410,293 @@ export default async function DashboardPage() {
         </section>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Scadenzario per stato</h2>
-          <StatusDonut
-            centerValue={`${compliancePct}%`}
-            centerLabel="in regola"
-            segments={[
-              { label: STATO_LABELS.OK, value: okCount, color: STATUS_HEX.OK },
-              { label: STATO_LABELS.IN_SCADENZA, value: inScadenzaCount, color: STATUS_HEX.IN_SCADENZA },
-              { label: STATO_LABELS.SCADUTO, value: scadutiCount, color: STATUS_HEX.SCADUTO },
-              { label: STATO_LABELS.DA_COMPILARE, value: daCompilareCount, color: STATUS_HEX.DA_COMPILARE },
-            ]}
-          />
-        </section>
-
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Valore magazzino per categoria</h2>
-            <Link href="/app/magazzino" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutto →
-            </Link>
-          </div>
-          <BarList items={categorieRanked} formatValue={formatCurrency} />
-        </section>
-
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Spesa manutenzioni — ultimi 6 mesi</h2>
-            <Link href="/app/controlli" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutto →
-            </Link>
-          </div>
-          <TrendBars items={speseUltimiMesi} formatValue={(v) => formatCurrency(v).replace(",00", "")} />
-        </section>
-
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Formazione ECM del team</h2>
-            <Link href="/app/ecm" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutto →
-            </Link>
-          </div>
-          <div className="space-y-3">
-            <Meter
-              label="Crediti totali team vs target"
-              value={ecmTotali.totale}
-              max={ecmTotali.target}
-              tone={ecmTotali.totale >= ecmTotali.target ? "good" : ecmTotali.totale >= ecmTotali.target * 0.6 ? "warn" : "bad"}
-            />
-            {ecmRanked.length > 0 && (
-              <div className="space-y-2.5 border-t border-slate-100 pt-3">
-                {ecmRanked.map(({ e, percentuale }) => (
+      <DraggableSections
+        studioId={studio.id}
+        sections={[
+          {
+            key: "scadenzario-stato",
+            node: (
+              <section key="scadenzario-stato" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="mb-4 text-base font-semibold text-slate-900">Scadenzario per stato</h2>
+                <StatusDonut
+                  centerValue={`${compliancePct}%`}
+                  centerLabel="in regola"
+                  segments={[
+                    { label: STATO_LABELS.OK, value: okCount, color: STATUS_HEX.OK },
+                    { label: STATO_LABELS.IN_SCADENZA, value: inScadenzaCount, color: STATUS_HEX.IN_SCADENZA },
+                    { label: STATO_LABELS.SCADUTO, value: scadutiCount, color: STATUS_HEX.SCADUTO },
+                    { label: STATO_LABELS.DA_COMPILARE, value: daCompilareCount, color: STATUS_HEX.DA_COMPILARE },
+                  ]}
+                />
+              </section>
+            ),
+          },
+          {
+            key: "magazzino-categoria",
+            node: (
+              <section key="magazzino-categoria" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-slate-900">Valore magazzino per categoria</h2>
+                  <Link href="/app/magazzino" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                    Vedi tutto →
+                  </Link>
+                </div>
+                <BarList items={categorieRanked} formatValue={formatCurrency} />
+              </section>
+            ),
+          },
+          {
+            key: "controlli-spesa",
+            node: (
+              <section key="controlli-spesa" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-slate-900">Spesa manutenzioni — ultimi 6 mesi</h2>
+                  <Link href="/app/controlli" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                    Vedi tutto →
+                  </Link>
+                </div>
+                <TrendBars items={speseUltimiMesi} formatValue={(v) => formatCurrency(v).replace(",00", "")} />
+              </section>
+            ),
+          },
+          {
+            key: "ecm",
+            node: (
+              <section key="ecm" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-slate-900">Formazione ECM del team</h2>
+                  <Link href="/app/ecm" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                    Vedi tutto →
+                  </Link>
+                </div>
+                <div className="space-y-3">
                   <Meter
-                    key={e.id}
-                    label={e.professionista}
-                    value={Math.round(percentuale * 100)}
-                    max={100}
-                    tone={percentuale >= 1 ? "good" : percentuale >= 0.6 ? "warn" : "bad"}
+                    label="Crediti totali team vs target"
+                    value={ecmTotali.totale}
+                    max={ecmTotali.target}
+                    tone={ecmTotali.totale >= ecmTotali.target ? "good" : ecmTotali.totale >= ecmTotali.target * 0.6 ? "warn" : "bad"}
                   />
-                ))}
-              </div>
-            )}
-            {ecmCrediti.length === 0 && <p className="text-sm text-slate-500">Nessun professionista censito.</p>}
-          </div>
-        </section>
-
-        <Link
-          href="/app/kpi"
-          className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">KPI Studio</h2>
-            <span className="text-sm font-medium text-brand-600">Vedi tutto →</span>
-          </div>
-          <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
-            <DashRow label="Fatturato di oggi" value={formatCurrency(kpiOggi?.fatturato ?? 0)} />
-            <DashRow label="Fatturato questo mese" value={formatCurrency(kpiMeseCorrente.fatturato)} />
-            <DashRow label="Prime visite questo mese" value={kpiMeseCorrente.numeroPrimeVisite} />
-            <DashRow label="Conversione preventivi" value={conversioneMeseKpi === null ? "—" : `${conversioneMeseKpi}%`} />
-          </div>
-          <div className="border-t border-slate-100 pt-4">
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Fatturato ultimi 7 giorni</p>
-            <TrendBars items={ultimi7Giorni} formatValue={formatCurrency} barAreaHeight={64} />
-          </div>
-        </Link>
-
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-semibold text-slate-900">Personale</h2>
-              {scadenzeContrattualiImminenti > 0 && (
-                <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
-                  {scadenzeContrattualiImminenti}
-                </span>
-              )}
-            </div>
-            <Link href="/app/personale" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutto →
-            </Link>
-          </div>
-          <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
-            <DashRow label="Dipendenti attivi" value={dipendentiAttivi.length} />
-            <DashRow label="Scadenze contrattuali imminenti" value={scadenzeContrattualiImminenti} bad={scadenzeContrattualiImminenti > 0} />
-            <DashRow label="Costo aziendale mensile" value={formatCurrency(costoMensileTotale)} />
-            <DashRow label="Costo aziendale annuo (stimato)" value={formatCurrency(costoMensileTotale * 12)} />
-          </div>
-          {costoPerMansioneRanked.length > 0 ? (
-            <div className="border-t border-slate-100 pt-4">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Costo per mansione</p>
-              <StatusDonut segments={costoPerMansioneRanked} formatValue={formatCurrency} />
-            </div>
-          ) : (
-            <p className="border-t border-slate-100 pt-4 text-sm text-slate-500">
-              Aggiungi il costo aziendale mensile ai dipendenti per vedere la ripartizione.
-            </p>
-          )}
-        </section>
-
-        <Link
-          href="/app/laboratori"
-          className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
-        >
-          <div className="mb-4 flex items-center gap-2">
-            <h2 className="text-base font-semibold text-slate-900">Laboratori</h2>
-            {dichiarazioniMancantiCount > 0 && (
-              <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
-                {dichiarazioniMancantiCount}
-              </span>
-            )}
-          </div>
-          <dl className="grid grid-cols-2 gap-4 text-sm">
-            <DashRow label="In attesa dal laboratorio" value={statiLavorazioniLab.inAttesa} />
-            <DashRow label="In lavorazione" value={statiLavorazioniLab.inLavorazione} />
-            <DashRow label="Arrivati" value={statiLavorazioniLab.arrivati} />
-            <DashRow label="Consegne previste nei prossimi 7gg" value={consegneImminentiCount} bad={consegneImminentiCount > 0} />
-            <DashRow label="Dichiarazioni mancanti" value={dichiarazioniMancantiCount} bad={dichiarazioniMancantiCount > 0} />
-            <DashRow label="Spesa laboratori questo mese" value={formatCurrency(spesaMeseCorrente)} />
-          </dl>
-        </Link>
-
-        {farmaci.length > 0 && (
-          <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-slate-900">Farmaci di emergenza per stato</h2>
-              <Link href="/app/farmaci" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-                Vedi tutto →
+                  {ecmRanked.length > 0 && (
+                    <div className="space-y-2.5 border-t border-slate-100 pt-3">
+                      {ecmRanked.map(({ e, percentuale }) => (
+                        <Meter
+                          key={e.id}
+                          label={e.professionista}
+                          value={Math.round(percentuale * 100)}
+                          max={100}
+                          tone={percentuale >= 1 ? "good" : percentuale >= 0.6 ? "warn" : "bad"}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {ecmCrediti.length === 0 && <p className="text-sm text-slate-500">Nessun professionista censito.</p>}
+                </div>
+              </section>
+            ),
+          },
+          {
+            key: "kpi",
+            node: (
+              <Link
+                key="kpi"
+                href="/app/kpi"
+                className="min-w-0 block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-slate-900">KPI Studio</h2>
+                  <span className="text-sm font-medium text-brand-600">Vedi tutto →</span>
+                </div>
+                <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
+                  <DashRow label="Fatturato di oggi" value={formatCurrency(kpiOggi?.fatturato ?? 0)} />
+                  <DashRow label="Fatturato questo mese" value={formatCurrency(kpiMeseCorrente.fatturato)} />
+                  <DashRow label="Prime visite questo mese" value={kpiMeseCorrente.numeroPrimeVisite} />
+                  <DashRow label="Conversione preventivi" value={conversioneMeseKpi === null ? "—" : `${conversioneMeseKpi}%`} />
+                </div>
+                <div className="border-t border-slate-100 pt-4">
+                  <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Fatturato ultimi 7 giorni</p>
+                  <TrendBars items={ultimi7Giorni} formatValue={formatCurrency} barAreaHeight={64} />
+                </div>
               </Link>
-            </div>
-            <StatusDonut
-              centerValue={String(farmaci.length)}
-              centerLabel="totali"
-              segments={[
-                { label: "In regola", value: farmaciOk, color: STATUS_HEX.OK },
-                { label: "In scadenza", value: farmaciInScadenza, color: STATUS_HEX.IN_SCADENZA },
-                { label: "Scaduti", value: farmaciScaduti, color: STATUS_HEX.SCADUTO },
-              ]}
-            />
-          </section>
-        )}
-
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Archivio documenti — completezza</h2>
-            <Link href="/app/documenti" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutto →
-            </Link>
-          </div>
-          <Meter
-            label={`${documenti.length} documenti censiti`}
-            value={documentiPresenti}
-            max={documenti.length}
-            tone={documentiCompletezza >= 80 ? "good" : documentiCompletezza >= 50 ? "warn" : "bad"}
-          />
-        </section>
-
-        <Link
-          href="/app/comunicazione"
-          className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Comunicazione Pazienti</h2>
-            <span className="text-sm font-medium text-brand-600">Vedi tutto →</span>
-          </div>
-          <p className="text-sm text-slate-600">
-            {materialiCount} material{materialiCount === 1 ? "e" : "i"} informativ{materialiCount === 1 ? "o" : "i"} per i
-            pazienti, pronti da mostrare in studio o condividere con un link.
-          </p>
-        </Link>
-
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Spese</h2>
-            <Link href="/app/spese" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-              Vedi tutto →
-            </Link>
-          </div>
-          <dl className="mb-4 grid grid-cols-2 gap-4 text-sm">
-            <DashRow label="Spese questo mese" value={formatCurrency(totaleSpese(speseDelMeseCorrente))} />
-            <DashRow label="Spese quest'anno" value={formatCurrency(totaleSpese(speseDellAnnoCorrente))} />
-          </dl>
-          {ripartizioneSpeseMese.length > 0 ? (
-            <div className="border-t border-slate-100 pt-4">
-              <StatusDonut segments={ripartizioneSpeseMese} formatValue={formatCurrency} size={112} strokeWidth={16} />
-            </div>
-          ) : (
-            <p className="border-t border-slate-100 pt-4 text-sm text-slate-500">
-              Aggiungi le tue voci di spesa (affitto, utenze...) per vedere il riepilogo qui.
-            </p>
-          )}
-        </section>
-
-        <Link
-          href="/app/manutenzione"
-          className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
-        >
-          <div className="mb-4 flex items-center gap-2">
-            <h2 className="text-base font-semibold text-slate-900">Manutenzione staff</h2>
-            {(manutenzioneInRitardo > 0 || manutenzioneAnomalie > 0) && (
-              <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
-                {manutenzioneInRitardo + manutenzioneAnomalie}
-              </span>
-            )}
-          </div>
-          <dl className="grid grid-cols-2 gap-4 text-sm">
-            <DashRow label="Tipi di controllo in ritardo" value={manutenzioneInRitardo} bad={manutenzioneInRitardo > 0} />
-            <DashRow label="Anomalie riscontrate" value={manutenzioneAnomalie} bad={manutenzioneAnomalie > 0} />
-          </dl>
-        </Link>
-      </div>
+            ),
+          },
+          {
+            key: "personale",
+            node: (
+              <section key="personale" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-semibold text-slate-900">Personale</h2>
+                    {scadenzeContrattualiImminenti > 0 && (
+                      <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                        {scadenzeContrattualiImminenti}
+                      </span>
+                    )}
+                  </div>
+                  <Link href="/app/personale" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                    Vedi tutto →
+                  </Link>
+                </div>
+                <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
+                  <DashRow label="Dipendenti attivi" value={dipendentiAttivi.length} />
+                  <DashRow label="Scadenze contrattuali imminenti" value={scadenzeContrattualiImminenti} bad={scadenzeContrattualiImminenti > 0} />
+                  <DashRow label="Costo aziendale mensile" value={formatCurrency(costoMensileTotale)} />
+                  <DashRow label="Costo aziendale annuo (stimato)" value={formatCurrency(costoMensileTotale * 12)} />
+                </div>
+                {costoPerMansioneRanked.length > 0 ? (
+                  <div className="border-t border-slate-100 pt-4">
+                    <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Costo per mansione</p>
+                    <StatusDonut segments={costoPerMansioneRanked} formatValue={formatCurrency} />
+                  </div>
+                ) : (
+                  <p className="border-t border-slate-100 pt-4 text-sm text-slate-500">
+                    Aggiungi il costo aziendale mensile ai dipendenti per vedere la ripartizione.
+                  </p>
+                )}
+              </section>
+            ),
+          },
+          {
+            key: "laboratori",
+            node: (
+              <Link
+                key="laboratori"
+                href="/app/laboratori"
+                className="min-w-0 block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
+              >
+                <div className="mb-4 flex items-center gap-2">
+                  <h2 className="text-base font-semibold text-slate-900">Laboratori</h2>
+                  {dichiarazioniMancantiCount > 0 && (
+                    <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                      {dichiarazioniMancantiCount}
+                    </span>
+                  )}
+                </div>
+                <dl className="grid grid-cols-2 gap-4 text-sm">
+                  <DashRow label="In attesa dal laboratorio" value={statiLavorazioniLab.inAttesa} />
+                  <DashRow label="In lavorazione" value={statiLavorazioniLab.inLavorazione} />
+                  <DashRow label="Arrivati" value={statiLavorazioniLab.arrivati} />
+                  <DashRow label="Consegne previste nei prossimi 7gg" value={consegneImminentiCount} bad={consegneImminentiCount > 0} />
+                  <DashRow label="Dichiarazioni mancanti" value={dichiarazioniMancantiCount} bad={dichiarazioniMancantiCount > 0} />
+                  <DashRow label="Spesa laboratori questo mese" value={formatCurrency(spesaMeseCorrente)} />
+                </dl>
+              </Link>
+            ),
+          },
+          ...(farmaci.length > 0
+            ? [
+                {
+                  key: "farmaci",
+                  node: (
+                    <section key="farmaci" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <div className="mb-4 flex items-center justify-between">
+                        <h2 className="text-base font-semibold text-slate-900">Farmaci di emergenza per stato</h2>
+                        <Link href="/app/farmaci" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                          Vedi tutto →
+                        </Link>
+                      </div>
+                      <StatusDonut
+                        centerValue={String(farmaci.length)}
+                        centerLabel="totali"
+                        segments={[
+                          { label: "In regola", value: farmaciOk, color: STATUS_HEX.OK },
+                          { label: "In scadenza", value: farmaciInScadenza, color: STATUS_HEX.IN_SCADENZA },
+                          { label: "Scaduti", value: farmaciScaduti, color: STATUS_HEX.SCADUTO },
+                        ]}
+                      />
+                    </section>
+                  ),
+                },
+              ]
+            : []),
+          {
+            key: "documenti",
+            node: (
+              <section key="documenti" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-slate-900">Archivio documenti — completezza</h2>
+                  <Link href="/app/documenti" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                    Vedi tutto →
+                  </Link>
+                </div>
+                <Meter
+                  label={`${documenti.length} documenti censiti`}
+                  value={documentiPresenti}
+                  max={documenti.length}
+                  tone={documentiCompletezza >= 80 ? "good" : documentiCompletezza >= 50 ? "warn" : "bad"}
+                />
+              </section>
+            ),
+          },
+          {
+            key: "comunicazione",
+            node: (
+              <Link
+                key="comunicazione"
+                href="/app/comunicazione"
+                className="min-w-0 block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-slate-900">Comunicazione Pazienti</h2>
+                  <span className="text-sm font-medium text-brand-600">Vedi tutto →</span>
+                </div>
+                <p className="text-sm text-slate-600">
+                  {materialiCount} material{materialiCount === 1 ? "e" : "i"} informativ{materialiCount === 1 ? "o" : "i"} per i
+                  pazienti, pronti da mostrare in studio o condividere con un link.
+                </p>
+              </Link>
+            ),
+          },
+          {
+            key: "spese",
+            node: (
+              <section key="spese" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-slate-900">Spese</h2>
+                  <Link href="/app/spese" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                    Vedi tutto →
+                  </Link>
+                </div>
+                <dl className="mb-4 grid grid-cols-2 gap-4 text-sm">
+                  <DashRow label="Spese questo mese" value={formatCurrency(totaleSpese(speseDelMeseCorrente))} />
+                  <DashRow label="Spese quest'anno" value={formatCurrency(totaleSpese(speseDellAnnoCorrente))} />
+                </dl>
+                {ripartizioneSpeseMese.length > 0 ? (
+                  <div className="border-t border-slate-100 pt-4">
+                    <StatusDonut segments={ripartizioneSpeseMese} formatValue={formatCurrency} size={112} strokeWidth={16} />
+                  </div>
+                ) : (
+                  <p className="border-t border-slate-100 pt-4 text-sm text-slate-500">
+                    Aggiungi le tue voci di spesa (affitto, utenze...) per vedere il riepilogo qui.
+                  </p>
+                )}
+              </section>
+            ),
+          },
+          {
+            key: "manutenzione-staff",
+            node: (
+              <Link
+                key="manutenzione-staff"
+                href="/app/manutenzione"
+                className="min-w-0 block rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-brand-300"
+              >
+                <div className="mb-4 flex items-center gap-2">
+                  <h2 className="text-base font-semibold text-slate-900">Manutenzione staff</h2>
+                  {(manutenzioneInRitardo > 0 || manutenzioneAnomalie > 0) && (
+                    <span className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                      {manutenzioneInRitardo + manutenzioneAnomalie}
+                    </span>
+                  )}
+                </div>
+                <dl className="grid grid-cols-2 gap-4 text-sm">
+                  <DashRow label="Tipi di controllo in ritardo" value={manutenzioneInRitardo} bad={manutenzioneInRitardo > 0} />
+                  <DashRow label="Anomalie riscontrate" value={manutenzioneAnomalie} bad={manutenzioneAnomalie > 0} />
+                </dl>
+              </Link>
+            ),
+          },
+        ]}
+      />
 
       <p className="rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-800">
         Suggerimento: apri lo Scadenzario e aggiorna la data dell&apos;ultimo controllo dopo ogni intervento — il cruscotto si aggiorna da solo.

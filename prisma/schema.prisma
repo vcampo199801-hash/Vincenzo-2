@@ -66,6 +66,7 @@ model Studio {
   materialiInformativi MaterialeInformativo[]
   speseStudio          SpesaStudio[]
   manutenzioniLog      ManutenzioneLog[]
+  tipiManutenzione     TipoManutenzione[]
 }
 
 // Team members with access to a studio (the practice owner plus invited
@@ -565,5 +566,23 @@ model ManutenzioneLog {
   note      String?
   createdAt DateTime @default(now())
 
+  @@index([studioId])
+}
+
+// Tipi di controllo configurabili dallo studio (i 3 predefiniti — autoclave,
+// lubrificazione manipoli, pulizia aspiratori — più eventuali tipi
+// personalizzati creati al volo dalla voce "Altro" del form). chiave è il
+// valore salvato in ManutenzioneLog.tipo. cadenzaGiorni è opzionale: se non
+// impostata, quel tipo non genera mai l'avviso "in ritardo".
+model TipoManutenzione {
+  id            String   @id @default(cuid())
+  studioId      String
+  studio        Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  chiave        String
+  nome          String
+  cadenzaGiorni Int?
+  createdAt     DateTime @default(now())
+
+  @@unique([studioId, chiave])
   @@index([studioId])
 }

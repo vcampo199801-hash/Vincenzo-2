@@ -1,15 +1,19 @@
 // Modulo Manutenzione staff: registro dei controlli di routine eseguiti
 // dallo staff dello studio (non da un tecnico esterno — per quello vedi
 // Registro controlli / ControlloLog): sterilizzazione in autoclave,
-// lubrificazione manipoli, pulizia degli aspiratori. Ogni voce riporta
-// l'operatore come attestazione di chi l'ha eseguita.
+// lubrificazione manipoli, pulizia degli aspiratori, o qualsiasi altro tipo
+// personalizzato creato dallo studio. Ogni voce riporta l'operatore come
+// attestazione di chi l'ha eseguita. I tipi di controllo (e la cadenza attesa
+// in giorni, opzionale) sono configurabili per studio — vedi TipoManutenzione.
 import { daysUntil } from "@/lib/compliance";
 
-export const TIPO_MANUTENZIONE_OPTIONS = [
-  { value: "AUTOCLAVE", label: "Controllo autoclave" },
-  { value: "LUBRIFICAZIONE_MANIPOLI", label: "Lubrificazione manipoli" },
-  { value: "PULIZIA_ASPIRATORI", label: "Pulizia aspiratori" },
-  { value: "ALTRO", label: "Altro" },
+// Tipi predefiniti creati automaticamente al primo utilizzo del modulo (vedi
+// ensureTipiManutenzione in lib/actions/manutenzione.ts) — lo studio può poi
+// cambiarne la cadenza o aggiungerne altri liberamente dalla voce "Altro".
+export const TIPI_MANUTENZIONE_DEFAULT = [
+  { chiave: "AUTOCLAVE", nome: "Controllo autoclave", cadenzaGiorni: 7 },
+  { chiave: "LUBRIFICAZIONE_MANIPOLI", nome: "Lubrificazione manipoli", cadenzaGiorni: 7 },
+  { chiave: "PULIZIA_ASPIRATORI", nome: "Pulizia aspiratori", cadenzaGiorni: 30 },
 ];
 
 export const ESITO_MANUTENZIONE_OPTIONS = [
@@ -18,31 +22,36 @@ export const ESITO_MANUTENZIONE_OPTIONS = [
   { value: "DA_VERIFICARE", label: "Da verificare" },
 ];
 
-/** Ogni tipo di controllo dovrebbe ripetersi con questa frequenza massima
- * (in giorni): usato solo per segnalare se un tipo non viene registrato da
- * troppo tempo, non per bloccare nulla. */
-export const FREQUENZA_ATTESA_GIORNI: Record<string, number> = {
-  AUTOCLAVE: 7,
-  LUBRIFICAZIONE_MANIPOLI: 7,
-  PULIZIA_ASPIRATORI: 30,
-};
-
 export function optionLabel(options: { value: string; label: string }[], value: string) {
   return options.find((o) => o.value === value)?.label ?? value;
 }
 
-export type ManutenzioneRiga = { tipo: string; data: Date; esito: string };
+/** "Guanti nitrile taglia M" -> "GUANTI_NITRILE_TAGLIA_M": chiave stabile per
+ * un nuovo tipo di controllo creato al volo dalla voce "Altro". */
+export function slugifyTipo(nome: string): string {
+  const slug = nome
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return slug || "ALTRO";
+}
 
-/** Ultima registrazione per ciascun tipo di controllo, e se risulta "in ritardo"
- * rispetto alla frequenza attesa. */
-export function ultimoControlloPerTipo(righe: ManutenzioneRiga[]) {
-  return TIPO_MANUTENZIONE_OPTIONS.filter((t) => t.value !== "ALTRO").map((t) => {
-    const delTipo = righe.filter((r) => r.tipo === t.value).sort((a, b) => b.data.getTime() - a.data.getTime());
+export type ManutenzioneRiga = { tipo: string; data: Date; esito: string };
+export type TipoManutenzioneInfo = { chiave: string; nome: string; cadenzaGiorni: number | null };
+
+/** Ultima registrazione per ciascun tipo di controllo configurato, e se
+ * risulta "in ritardo" rispetto alla cadenza impostata. Un tipo senza
+ * cadenza (cadenzaGiorni null) non risulta mai in ritardo. */
+export function ultimoControlloPerTipo(righe: ManutenzioneRiga[], tipi: TipoManutenzioneInfo[]) {
+  return tipi.map((t) => {
+    const delTipo = righe.filter((r) => r.tipo === t.chiave).sort((a, b) => b.data.getTime() - a.data.getTime());
     const ultima = delTipo[0] ?? null;
     const giorni = ultima ? daysUntil(ultima.data) : null;
-    const frequenza = FREQUENZA_ATTESA_GIORNI[t.value];
-    const inRitardo = giorni !== null && frequenza !== undefined && -giorni > frequenza;
-    return { tipo: t.value, label: t.label, ultima, inRitardo };
+    const inRitardo = t.cadenzaGiorni !== null && giorni !== null && -giorni > t.cadenzaGiorni;
+    return { tipo: t.chiave, label: t.nome, cadenzaGiorni: t.cadenzaGiorni, ultima, inRitardo };
   });
 }
 
