@@ -5,14 +5,19 @@ import { PIANI, PIANI_ORDINE } from "@/lib/plans";
 const MODULES = [
   { icon: "🗓️", title: "Scadenzario", desc: "24 adempimenti normativi standard già pronti: estintori, autoclave, messa a terra, sorveglianza sanitaria e altro. Stato calcolato in automatico." },
   { icon: "🛠️", title: "Registro controlli", desc: "Lo storico degli interventi con costi, utile per dimostrare la diligenza dello studio in caso di ispezione." },
-  { icon: "🎓", title: "Formazione ECM", desc: "Crediti ECM del team tracciati per il triennio, con avanzamento verso il target." },
   { icon: "📁", title: "Documenti", desc: "Checklist dei documenti obbligatori con percentuale di completezza dell'archivio." },
-  { icon: "📦", title: "Magazzino", desc: "Scorte minime, riordini automatici e scadenze lotti sempre sotto controllo." },
+  { icon: "📊", title: "Dashboard", desc: "La fotografia dello studio in un colpo d'occhio: % di compliance, prossime scadenze, sintesi magazzino e bilancio." },
+  { icon: "📦", title: "Magazzino", desc: "Scorte minime e scadenze lotti sempre sotto controllo, con avvisi automatici di riordino materiali quando la scorta scende sotto il minimo." },
   { icon: "💊", title: "Farmaci emergenza", desc: "Registro del carrello emergenza con avviso 90 giorni prima della scadenza, più controlli mensili." },
   { icon: "📇", title: "Fornitori", desc: "Rubrica dei referenti compliance e dei fornitori di materiali, collegata al magazzino." },
-  { icon: "📊", title: "Dashboard", desc: "La fotografia dello studio in un colpo d'occhio: % di compliance, prossime scadenze, sintesi magazzino." },
+  { icon: "🎓", title: "Formazione ECM", desc: "Crediti ECM del team tracciati per il triennio, con avanzamento verso il target." },
   { icon: "👥", title: "Personale", desc: "Anagrafica dei dipendenti e archivio cedolini, senza la complessità di un gestionale HR.", piano: "Plus" },
   { icon: "🦷", title: "Laboratori", desc: "Registro lavorazioni e dichiarazioni di conformità dei dispositivi su misura, come richiesto dal Reg. UE 2017/745.", piano: "Completo" },
+  { icon: "💶", title: "Spese", desc: "Le voci di spesa dello studio (affitto, utenze, collaboratori) con proiezione del costo annuo e riepilogo per categoria." },
+  { icon: "🧰", title: "Manutenzione", desc: "Controlli di routine dello staff — autoclave, lubrificazione manipoli e altro — con cadenza personalizzabile e avviso quando sono in ritardo." },
+  { icon: "📈", title: "KPI Studio", desc: "Fatturato, prime visite, appuntamenti e preventivi giorno per giorno, con grafici e resoconti settimanali, mensili e annuali." },
+  { icon: "🎬", title: "Comunicazione Pazienti", desc: "Materiali informativi pronti da mostrare in studio o condividere con un link prima dell'appuntamento." },
+  { icon: "📋", title: "Report ispezione", desc: "Report stampabile con lo stato di tutte le scadenze, pronto da mostrare in caso di ispezione ASL." },
 ];
 
 export default function Home() {
