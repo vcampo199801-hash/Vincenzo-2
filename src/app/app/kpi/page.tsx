@@ -27,12 +27,17 @@ import { TrendBars } from "@/components/charts/trend-bars";
 export const dynamic = "force-dynamic";
 
 const PERIODI = [
+  { value: "settimana", label: "Settimana" },
   { value: "giorni", label: "Ultimi 14 giorni" },
   { value: "mese", label: "Mensile" },
   { value: "semestre", label: "Semestrale" },
   { value: "anno", label: "Annuale" },
 ] as const;
 type Periodo = (typeof PERIODI)[number]["value"];
+/** Vista di apertura della pagina: la settimana appena trascorsa, sempre
+ * ancorata a oggi (il periodo è ricalcolato a ogni apertura, mai una
+ * finestra fissa). */
+const PERIODO_DEFAULT: Periodo = "settimana";
 
 /** Intervallo di date del periodo scelto: sempre giorno per giorno, il
  * periodo cambia solo l'ampiezza dell'intervallo mostrato (non aggrega più
@@ -59,12 +64,14 @@ function minData(a: Date, b: Date) {
 }
 
 function serieMetrica(righe: KpiRiga[], periodo: Periodo, metrica: KpiMetricaKey, oggi: Date) {
+  if (periodo === "settimana") return serieUltimiGiorni(righe, 7, metrica, oggi);
   if (periodo === "giorni") return serieUltimiGiorni(righe, 14, metrica, oggi);
   const { inizio, fine } = intervalloPeriodo(periodo, oggi);
   return serieGiornalieraIntervallo(righe, inizio, fine, metrica);
 }
 
 function titoloPeriodo(periodo: Periodo, anno: number) {
+  if (periodo === "settimana") return "Ultimi 7 giorni";
   if (periodo === "mese") return `Giorno per giorno — mese corrente ${anno}`;
   if (periodo === "semestre") return `Giorno per giorno — semestre corrente ${anno}`;
   if (periodo === "anno") return `Giorno per giorno — anno ${anno}`;
@@ -78,7 +85,7 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
   const oggi = new Date();
   const dataSelezionata = params.data ? new Date(params.data) : oggi;
   const isModifica = Boolean(params.data);
-  const periodo: Periodo = PERIODI.some((p) => p.value === params.periodo) ? (params.periodo as Periodo) : "giorni";
+  const periodo: Periodo = PERIODI.some((p) => p.value === params.periodo) ? (params.periodo as Periodo) : PERIODO_DEFAULT;
   const anno = oggi.getUTCFullYear();
 
   const [righe, righeGiornoSelezionato] = await Promise.all([
