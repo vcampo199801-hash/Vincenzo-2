@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate, formatCurrency } from "@/lib/compliance";
-import { inizioAnno, fineAnno, inizioMese, mesiTraDate, toIsoDate } from "@/lib/kpi";
+import { inizioAnno, inizioMese, mesiTraDate, toIsoDate } from "@/lib/kpi";
 import {
   CATEGORIA_SPESA_OPTIONS,
   optionLabel,
@@ -14,6 +14,7 @@ import {
   ricorrenzaLabel,
   costoAnnualizzato,
   costoAnnuoProiettato,
+  costoAnnuoProiettatoPerCategoria,
 } from "@/lib/spese";
 import { eliminaSpesa } from "@/lib/actions/spese";
 import { PageHeader } from "@/components/ui/page-header";
@@ -57,21 +58,25 @@ export default async function SpesePage({
   const ripartizioneDaIso = params.ripartizioneDa || ripartizioneDaDefault;
   const ripartizioneAIso = params.ripartizioneA || ripartizioneADefault;
 
-  let speseDelPeriodo: typeof delMese;
+  let sommaCategorie: { categoria: string; importo: number }[];
   let titoloRipartizione: string;
   if (periodoRipartizione === "annuale") {
-    speseDelPeriodo = speseEffettiveNelPeriodo(spese, mesiTraDate(inizioAnno(anno), fineAnno(anno)));
+    // Stessa proiezione "a regime" del riquadro "Costo annuo stimato" sopra
+    // (una ricorrente vale il suo importo annualizzato, non solo le
+    // occorrenze già passate dall'inizio dell'anno), così i due numeri
+    // coincidono sempre.
+    sommaCategorie = costoAnnuoProiettatoPerCategoria(spese, anno);
     titoloRipartizione = `anno ${anno}`;
   } else if (periodoRipartizione === "personalizzato") {
     const dataInizio = new Date(ripartizioneDaIso);
     const dataFine = new Date(ripartizioneAIso);
-    speseDelPeriodo = speseEffettiveNelPeriodo(spese, mesiTraDate(dataInizio, dataFine));
+    sommaCategorie = sommaPerCategoria(speseEffettiveNelPeriodo(spese, mesiTraDate(dataInizio, dataFine)));
     titoloRipartizione = `dal ${formatDate(dataInizio)} al ${formatDate(dataFine)}`;
   } else {
-    speseDelPeriodo = speseEffettiveDelMese(spese, anno, mese);
+    sommaCategorie = sommaPerCategoria(speseEffettiveDelMese(spese, anno, mese));
     titoloRipartizione = `mese di ${new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric", timeZone: "UTC" }).format(inizioMese(anno, mese))}`;
   }
-  const ripartizionePeriodo = sommaPerCategoria(speseDelPeriodo).map((s, i) => ({
+  const ripartizionePeriodo = sommaCategorie.map((s, i) => ({
     label: optionLabel(CATEGORIA_SPESA_OPTIONS, s.categoria),
     value: s.importo,
     color: BRAND_SEQUENTIAL[i % BRAND_SEQUENTIAL.length],

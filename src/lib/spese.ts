@@ -103,3 +103,22 @@ export function costoAnnuoProiettato(righe: SpesaRiga[], anno: number): number {
   }
   return totale;
 }
+
+/** Come costoAnnuoProiettato, ma ripartito per categoria — stessa logica "a
+ * regime" (una spesa ricorrente vale il suo importo annualizzato, non solo i
+ * mesi trascorsi da quando è stata registrata), così la torta "Ripartizione
+ * per categoria" in vista Annuale coincide col totale "Costo annuo stimato". */
+export function costoAnnuoProiettatoPerCategoria(righe: SpesaRiga[], anno: number) {
+  const perCategoria = new Map<string, number>();
+  for (const r of righe) {
+    const importo = r.ricorrenzaMesi
+      ? costoAnnualizzato(r.importo, r.ricorrenzaMesi)
+      : r.data.getUTCFullYear() === anno
+        ? r.importo
+        : 0;
+    if (importo > 0) perCategoria.set(r.categoria, (perCategoria.get(r.categoria) ?? 0) + importo);
+  }
+  return [...perCategoria.entries()]
+    .map(([categoria, importo]) => ({ categoria, importo }))
+    .sort((a, b) => b.importo - a.importo);
+}
