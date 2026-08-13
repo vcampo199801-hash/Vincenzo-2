@@ -12,7 +12,7 @@ import {
   speseEffettiveNelPeriodo,
   speseDellAnno,
   ricorrenzaLabel,
-  costoAnnualizzato,
+  costoAnnuoRiga,
   costoAnnuoProiettato,
   costoAnnuoProiettatoPerCategoria,
 } from "@/lib/spese";
@@ -86,7 +86,7 @@ export default async function SpesePage({
     <div>
       <PageHeader
         title="Spese / Diario del titolare"
-        description="Le tue voci di spesa (affitto, utenze, collaboratori...): finiscono nel riepilogo in dashboard, non sostituiscono la contabilità."
+        description="Le tue voci di spesa (affitto, utenze, collaboratori, ma anche rate di finanziamenti e leasing...): finiscono nel riepilogo in dashboard, non sostituiscono la contabilità."
         action="Aggiungi spesa"
         actionHref="/app/spese/new"
       />
@@ -167,9 +167,9 @@ export default async function SpesePage({
                 <td className="px-4 py-3 font-medium text-slate-900">{optionLabel(CATEGORIA_SPESA_OPTIONS, s.categoria)}</td>
                 <td className="px-4 py-3 max-w-xs truncate text-slate-500">{s.descrizione ?? "—"}</td>
                 <td className="px-4 py-3 text-slate-600">{formatCurrency(s.importo)}</td>
-                <td className="px-4 py-3 text-slate-500">{ricorrenzaLabel(s.ricorrenzaMesi)}</td>
+                <td className="px-4 py-3 text-slate-500">{ricorrenzaLabel(s.ricorrenzaMesi, s.dataFineRicorrenza)}</td>
                 <td className="px-4 py-3 text-slate-500">
-                  {s.ricorrenzaMesi ? formatCurrency(costoAnnualizzato(s.importo, s.ricorrenzaMesi)) : "—"}
+                  {costoAnnuoRiga(s, anno) > 0 ? formatCurrency(costoAnnuoRiga(s, anno)) : "—"}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-3">

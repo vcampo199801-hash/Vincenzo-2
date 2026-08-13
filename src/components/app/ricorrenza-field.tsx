@@ -12,13 +12,20 @@ const PRESET_OPTIONS = [
 ];
 const PRESET_VALUES = new Set(["1", "3", "6", "12"]);
 
-export function RicorrenzaField({ defaultRicorrenzaMesi }: { defaultRicorrenzaMesi?: number | null }) {
+export function RicorrenzaField({
+  defaultRicorrenzaMesi,
+  defaultDataFineRicorrenza,
+}: {
+  defaultRicorrenzaMesi?: number | null;
+  defaultDataFineRicorrenza?: string | null;
+}) {
   const initial = !defaultRicorrenzaMesi
     ? ""
     : PRESET_VALUES.has(String(defaultRicorrenzaMesi))
       ? String(defaultRicorrenzaMesi)
       : "custom";
   const [selezione, setSelezione] = useState(initial);
+  const ricorrente = selezione !== "";
 
   return (
     <div className="space-y-3">
@@ -55,6 +62,22 @@ export function RicorrenzaField({ defaultRicorrenzaMesi }: { defaultRicorrenzaMe
         </label>
       ) : (
         <input type="hidden" name="ricorrenzaMesi" value={selezione} />
+      )}
+
+      {ricorrente && (
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Fine pagamento (facoltativo)</span>
+          <input
+            name="dataFineRicorrenza"
+            type="date"
+            defaultValue={defaultDataFineRicorrenza ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+          <span className="mt-1 block text-xs text-slate-400">
+            Per un finanziamento o leasing con un numero di rate definito: dopo questa data non verrà più conteggiato.
+            Lascia vuoto se il pagamento continua senza una scadenza (es. affitto, utenze).
+          </span>
+        </label>
       )}
     </div>
   );

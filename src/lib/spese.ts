@@ -5,6 +5,7 @@
 export const CATEGORIA_SPESA_OPTIONS = [
   { value: "AFFITTO", label: "Affitto / mutuo studio" },
   { value: "UTENZE", label: "Utenze (luce, gas, acqua, internet)" },
+  { value: "FINANZIAMENTI", label: "Finanziamenti / Leasing (rate)" },
   { value: "PERSONALE_ESTERNO", label: "Collaboratori esterni / consulenti" },
   { value: "MATERIALI_NON_SANITARI", label: "Materiali e cancelleria" },
   { value: "MANUTENZIONE_ATTREZZATURE", label: "Manutenzione attrezzature" },
@@ -19,14 +20,24 @@ export function optionLabel(options: { value: string; label: string }[], value: 
 }
 
 /** Etichetta leggibile per la cadenza: null -> "—", altrimenti "Mensile" /
- * "Trimestrale" / "Semestrale" / "Annuale" per i valori più comuni, o "Ogni N mesi". */
-export function ricorrenzaLabel(ricorrenzaMesi: number | null | undefined): string {
+ * "Trimestrale" / "Semestrale" / "Annuale" per i valori più comuni, o "Ogni N mesi".
+ * Se è impostata una data di fine (es. l'ultima rata di un finanziamento), la
+ * aggiunge tra parentesi. */
+export function ricorrenzaLabel(ricorrenzaMesi: number | null | undefined, dataFineRicorrenza?: Date | null): string {
   if (!ricorrenzaMesi) return "—";
-  if (ricorrenzaMesi === 1) return "Mensile";
-  if (ricorrenzaMesi === 3) return "Trimestrale";
-  if (ricorrenzaMesi === 6) return "Semestrale";
-  if (ricorrenzaMesi === 12) return "Annuale";
-  return `Ogni ${ricorrenzaMesi} mesi`;
+  const base =
+    ricorrenzaMesi === 1
+      ? "Mensile"
+      : ricorrenzaMesi === 3
+        ? "Trimestrale"
+        : ricorrenzaMesi === 6
+          ? "Semestrale"
+          : ricorrenzaMesi === 12
+            ? "Annuale"
+            : `Ogni ${ricorrenzaMesi} mesi`;
+  if (!dataFineRicorrenza) return base;
+  const fine = new Intl.DateTimeFormat("it-IT", { month: "short", year: "numeric", timeZone: "UTC" }).format(dataFineRicorrenza);
+  return `${base} (fino a ${fine})`;
 }
 
 /** Costo annuo di una spesa ricorrente proiettato dalla sua cadenza
@@ -37,7 +48,13 @@ export function costoAnnualizzato(importo: number, ricorrenzaMesi: number | null
   return importo * (12 / ricorrenzaMesi);
 }
 
-export type SpesaRiga = { data: Date; categoria: string; importo: number; ricorrenzaMesi?: number | null };
+export type SpesaRiga = {
+  data: Date;
+  categoria: string;
+  importo: number;
+  ricorrenzaMesi?: number | null;
+  dataFineRicorrenza?: Date | null;
+};
 
 export function totaleSpese(righe: SpesaRiga[]) {
   return righe.reduce((sum, r) => sum + r.importo, 0);
@@ -59,16 +76,32 @@ export function speseDelMese(righe: SpesaRiga[], anno: number, mese: number) {
 }
 
 /** Una spesa ricorrente "conta" in ogni mese in cui ricade la sua cadenza a
- * partire dal mese in cui è stata registrata (nessuna data di fine: resta
- * attiva finché non viene modificata o cancellata) — non solo nel mese in
- * cui è stata inserita la prima volta. Una spesa una tantum conta solo nel
- * suo mese. */
+ * partire dal mese in cui è stata registrata — per default nessuna data di
+ * fine: resta attiva finché non viene modificata o cancellata — non solo nel
+ * mese in cui è stata inserita la prima volta. Se è impostata una data di
+ * fine (es. l'ultima rata di un finanziamento/leasing), non conta più dopo
+ * quel mese. Una spesa una tantum conta solo nel suo mese. */
 export function spesaAttivaNelMese(spesa: SpesaRiga, anno: number, mese: number): boolean {
   const target = anno * 12 + mese;
   const inizio = spesa.data.getUTCFullYear() * 12 + spesa.data.getUTCMonth();
   if (target < inizio) return false;
   if (!spesa.ricorrenzaMesi) return target === inizio;
+  if (spesa.dataFineRicorrenza) {
+    const fine = spesa.dataFineRicorrenza.getUTCFullYear() * 12 + spesa.dataFineRicorrenza.getUTCMonth();
+    if (target > fine) return false;
+  }
   return (target - inizio) % spesa.ricorrenzaMesi === 0;
+}
+
+/** Quante volte una spesa ricorrente ricade in un anno specifico — usato solo
+ * quando c'è una data di fine, per non proiettarla "a regime" oltre
+ * l'ultima rata (vedi costoAnnuoProiettato). */
+function occorrenzeNellAnno(spesa: SpesaRiga, anno: number): number {
+  let occorrenze = 0;
+  for (let mese = 0; mese < 12; mese++) {
+    if (spesaAttivaNelMese(spesa, anno, mese)) occorrenze++;
+  }
+  return occorrenze;
 }
 
 /** Come speseDelMese, ma per le spese ricorrenti guarda alla cadenza invece
@@ -88,34 +121,33 @@ export function speseEffettiveNelPeriodo(righe: SpesaRiga[], mesi: { anno: numbe
   return mesi.flatMap(({ anno, mese }) => speseEffettiveDelMese(righe, anno, mese));
 }
 
-/** Stima di quanto costerà l'anno "a regime": le spese ricorrenti vengono
- * proiettate sull'intero anno in base alla loro cadenza (inserite una sola
- * volta come definizione, non una riga per ogni occorrenza); le spese una
- * tantum contano per l'importo effettivo se datate nell'anno indicato. */
-export function costoAnnuoProiettato(righe: SpesaRiga[], anno: number): number {
-  let totale = 0;
-  for (const r of righe) {
-    if (r.ricorrenzaMesi) {
-      totale += costoAnnualizzato(r.importo, r.ricorrenzaMesi);
-    } else if (r.data.getUTCFullYear() === anno) {
-      totale += r.importo;
-    }
+/** Il costo annuo di una singola riga per l'anno indicato: le spese
+ * ricorrenti senza data di fine vengono proiettate "a regime" sull'intero
+ * anno in base alla loro cadenza (un impegno aperto, che si presume continui
+ * al ritmo attuale); quelle CON una data di fine (es. le rate rimaste di un
+ * finanziamento/leasing) contano invece solo le occorrenze che ricadono
+ * davvero in quell'anno, così da non proiettare un costo oltre l'ultima
+ * rata. Le spese una tantum contano per l'importo effettivo se datate
+ * nell'anno indicato. */
+export function costoAnnuoRiga(r: SpesaRiga, anno: number): number {
+  if (r.ricorrenzaMesi) {
+    return r.dataFineRicorrenza ? r.importo * occorrenzeNellAnno(r, anno) : costoAnnualizzato(r.importo, r.ricorrenzaMesi);
   }
-  return totale;
+  return r.data.getUTCFullYear() === anno ? r.importo : 0;
 }
 
-/** Come costoAnnuoProiettato, ma ripartito per categoria — stessa logica "a
- * regime" (una spesa ricorrente vale il suo importo annualizzato, non solo i
- * mesi trascorsi da quando è stata registrata), così la torta "Ripartizione
- * per categoria" in vista Annuale coincide col totale "Costo annuo stimato". */
+/** Stima di quanto costerà l'anno — somma di costoAnnuoRiga per ogni voce. */
+export function costoAnnuoProiettato(righe: SpesaRiga[], anno: number): number {
+  return righe.reduce((totale, r) => totale + costoAnnuoRiga(r, anno), 0);
+}
+
+/** Come costoAnnuoProiettato, ma ripartito per categoria, così la torta
+ * "Ripartizione per categoria" in vista Annuale coincide col totale "Costo
+ * annuo stimato". */
 export function costoAnnuoProiettatoPerCategoria(righe: SpesaRiga[], anno: number) {
   const perCategoria = new Map<string, number>();
   for (const r of righe) {
-    const importo = r.ricorrenzaMesi
-      ? costoAnnualizzato(r.importo, r.ricorrenzaMesi)
-      : r.data.getUTCFullYear() === anno
-        ? r.importo
-        : 0;
+    const importo = costoAnnuoRiga(r, anno);
     if (importo > 0) perCategoria.set(r.categoria, (perCategoria.get(r.categoria) ?? 0) + importo);
   }
   return [...perCategoria.entries()]

@@ -539,13 +539,14 @@ model SpesaStudio {
   id             String   @id @default(cuid())
   studioId       String
   studio         Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  data           DateTime
-  categoria      String   @default("ALTRO")
-  descrizione    String?
-  importo        Float
-  ricorrenzaMesi Int?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  data               DateTime
+  categoria          String    @default("ALTRO")
+  descrizione        String?
+  importo            Float
+  ricorrenzaMesi     Int?
+  dataFineRicorrenza DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@index([studioId])
 }

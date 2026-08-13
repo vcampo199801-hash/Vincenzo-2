@@ -30,7 +30,10 @@ export default async function ModificaSpesaPage({ params }: { params: Promise<{ 
         <SelectField label="Categoria" name="categoria" options={CATEGORIA_SPESA_OPTIONS} defaultValue={spesa.categoria} required />
         <Field label="Importo (€)" name="importo" type="number" step="0.01" required defaultValue={spesa.importo} />
         <TextAreaField label="Descrizione" name="descrizione" defaultValue={spesa.descrizione} />
-        <RicorrenzaField defaultRicorrenzaMesi={spesa.ricorrenzaMesi} />
+        <RicorrenzaField
+          defaultRicorrenzaMesi={spesa.ricorrenzaMesi}
+          defaultDataFineRicorrenza={spesa.dataFineRicorrenza?.toISOString().slice(0, 10)}
+        />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
     </div>

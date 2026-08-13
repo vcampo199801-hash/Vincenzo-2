@@ -10,12 +10,14 @@ function payload(formData: FormData) {
   const ricorrenzaMesiRaw = String(formData.get("ricorrenzaMesi") ?? "").trim();
   const ricorrenzaMesiParsed = ricorrenzaMesiRaw ? Math.round(Number(ricorrenzaMesiRaw)) : NaN;
   const ricorrenzaMesi = Number.isFinite(ricorrenzaMesiParsed) && ricorrenzaMesiParsed > 0 ? ricorrenzaMesiParsed : null;
+  const dataFineRaw = String(formData.get("dataFineRicorrenza") ?? "").trim();
   return {
     data: dataRaw ? new Date(dataRaw) : new Date(),
     categoria: String(formData.get("categoria") ?? "ALTRO"),
     descrizione: String(formData.get("descrizione") ?? "").trim() || null,
     importo: Number(formData.get("importo") ?? 0) || 0,
     ricorrenzaMesi,
+    dataFineRicorrenza: ricorrenzaMesi && dataFineRaw ? new Date(dataFineRaw) : null,
   };
 }
 
