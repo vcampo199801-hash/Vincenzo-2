@@ -14,6 +14,7 @@ const MODULES = [
   { icon: "👥", title: "Personale", desc: "Anagrafica dei dipendenti e archivio cedolini, senza la complessità di un gestionale HR.", piano: "Plus" },
   { icon: "🦷", title: "Laboratori", desc: "Registro lavorazioni e dichiarazioni di conformità dei dispositivi su misura, come richiesto dal Reg. UE 2017/745.", piano: "Completo" },
   { icon: "💶", title: "Spese", desc: "Le voci di spesa dello studio (affitto, utenze, collaboratori) con proiezione del costo annuo e riepilogo per categoria." },
+  { icon: "⚖️", title: "Bilancio aziendale", desc: "Sai subito se lo studio è in utile o in perdita: il fatturato si confronta da solo con tutti i costi — spese, personale, laboratori, manutenzioni — vista per anno, mese o un periodo a tua scelta. Niente più fogli Excel o attese per il commercialista." },
   { icon: "🧰", title: "Manutenzione", desc: "Controlli di routine dello staff — autoclave, lubrificazione manipoli e altro — con cadenza personalizzabile e avviso quando sono in ritardo." },
   { icon: "📈", title: "KPI Studio", desc: "Fatturato, prime visite, appuntamenti e preventivi giorno per giorno, con grafici e resoconti settimanali, mensili e annuali." },
   { icon: "🎬", title: "Comunicazione Pazienti", desc: "Materiali informativi pronti da mostrare in studio o condividere con un link prima dell'appuntamento." },
