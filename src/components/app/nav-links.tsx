@@ -20,6 +20,7 @@ const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey |
   { href: "/app/comunicazione", label: "Comunicazione Pazienti", icon: "🎬", moduleKey: "comunicazione" },
   { href: "/app/spese", label: "Spese", icon: "💶", moduleKey: "spese" },
   { href: "/app/manutenzione", label: "Manutenzione", icon: "🧯", moduleKey: "manutenzione" },
+  { href: "/app/forum", label: "Forum", icon: "💬", moduleKey: "forum" },
   { href: "/app/abbonamento", label: "Abbonamento", icon: "💳", moduleKey: null },
   {
     href: "https://www.sorrisiinregola.com",

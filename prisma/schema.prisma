@@ -33,6 +33,10 @@ model Studio {
   logoUrl                        String?
   indirizzo                      String?
   numeroAlboTitolare             String?
+  // Il forum è tra studi (non ognuno vede solo il proprio, come tutto il
+  // resto dell'app): questo flag è il consenso esplicito a parteciparvi —
+  // di default spento, ogni studio decide se aderire o meno.
+  forumAttivo                    Boolean  @default(false)
   notificheAttive                Boolean  @default(true)
   notificheSms                   Boolean  @default(false)
   telefonoSms                    String?
@@ -67,6 +71,9 @@ model Studio {
   speseStudio          SpesaStudio[]
   manutenzioniLog      ManutenzioneLog[]
   tipiManutenzione     TipoManutenzione[]
+  forumPost            ForumPost[]
+  forumCommenti        ForumCommento[]
+  forumSegnalazioni    ForumSegnalazione[]
 }
 
 // Team members with access to a studio (the practice owner plus invited
@@ -590,4 +597,65 @@ model TipoManutenzione {
 
   @@unique([studioId, chiave])
   @@index([studioId])
+}
+
+// ---------- Forum (community tra studi) ----------
+// L'unico modulo trasversale dell'app: gli studi che hanno attivato
+// Studio.forumAttivo si vedono e comunicano tra loro (non isolati per
+// studioId come tutto il resto). L'identità mostrata è sempre quella dello
+// studio autore (nome/città), mai anonima.
+
+model ForumPost {
+  id        String   @id @default(cuid())
+  studioId  String
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  categoria String
+  titolo    String
+  corpo     String
+  // Solo per la categoria "Vendo materiali/attrezzature usate".
+  prezzo    Float?
+  nascosto  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  commenti     ForumCommento[]
+  segnalazioni ForumSegnalazione[]
+
+  @@index([studioId])
+  @@index([categoria])
+  @@index([createdAt])
+}
+
+model ForumCommento {
+  id        String    @id @default(cuid())
+  postId    String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  studioId  String
+  studio    Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  corpo     String
+  nascosto  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  segnalazioni ForumSegnalazione[]
+
+  @@index([postId])
+  @@index([studioId])
+}
+
+// Una segnalazione punta o a un post o a un commento (mai entrambi). Dopo
+// SOGLIA_SEGNALAZIONI segnalazioni distinte, il contenuto viene nascosto in
+// automatico in attesa che l'autore lo rimuova — vedi lib/forum.ts.
+model ForumSegnalazione {
+  id         String         @id @default(cuid())
+  postId     String?
+  post       ForumPost?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentoId String?
+  commento   ForumCommento? @relation(fields: [commentoId], references: [id], onDelete: Cascade)
+  studioId   String
+  studio     Studio         @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  motivo     String?
+  createdAt  DateTime       @default(now())
+
+  @@index([postId])
+  @@index([commentoId])
 }

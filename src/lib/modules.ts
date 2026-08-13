@@ -19,6 +19,7 @@ export const APP_MODULES = [
   { key: "comunicazione", label: "Comunicazione Pazienti", href: "/app/comunicazione" },
   { key: "spese", label: "Spese", href: "/app/spese" },
   { key: "manutenzione", label: "Manutenzione", href: "/app/manutenzione" },
+  { key: "forum", label: "Forum", href: "/app/forum" },
 ] as const;
 
 export type ModuleKey = (typeof APP_MODULES)[number]["key"];

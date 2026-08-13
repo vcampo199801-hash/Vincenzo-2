@@ -18,6 +18,7 @@ const MODULI_BASE: ModuleKey[] = [
   "comunicazione",
   "spese",
   "manutenzione",
+  "forum",
 ];
 
 export const PIANI: Record<
@@ -38,7 +39,7 @@ export const PIANI: Record<
     stripePriceEnvVar: "STRIPE_PRICE_ID_BASE",
     moduli: MODULI_BASE,
     descrizione:
-      "Tutti i moduli di compliance e gestione: scadenzario, registro controlli, formazione ECM, documenti, magazzino, farmaci emergenza, fornitori, report ispezione, KPI dello studio, comunicazione con i pazienti, spese e manutenzione staff.",
+      "Tutti i moduli di compliance e gestione: scadenzario, registro controlli, formazione ECM, documenti, magazzino, farmaci emergenza, fornitori, report ispezione, KPI dello studio, comunicazione con i pazienti, spese, manutenzione staff e il forum tra colleghi.",
   },
   PLUS: {
     key: "PLUS",
