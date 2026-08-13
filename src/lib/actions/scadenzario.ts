@@ -42,6 +42,7 @@ export async function updateAdempimento(id: string, formData: FormData) {
       mesi: Number(formData.get("mesi") ?? 12),
       dataUltimoControllo: parseDate(formData.get("dataUltimoControllo")),
       note: String(formData.get("note") ?? "").trim() || null,
+      notificaSilenziata: formData.get("notificaSilenziata") === "on",
     },
   });
 

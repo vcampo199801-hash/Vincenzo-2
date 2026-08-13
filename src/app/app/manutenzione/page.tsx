@@ -64,22 +64,33 @@ export default async function ManutenzionePage() {
             ) : (
               <p className="mt-1 text-xs text-slate-500">Nessuna registrazione ancora.</p>
             )}
-            <form action={aggiornaCadenzaTipo.bind(null, tipi.find((x) => x.chiave === t.tipo)!.id)} className="mt-3 flex items-center gap-2">
+            <form action={aggiornaCadenzaTipo.bind(null, tipi.find((x) => x.chiave === t.tipo)!.id)} className="mt-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 text-xs text-slate-500">
+                  Cadenza (giorni)
+                  <input
+                    type="number"
+                    name="cadenzaGiorni"
+                    min={1}
+                    step={1}
+                    defaultValue={t.cadenzaGiorni ?? ""}
+                    placeholder="—"
+                    className="w-16 rounded-lg border border-slate-300 px-2 py-1 text-xs"
+                  />
+                </label>
+                <button type="submit" className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200">
+                  Salva
+                </button>
+              </div>
               <label className="flex items-center gap-1.5 text-xs text-slate-500">
-                Cadenza (giorni)
                 <input
-                  type="number"
-                  name="cadenzaGiorni"
-                  min={1}
-                  step={1}
-                  defaultValue={t.cadenzaGiorni ?? ""}
-                  placeholder="—"
-                  className="w-16 rounded-lg border border-slate-300 px-2 py-1 text-xs"
+                  type="checkbox"
+                  name="notificaSilenziata"
+                  defaultChecked={tipi.find((x) => x.chiave === t.tipo)!.notificaSilenziata}
+                  className="h-3.5 w-3.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                 />
+                Silenzia i promemoria per questo tipo
               </label>
-              <button type="submit" className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200">
-                Salva
-              </button>
             </form>
           </div>
         ))}

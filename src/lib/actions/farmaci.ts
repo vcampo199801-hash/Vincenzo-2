@@ -20,6 +20,7 @@ function payload(formData: FormData) {
     scadenza: parseDate(formData.get("scadenza")),
     codice: String(formData.get("codice") ?? "").trim() || null,
     note: String(formData.get("note") ?? "").trim() || null,
+    notificaSilenziata: formData.get("notificaSilenziata") === "on",
   };
 }
 

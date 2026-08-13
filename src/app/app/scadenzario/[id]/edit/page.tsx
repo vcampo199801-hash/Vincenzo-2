@@ -3,7 +3,7 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updateAdempimento } from "@/lib/actions/scadenzario";
 import { PageHeader } from "@/components/ui/page-header";
-import { Field, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { Field, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { PeriodicitaFields } from "@/components/app/periodicita-fields";
 
 // Session-dependent, must never be prerendered or cached.
@@ -32,6 +32,11 @@ export default async function EditAdempimentoPage({ params }: { params: Promise<
           defaultValue={item.dataUltimoControllo?.toISOString().slice(0, 10)}
         />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
+        <CheckboxField
+          label="Silenzia i promemoria email/SMS per questo adempimento"
+          name="notificaSilenziata"
+          defaultChecked={item.notificaSilenziata}
+        />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
     </div>

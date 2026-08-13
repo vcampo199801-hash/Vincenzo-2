@@ -22,6 +22,7 @@ function payload(formData: FormData) {
     prezzoUnitario: Number(formData.get("prezzoUnitario") ?? 0) || 0,
     codice: String(formData.get("codice") ?? "").trim() || null,
     note: String(formData.get("note") ?? "").trim() || null,
+    notificaSilenziata: formData.get("notificaSilenziata") === "on",
   };
 }
 

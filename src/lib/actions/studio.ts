@@ -49,11 +49,12 @@ export async function sendTestDigest(): Promise<TestDigestState> {
     if (!digest) {
       return { success: "Nessuna scadenza urgente al momento: non c'è nulla da segnalare, quindi non è stata inviata alcuna email." };
     }
-    const totalCount = digest.scadenzeUrgenti.length + digest.farmaciUrgenti.length + digest.lottiUrgenti.length;
+    const totalCount =
+      digest.scadenzeUrgenti.length + digest.farmaciUrgenti.length + digest.lottiUrgenti.length + digest.manutenzioniUrgenti.length;
     await sendEmail({
       to: studio.email,
       subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,
-      html: renderDigestHtml(studio.name, digest),
+      html: await renderDigestHtml(studio.name, digest),
     });
     return { success: `Email di riepilogo inviata a ${studio.email}.` };
   } catch (e) {

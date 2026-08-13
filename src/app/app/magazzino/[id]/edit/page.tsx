@@ -3,7 +3,7 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updateMagazzinoItem } from "@/lib/actions/magazzino";
 import { PageHeader } from "@/components/ui/page-header";
-import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { Field, SelectField, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { FornitoreField } from "@/components/ui/fornitore-field";
 import { MAGAZZINO_CATEGORIE } from "@/lib/compliance";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
@@ -44,6 +44,11 @@ export default async function EditMagazzinoPage({ params }: { params: Promise<{ 
         </div>
         <Field label="Codice a barre / GTIN" name="codice" defaultValue={item.codice} />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
+        <CheckboxField
+          label="Silenzia i promemoria email/SMS per questo articolo"
+          name="notificaSilenziata"
+          defaultChecked={item.notificaSilenziata}
+        />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
     </div>

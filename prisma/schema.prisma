@@ -134,6 +134,7 @@ model Adempimento {
   mesi                Int
   dataUltimoControllo DateTime?
   note                String?
+  notificaSilenziata  Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -210,6 +211,7 @@ model MagazzinoItem {
   prezzoUnitario  Float     @default(0)
   codice          String?
   note            String?
+  notificaSilenziata Boolean @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -219,19 +221,20 @@ model MagazzinoItem {
 // ---------- Farmaci ----------
 
 model Farmaco {
-  id           String    @id @default(cuid())
-  studioId     String
-  studio       Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  nome         String
-  categoriaUso String?
-  doveSiTrova  String?
-  quantita     Int       @default(1)
-  lotto        String?
-  scadenza     DateTime?
-  codice       String?
-  note         String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  studioId           String
+  studio             Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  nome               String
+  categoriaUso       String?
+  doveSiTrova        String?
+  quantita           Int       @default(1)
+  lotto              String?
+  scadenza           DateTime?
+  codice             String?
+  note               String?
+  notificaSilenziata Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@index([studioId])
 }
@@ -575,13 +578,14 @@ model ManutenzioneLog {
 // valore salvato in ManutenzioneLog.tipo. cadenzaGiorni è opzionale: se non
 // impostata, quel tipo non genera mai l'avviso "in ritardo".
 model TipoManutenzione {
-  id            String   @id @default(cuid())
-  studioId      String
-  studio        Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  chiave        String
-  nome          String
-  cadenzaGiorni Int?
-  createdAt     DateTime @default(now())
+  id                 String   @id @default(cuid())
+  studioId           String
+  studio             Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  chiave             String
+  nome               String
+  cadenzaGiorni      Int?
+  notificaSilenziata Boolean  @default(false)
+  createdAt          DateTime @default(now())
 
   @@unique([studioId, chiave])
   @@index([studioId])

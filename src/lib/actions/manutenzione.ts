@@ -74,7 +74,8 @@ export async function aggiornaCadenzaTipo(id: string, formData: FormData) {
   const { studio } = await requireStudio();
   const raw = String(formData.get("cadenzaGiorni") ?? "").trim();
   const cadenzaGiorni = raw ? Math.max(1, Number(raw) || 0) || null : null;
-  await prisma.tipoManutenzione.updateMany({ where: { id, studioId: studio.id }, data: { cadenzaGiorni } });
+  const notificaSilenziata = formData.get("notificaSilenziata") === "on";
+  await prisma.tipoManutenzione.updateMany({ where: { id, studioId: studio.id }, data: { cadenzaGiorni, notificaSilenziata } });
   revalidatePath("/app/manutenzione");
   revalidatePath("/app");
 }

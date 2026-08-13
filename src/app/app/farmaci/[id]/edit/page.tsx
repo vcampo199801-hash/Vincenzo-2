@@ -3,7 +3,7 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updateFarmaco } from "@/lib/actions/farmaci";
 import { PageHeader } from "@/components/ui/page-header";
-import { Field, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { Field, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
 
 // Session-dependent, must never be prerendered or cached.
@@ -34,6 +34,11 @@ export default async function EditFarmacoPage({ params }: { params: Promise<{ id
         </div>
         <Field label="Codice a barre / GTIN" name="codice" defaultValue={item.codice} />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
+        <CheckboxField
+          label="Silenzia i promemoria email/SMS per questo farmaco/presidio"
+          name="notificaSilenziata"
+          defaultChecked={item.notificaSilenziata}
+        />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
     </div>
