@@ -1,12 +1,9 @@
-import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { scortaStato, lottoStato, formatDate, formatCurrency } from "@/lib/compliance";
+import { scortaStato, lottoStato, formatCurrency } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
-import { StatoBadge } from "@/components/ui/badge";
-import { DeleteButton } from "@/components/ui/delete-button";
-import { deleteMagazzinoItem, regolaQuantita } from "@/lib/actions/magazzino";
+import { MagazzinoRow } from "@/components/app/magazzino-row";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -58,56 +55,20 @@ export default async function MagazzinoPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {rows.map(({ i, stato, lotto, valore }) => (
-              <tr key={i.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3">
-                  <p className="font-medium text-slate-900">{i.prodotto}</p>
-                  {i.fornitore && <p className="text-xs text-slate-500">{i.fornitore}</p>}
-                </td>
-                <td className="px-4 py-3 text-slate-600">{i.categoria}</td>
-                <td className="px-4 py-3 text-slate-600">
-                  <div className="flex items-center gap-1.5">
-                    <form action={regolaQuantita.bind(null, i.id, -1)}>
-                      <button
-                        type="submit"
-                        disabled={i.quantitaAttuale <= 0}
-                        aria-label={`Diminuisci scorta di ${i.prodotto}`}
-                        className="flex h-6 w-6 items-center justify-center rounded border border-slate-300 text-slate-500 hover:bg-slate-100 disabled:opacity-40"
-                      >
-                        −
-                      </button>
-                    </form>
-                    <span className="min-w-[6.5rem] text-center tabular-nums">
-                      {i.quantitaAttuale} / {i.scortaMinima} {i.unita}
-                    </span>
-                    <form action={regolaQuantita.bind(null, i.id, 1)}>
-                      <button
-                        type="submit"
-                        aria-label={`Aumenta scorta di ${i.prodotto}`}
-                        className="flex h-6 w-6 items-center justify-center rounded border border-slate-300 text-slate-500 hover:bg-slate-100"
-                      >
-                        +
-                      </button>
-                    </form>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <StatoBadge stato={stato} />
-                </td>
-                <td className="px-4 py-3 text-slate-600">{formatDate(i.scadenzaLotto)}</td>
-                <td className="px-4 py-3">
-                  <StatoBadge stato={lotto} />
-                </td>
-                <td className="px-4 py-3 text-slate-600">{formatCurrency(valore)}</td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    <Link href={`/app/magazzino/${i.id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">
-                      Modifica
-                    </Link>
-                    <DeleteButton action={deleteMagazzinoItem.bind(null, i.id)} />
-                  </div>
-                </td>
-              </tr>
+            {rows.map(({ i, lotto }) => (
+              <MagazzinoRow
+                key={i.id}
+                id={i.id}
+                prodotto={i.prodotto}
+                fornitore={i.fornitore}
+                categoria={i.categoria}
+                quantitaAttuale={i.quantitaAttuale}
+                scortaMinima={i.scortaMinima}
+                unita={i.unita}
+                prezzoUnitario={i.prezzoUnitario}
+                scadenzaLotto={i.scadenzaLotto}
+                lotto={lotto}
+              />
             ))}
             {rows.length === 0 && (
               <tr>
