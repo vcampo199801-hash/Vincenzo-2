@@ -2,12 +2,14 @@ import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate, formatCurrency } from "@/lib/compliance";
+import { inizioAnno, fineAnno, inizioMese, mesiTraDate, toIsoDate } from "@/lib/kpi";
 import {
   CATEGORIA_SPESA_OPTIONS,
   optionLabel,
   totaleSpese,
   sommaPerCategoria,
   speseEffettiveDelMese,
+  speseEffettiveNelPeriodo,
   speseDellAnno,
   ricorrenzaLabel,
   costoAnnualizzato,
@@ -23,8 +25,20 @@ import { BRAND_SEQUENTIAL } from "@/components/charts/colors";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-export default async function SpesePage() {
+const PERIODI_RIPARTIZIONE = [
+  { value: "mensile", label: "Mensile" },
+  { value: "annuale", label: "Annuale" },
+  { value: "personalizzato", label: "Personalizzato" },
+] as const;
+type PeriodoRipartizione = (typeof PERIODI_RIPARTIZIONE)[number]["value"];
+
+export default async function SpesePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ripartizione?: string; ripartizioneDa?: string; ripartizioneA?: string }>;
+}) {
   const { studio } = await requireActiveSubscription("spese");
+  const params = await searchParams;
 
   const spese = await prisma.spesaStudio.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } });
 
@@ -34,7 +48,30 @@ export default async function SpesePage() {
 
   const delMese = speseEffettiveDelMese(spese, anno, mese);
   const dellAnno = speseDellAnno(spese, anno);
-  const ripartizioneMese = sommaPerCategoria(delMese).map((s, i) => ({
+
+  const periodoRipartizione: PeriodoRipartizione = PERIODI_RIPARTIZIONE.some((p) => p.value === params.ripartizione)
+    ? (params.ripartizione as PeriodoRipartizione)
+    : "mensile";
+  const ripartizioneDaDefault = toIsoDate(inizioAnno(anno));
+  const ripartizioneADefault = toIsoDate(oggi);
+  const ripartizioneDaIso = params.ripartizioneDa || ripartizioneDaDefault;
+  const ripartizioneAIso = params.ripartizioneA || ripartizioneADefault;
+
+  let speseDelPeriodo: typeof delMese;
+  let titoloRipartizione: string;
+  if (periodoRipartizione === "annuale") {
+    speseDelPeriodo = speseEffettiveNelPeriodo(spese, mesiTraDate(inizioAnno(anno), fineAnno(anno)));
+    titoloRipartizione = `anno ${anno}`;
+  } else if (periodoRipartizione === "personalizzato") {
+    const dataInizio = new Date(ripartizioneDaIso);
+    const dataFine = new Date(ripartizioneAIso);
+    speseDelPeriodo = speseEffettiveNelPeriodo(spese, mesiTraDate(dataInizio, dataFine));
+    titoloRipartizione = `dal ${formatDate(dataInizio)} al ${formatDate(dataFine)}`;
+  } else {
+    speseDelPeriodo = speseEffettiveDelMese(spese, anno, mese);
+    titoloRipartizione = `mese di ${new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric", timeZone: "UTC" }).format(inizioMese(anno, mese))}`;
+  }
+  const ripartizionePeriodo = sommaPerCategoria(speseDelPeriodo).map((s, i) => ({
     label: optionLabel(CATEGORIA_SPESA_OPTIONS, s.categoria),
     value: s.importo,
     color: BRAND_SEQUENTIAL[i % BRAND_SEQUENTIAL.length],
@@ -61,11 +98,47 @@ export default async function SpesePage() {
       </p>
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-sm font-semibold text-slate-900">Ripartizione per categoria — questo mese</h2>
-        {ripartizioneMese.length > 0 ? (
-          <StatusDonut segments={ripartizioneMese} formatValue={formatCurrency} />
+        <h2 className="mb-4 text-sm font-semibold text-slate-900">Ripartizione per categoria — {titoloRipartizione}</h2>
+
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {PERIODI_RIPARTIZIONE.map((p) => (
+            <Link
+              key={p.value}
+              href={`/app/spese?ripartizione=${p.value}`}
+              className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
+                periodoRipartizione === p.value ? "bg-brand-600 text-white" : "border border-slate-300 text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {p.label}
+            </Link>
+          ))}
+          {periodoRipartizione === "personalizzato" && (
+            <form method="get" className="flex flex-wrap items-center gap-2">
+              <input type="hidden" name="ripartizione" value="personalizzato" />
+              <input
+                type="date"
+                name="ripartizioneDa"
+                defaultValue={ripartizioneDaIso}
+                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+              />
+              <span className="text-sm text-slate-400">—</span>
+              <input
+                type="date"
+                name="ripartizioneA"
+                defaultValue={ripartizioneAIso}
+                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+              />
+              <button type="submit" className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
+                Applica
+              </button>
+            </form>
+          )}
+        </div>
+
+        {ripartizionePeriodo.length > 0 ? (
+          <StatusDonut segments={ripartizionePeriodo} formatValue={formatCurrency} />
         ) : (
-          <p className="text-sm text-slate-500">Nessuna spesa registrata questo mese.</p>
+          <p className="text-sm text-slate-500">Nessuna spesa registrata in questo periodo.</p>
         )}
       </div>
 

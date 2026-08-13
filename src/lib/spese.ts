@@ -81,6 +81,13 @@ export function speseDellAnno(righe: SpesaRiga[], anno: number) {
   return righe.filter((r) => r.data.getUTCFullYear() === anno);
 }
 
+/** Come speseEffettiveDelMese, ma su un elenco di mesi qualsiasi (es. tutti i
+ * mesi di un intervallo personalizzato o di un anno intero) — usato per la
+ * ripartizione per categoria su un periodo scelto liberamente. */
+export function speseEffettiveNelPeriodo(righe: SpesaRiga[], mesi: { anno: number; mese: number }[]) {
+  return mesi.flatMap(({ anno, mese }) => speseEffettiveDelMese(righe, anno, mese));
+}
+
 /** Stima di quanto costerà l'anno "a regime": le spese ricorrenti vengono
  * proiettate sull'intero anno in base alla loro cadenza (inserite una sola
  * volta come definizione, non una riga per ogni occorrenza); le spese una

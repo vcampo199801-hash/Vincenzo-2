@@ -170,3 +170,23 @@ export function inizioAnno(anno: number) {
 export function fineAnno(anno: number) {
   return new Date(Date.UTC(anno, 11, 31));
 }
+
+/** Elenco {anno, mese} di ogni mese compreso tra dataInizio e dataFine
+ * (estremi inclusi) — usato per sommare mese per mese le spese ricorrenti e
+ * il costo del personale su un periodo mensile/personalizzato. */
+export function mesiTraDate(dataInizio: Date, dataFine: Date): { anno: number; mese: number }[] {
+  const risultato: { anno: number; mese: number }[] = [];
+  let anno = dataInizio.getUTCFullYear();
+  let mese = dataInizio.getUTCMonth();
+  const annoFine = dataFine.getUTCFullYear();
+  const meseFine = dataFine.getUTCMonth();
+  while (anno < annoFine || (anno === annoFine && mese <= meseFine)) {
+    risultato.push({ anno, mese });
+    mese += 1;
+    if (mese > 11) {
+      mese = 0;
+      anno += 1;
+    }
+  }
+  return risultato;
+}
