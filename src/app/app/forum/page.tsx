@@ -2,7 +2,6 @@ import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { CATEGORIA_FORUM_OPTIONS, categoriaLabel, nomeAutore, formatDataOra } from "@/lib/forum";
-import { formatCurrency } from "@/lib/compliance";
 import { attivaForum, disattivaForum } from "@/lib/actions/forum";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
@@ -34,7 +33,7 @@ export default async function ForumPage({ searchParams }: { searchParams: Promis
     <div>
       <PageHeader
         title="Forum"
-        description="La community tra gli studi iscritti a Scadenze in Regola: dubbi, consigli, compravendita di attrezzature."
+        description="Il confronto tra colleghi degli studi iscritti a Scadenze in Regola: dubbi clinici e gestionali, consigli, bacheca."
         action="Nuovo post"
         actionHref="/app/forum/nuovo"
       />
@@ -93,9 +92,6 @@ export default async function ForumPage({ searchParams }: { searchParams: Promis
                     In revisione (segnalato)
                   </span>
                 )}
-                {post.prezzo != null && (
-                  <span className="font-semibold text-slate-900">{formatCurrency(post.prezzo)}</span>
-                )}
               </div>
               <h2 className="text-base font-semibold text-slate-900">{post.titolo}</h2>
               <p className="mt-1 line-clamp-2 text-sm text-slate-500">{post.corpo}</p>
@@ -119,12 +115,11 @@ export default async function ForumPage({ searchParams }: { searchParams: Promis
 function FormPartecipazione({ studio }: { studio: { name: string; citta: string | null } }) {
   return (
     <div className="max-w-2xl">
-      <PageHeader title="Forum" description="La community tra gli studi iscritti a Scadenze in Regola." />
+      <PageHeader title="Forum" description="Il confronto tra colleghi degli studi iscritti a Scadenze in Regola." />
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm text-slate-600">
           Il forum è uno spazio dove tutti gli studi iscritti a Scadenze in Regola possono confrontarsi: dubbi
-          clinici e gestionali, consigli tra colleghi, compravendita di attrezzature e materiali usati, bacheca
-          generale.
+          clinici e gestionali, consigli tra colleghi, bacheca generale.
         </p>
         <p className="mt-3 text-sm text-slate-600">
           Non è anonimo: se aderisci, i tuoi post e commenti saranno firmati come{" "}

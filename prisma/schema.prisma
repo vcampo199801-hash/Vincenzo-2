@@ -612,8 +612,6 @@ model ForumPost {
   categoria String
   titolo    String
   corpo     String
-  // Solo per la categoria "Vendo materiali/attrezzature usate".
-  prezzo    Float?
   nascosto  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

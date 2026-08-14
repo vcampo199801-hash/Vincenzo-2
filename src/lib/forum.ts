@@ -6,7 +6,6 @@
 export const CATEGORIA_FORUM_OPTIONS = [
   { value: "DUBBI", label: "Dubbi clinici e gestionali" },
   { value: "CONSIGLI", label: "Consigli tra colleghi" },
-  { value: "VENDO", label: "Compravendita attrezzature e materiali" },
   { value: "BACHECA", label: "Bacheca generale" },
 ] as const;
 

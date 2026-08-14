@@ -19,13 +19,6 @@ export default async function NuovoPostForumPage() {
         <SelectField label="Categoria" name="categoria" options={[...CATEGORIA_FORUM_OPTIONS]} defaultValue="BACHECA" required />
         <Field label="Titolo" name="titolo" required placeholder="Es. Consiglio su fornitore materiali" />
         <TextAreaField label="Messaggio" name="corpo" placeholder="Scrivi qui il tuo post…" />
-        <Field
-          label="Prezzo (€)"
-          name="prezzo"
-          type="number"
-          step="0.01"
-          hint="Compilalo solo se stai vendendo qualcosa nella categoria Compravendita — altrimenti lascialo vuoto."
-        />
         <SubmitButton>Pubblica</SubmitButton>
       </form>
     </div>

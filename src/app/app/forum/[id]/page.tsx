@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { categoriaLabel, nomeAutore, formatDataOra } from "@/lib/forum";
-import { formatCurrency } from "@/lib/compliance";
 import { creaCommento, eliminaPost, eliminaCommento, segnalaPost, segnalaCommento } from "@/lib/actions/forum";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
@@ -47,7 +46,6 @@ export default async function PostForumPage({ params }: { params: Promise<{ id: 
           <span className="inline-flex items-center rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 font-medium text-brand-700">
             {categoriaLabel(post.categoria)}
           </span>
-          {post.prezzo != null && <span className="font-semibold text-slate-900">{formatCurrency(post.prezzo)}</span>}
         </div>
         <p className="whitespace-pre-wrap text-sm text-slate-700">{post.corpo}</p>
         <p className="mt-4 text-xs text-slate-400">

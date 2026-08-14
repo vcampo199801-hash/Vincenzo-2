@@ -19,6 +19,7 @@ const MODULES = [
   { icon: "📈", title: "KPI Studio", desc: "Fatturato, prime visite, appuntamenti e preventivi giorno per giorno, con grafici e resoconti settimanali, mensili e annuali." },
   { icon: "🎬", title: "Comunicazione Pazienti", desc: "Materiali informativi pronti da mostrare in studio o condividere con un link prima dell'appuntamento." },
   { icon: "📋", title: "Report ispezione", desc: "Report stampabile con lo stato di tutte le scadenze, pronto da mostrare in caso di ispezione ASL." },
+  { icon: "💬", title: "Forum", desc: "Il confronto tra colleghi degli studi iscritti: dubbi clinici e gestionali, consigli, bacheca — mai anonimo, con adesione facoltativa." },
 ];
 
 export default function Home() {

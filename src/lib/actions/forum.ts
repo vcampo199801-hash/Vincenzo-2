@@ -27,7 +27,6 @@ export async function creaPost(formData: FormData) {
   const categoria = String(formData.get("categoria") ?? "BACHECA");
   const titolo = String(formData.get("titolo") ?? "").trim();
   const corpo = String(formData.get("corpo") ?? "").trim();
-  const prezzoRaw = String(formData.get("prezzo") ?? "").trim();
   if (!titolo || !corpo) redirect("/app/forum/nuovo");
 
   const post = await prisma.forumPost.create({
@@ -36,7 +35,6 @@ export async function creaPost(formData: FormData) {
       categoria,
       titolo,
       corpo,
-      prezzo: categoria === "VENDO" && prezzoRaw ? Number(prezzoRaw) || null : null,
     },
   });
 
