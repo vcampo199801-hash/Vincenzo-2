@@ -156,6 +156,7 @@ export default async function SpesePage({
               <th className="px-4 py-3">Descrizione</th>
               <th className="px-4 py-3">Importo</th>
               <th className="px-4 py-3">Ricorrenza</th>
+              <th className="px-4 py-3">Scadenza</th>
               <th className="px-4 py-3">Costo annuo</th>
               <th className="px-4 py-3" />
             </tr>
@@ -167,7 +168,8 @@ export default async function SpesePage({
                 <td className="px-4 py-3 font-medium text-slate-900">{optionLabel(CATEGORIA_SPESA_OPTIONS, s.categoria)}</td>
                 <td className="px-4 py-3 max-w-xs truncate text-slate-500">{s.descrizione ?? "—"}</td>
                 <td className="px-4 py-3 text-slate-600">{formatCurrency(s.importo)}</td>
-                <td className="px-4 py-3 text-slate-500">{ricorrenzaLabel(s.ricorrenzaMesi, s.dataFineRicorrenza)}</td>
+                <td className="px-4 py-3 text-slate-500">{ricorrenzaLabel(s.ricorrenzaMesi)}</td>
+                <td className="px-4 py-3 text-slate-500">{s.dataFineRicorrenza ? formatDate(s.dataFineRicorrenza) : "—"}</td>
                 <td className="px-4 py-3 text-slate-500">
                   {costoAnnuoRiga(s, anno) > 0 ? formatCurrency(costoAnnuoRiga(s, anno)) : "—"}
                 </td>
@@ -183,7 +185,7 @@ export default async function SpesePage({
             ))}
             {spese.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                   Nessuna spesa registrata finora.
                 </td>
               </tr>

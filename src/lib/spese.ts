@@ -20,24 +20,18 @@ export function optionLabel(options: { value: string; label: string }[], value: 
 }
 
 /** Etichetta leggibile per la cadenza: null -> "—", altrimenti "Mensile" /
- * "Trimestrale" / "Semestrale" / "Annuale" per i valori più comuni, o "Ogni N mesi".
- * Se è impostata una data di fine (es. l'ultima rata di un finanziamento), la
- * aggiunge tra parentesi. */
-export function ricorrenzaLabel(ricorrenzaMesi: number | null | undefined, dataFineRicorrenza?: Date | null): string {
+ * "Trimestrale" / "Semestrale" / "Annuale" per i valori più comuni, o "Ogni N mesi". */
+export function ricorrenzaLabel(ricorrenzaMesi: number | null | undefined): string {
   if (!ricorrenzaMesi) return "—";
-  const base =
-    ricorrenzaMesi === 1
-      ? "Mensile"
-      : ricorrenzaMesi === 3
-        ? "Trimestrale"
-        : ricorrenzaMesi === 6
-          ? "Semestrale"
-          : ricorrenzaMesi === 12
-            ? "Annuale"
-            : `Ogni ${ricorrenzaMesi} mesi`;
-  if (!dataFineRicorrenza) return base;
-  const fine = new Intl.DateTimeFormat("it-IT", { month: "short", year: "numeric", timeZone: "UTC" }).format(dataFineRicorrenza);
-  return `${base} (fino a ${fine})`;
+  return ricorrenzaMesi === 1
+    ? "Mensile"
+    : ricorrenzaMesi === 3
+      ? "Trimestrale"
+      : ricorrenzaMesi === 6
+        ? "Semestrale"
+        : ricorrenzaMesi === 12
+          ? "Annuale"
+          : `Ogni ${ricorrenzaMesi} mesi`;
 }
 
 /** Costo annuo di una spesa ricorrente proiettato dalla sua cadenza

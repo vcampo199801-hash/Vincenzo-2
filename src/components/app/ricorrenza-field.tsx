@@ -66,7 +66,7 @@ export function RicorrenzaField({
 
       {ricorrente && (
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Fine pagamento (facoltativo)</span>
+          <span className="mb-1 block font-medium text-slate-700">Scadenza (facoltativa)</span>
           <input
             name="dataFineRicorrenza"
             type="date"
@@ -74,8 +74,9 @@ export function RicorrenzaField({
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
           <span className="mt-1 block text-xs text-slate-400">
-            Per un finanziamento o leasing con un numero di rate definito: dopo questa data non verrà più conteggiato.
-            Lascia vuoto se il pagamento continua senza una scadenza (es. affitto, utenze).
+            Se questa spesa va pagata solo per un periodo definito (es. le rate rimaste di un finanziamento o
+            leasing), indica qui dopo quale data non la pagherai più. Lascia vuoto se continua senza una scadenza
+            (es. affitto, utenze).
           </span>
         </label>
       )}
