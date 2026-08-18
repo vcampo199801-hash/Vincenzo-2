@@ -125,7 +125,7 @@ export default async function AbbonamentoPage({
         )}
       </div>
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
         {PIANI_ORDINE.map((key) => {
           const piano = PIANI[key];
           const isCurrent = active && pianoAttuale === key;

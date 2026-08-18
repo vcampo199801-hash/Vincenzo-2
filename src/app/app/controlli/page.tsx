@@ -5,6 +5,7 @@ import { formatDate, formatCurrency } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { deleteControllo } from "@/lib/actions/controlli";
 
 // Session-dependent, must never be prerendered or cached.
@@ -38,7 +39,7 @@ export default async function ControlliPage() {
         <StatCard label="Interventi totali" value={controlli.length} />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
@@ -79,7 +80,7 @@ export default async function ControlliPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

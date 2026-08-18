@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { parseGs1Barcode } from "@/lib/barcode";
-
-type BarcodeDetectorResult = { rawValue: string };
-type BarcodeDetectorLike = { detect: (source: CanvasImageSource) => Promise<BarcodeDetectorResult[]> };
+import type { DecodeHintType as DecodeHintTypeT } from "@zxing/library";
 
 /** Which form field (by `name`) each parsed piece of data should fill —
  * lets the same scanner drive Farmaci ("scadenza") and Magazzino ("scadenzaLotto"). */
@@ -16,14 +14,14 @@ export type ScannerTargets = {
 
 /** Scan support for the "external device" a studio plugs in — any USB/Bluetooth
  * barcode scanner acts as a keyboard, so the text input below is all that's
- * needed to capture it. The camera button is a bonus for phones without a
- * dedicated scanner, shown only where the browser supports BarcodeDetector
- * (Chrome on Android/desktop — not Safari/iOS, a browser platform gap). */
+ * needed to capture it. The camera button decodes frames with ZXing (pure JS,
+ * canvas-based) instead of the native BarcodeDetector API, which Safari/iOS
+ * never implemented — this way the camera works on every phone, not just
+ * Chrome on Android. */
 export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const rafRef = useRef<number | null>(null);
+  const controlsRef = useRef<{ stop: () => void } | null>(null);
 
   const [lastScan, setLastScan] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -31,7 +29,7 @@ export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   useEffect(() => {
-    setCameraSupported(typeof window !== "undefined" && "BarcodeDetector" in window);
+    setCameraSupported(typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia);
   }, []);
 
   function fillForm(raw: string) {
@@ -67,10 +65,8 @@ export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
   }
 
   function stopCamera() {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
+    controlsRef.current?.stop();
+    controlsRef.current = null;
     setCameraOpen(false);
   }
 
@@ -78,33 +74,37 @@ export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
     setCameraError(null);
     setCameraOpen(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      const Detector = (window as unknown as { BarcodeDetector: new (opts: { formats: string[] }) => BarcodeDetectorLike })
-        .BarcodeDetector;
-      const detector = new Detector({
-        formats: ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "data_matrix", "upc_a"],
-      });
+      const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType, NotFoundException }] = await Promise.all([
+        import("@zxing/browser"),
+        import("@zxing/library"),
+      ]);
+      const hints = new Map<DecodeHintTypeT, unknown>();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.QR_CODE,
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.DATA_MATRIX,
+      ]);
+      const reader = new BrowserMultiFormatReader(hints);
 
-      const loop = async () => {
-        if (!streamRef.current || !videoRef.current) return;
-        try {
-          const codes = await detector.detect(videoRef.current);
-          if (codes.length > 0) {
-            fillForm(codes[0].rawValue);
+      if (!videoRef.current) return;
+      const controls = await reader.decodeFromConstraints(
+        { video: { facingMode: "environment" } },
+        videoRef.current,
+        (result, error) => {
+          if (result) {
+            fillForm(result.getText());
             stopCamera();
-            return;
+          } else if (error && !(error instanceof NotFoundException)) {
+            // NotFoundException fires on every frame with no code in view —
+            // normal mid-stream, not worth surfacing. Anything else is real.
           }
-        } catch {
-          // transient decode errors are normal mid-stream — keep looping
         }
-        rafRef.current = requestAnimationFrame(loop);
-      };
-      rafRef.current = requestAnimationFrame(loop);
+      );
+      controlsRef.current = controls;
     } catch {
       setCameraError("Impossibile accedere alla fotocamera: controlla i permessi del browser.");
       stopCamera();
@@ -140,8 +140,8 @@ export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
       </div>
       {!cameraSupported && (
         <p className="mt-2 text-xs text-brand-700">
-          La scansione con la fotocamera è disponibile su Chrome (Android o computer) — su iPhone/Safari usa un
-          lettore esterno oppure inserisci i dati a mano.
+          Questo browser non consente l&apos;accesso alla fotocamera: usa un lettore esterno oppure inserisci i
+          dati a mano.
         </p>
       )}
       {cameraError && <p className="mt-2 text-xs text-red-700">{cameraError}</p>}

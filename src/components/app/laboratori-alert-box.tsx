@@ -55,7 +55,7 @@ export function LaboratoriAlertBox({
   if (totale === 0) return null;
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {scadute.length > 0 && (
         <AvvisoCard tone="critical" icon="⏰" title="Consegne scadute" count={scadute.length}>
           <ul className="space-y-1">

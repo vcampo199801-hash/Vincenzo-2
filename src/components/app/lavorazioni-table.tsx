@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { updateCampoLavorazione } from "@/lib/actions/laboratori";
 import { consegnaStato, optionLabel, STATO_LAVORAZIONE_OPTIONS, STATO_LAVORAZIONE_STYLE, TIPOLOGIA_LAVORAZIONE_OPTIONS } from "@/lib/laboratori";
 import { formatDate } from "@/lib/compliance";
+import { TableScroll } from "@/components/ui/table-scroll";
 
 export type LavorazioneRow = {
   id: string;
@@ -154,7 +155,7 @@ export function LavorazioniTable({
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
@@ -254,7 +255,7 @@ export function LavorazioniTable({
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

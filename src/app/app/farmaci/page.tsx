@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { deleteFarmaco, ensureControlliAnno } from "@/lib/actions/farmaci";
 import { MonthlyControlRow } from "@/components/app/monthly-control-row";
 
@@ -44,7 +45,7 @@ export default async function FarmaciPage() {
           <StatCard label="OK" value={rows.length - scaduti - inScadenza} tone="good" />
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
               <tr>
@@ -92,7 +93,7 @@ export default async function FarmaciPage() {
               )}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       </div>
 
       <div>
@@ -102,7 +103,7 @@ export default async function FarmaciPage() {
         <p className="mb-3 text-sm text-slate-500">
           Controllo scadenze farmaci e integrità kit di primo soccorso, mese per mese.
         </p>
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
               <tr>
@@ -128,7 +129,7 @@ export default async function FarmaciPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       </div>
     </div>
   );

@@ -81,7 +81,7 @@ export default function Home() {
         <p className="mx-auto mt-2 max-w-2xl text-center text-slate-500">
           Moduli pensati per la compliance di uno studio dentistico, pronti all&apos;uso fin dal primo accesso.
         </p>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {MODULES.map((m) => (
             <div key={m.title} className="relative rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               {"piano" in m && m.piano && (
@@ -102,7 +102,7 @@ export default function Home() {
           <h2 className="text-2xl font-semibold text-slate-900">Un piano per ogni esigenza</h2>
           <p className="mt-2 text-slate-500">Nessun vincolo, disdici quando vuoi.</p>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
             {PIANI_ORDINE.map((key) => {
               const piano = PIANI[key];
               return (

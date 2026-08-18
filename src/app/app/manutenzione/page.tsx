@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { TipoManutenzioneField } from "@/components/app/tipo-manutenzione-field";
 
 // Session-dependent, must never be prerendered or cached.
@@ -52,7 +53,7 @@ export default async function ManutenzionePage() {
         <StatCard label="Tipi di controllo in ritardo" value={perTipo.filter((t) => t.inRitardo).length} tone={perTipo.some((t) => t.inRitardo) ? "warn" : "good"} />
       </div>
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {perTipo.map((t) => (
           <div key={t.tipo} className={`rounded-xl border p-4 ${t.inRitardo ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-white"} shadow-sm`}>
             <p className="text-sm font-semibold text-slate-900">{t.label}</p>
@@ -99,11 +100,11 @@ export default async function ManutenzionePage() {
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-sm font-semibold text-slate-900">Registra un controllo</h2>
         <form action={creaManutenzione} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TipoManutenzioneField tipi={tipi.map((t) => ({ chiave: t.chiave, nome: t.nome }))} />
             <Field label="Data" name="data" type="date" required defaultValue={toIsoDate(new Date())} />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Operatore (firma)" name="operatore" required placeholder="Nome di chi ha eseguito il controllo" hint="Obbligatorio: è l'attestazione di chi ha eseguito il controllo." />
             <SelectField label="Esito" name="esito" options={ESITO_MANUTENZIONE_OPTIONS} defaultValue="OK" required />
           </div>
@@ -112,7 +113,7 @@ export default async function ManutenzionePage() {
         </form>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
@@ -150,7 +151,7 @@ export default async function ManutenzionePage() {
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

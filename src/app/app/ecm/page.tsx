@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ecmPercent } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { deleteEcm } from "@/lib/actions/ecm";
 import { StatusDonut } from "@/components/charts/donut";
 import { TargetProgressBars } from "@/components/charts/target-progress-bars";
@@ -38,7 +39,7 @@ export default async function EcmPage() {
       />
 
       {crediti.length > 0 && (
-        <div className="mb-6 grid gap-4 lg:grid-cols-3">
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
             <h2 className="mb-3 text-sm font-semibold text-slate-900">Team per stato di completamento</h2>
             <StatusDonut
@@ -60,7 +61,7 @@ export default async function EcmPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
@@ -116,7 +117,7 @@ export default async function EcmPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

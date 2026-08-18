@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { scadenzaStato } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { ScadenzarioRow } from "@/components/app/scadenzario-row";
+import { TableScroll } from "@/components/ui/table-scroll";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -56,7 +57,7 @@ export default async function ScadenzarioPage() {
         <SummaryPill label="Da compilare" value={counts.DA_COMPILARE ?? 0} tone="default" />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
@@ -92,7 +93,7 @@ export default async function ScadenzarioPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

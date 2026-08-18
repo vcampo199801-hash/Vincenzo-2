@@ -4,6 +4,7 @@ import { scortaStato, lottoStato, formatCurrency } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { MagazzinoRow } from "@/components/app/magazzino-row";
+import { TableScroll } from "@/components/ui/table-scroll";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -40,7 +41,7 @@ export default async function MagazzinoPage() {
         <StatCard label="Valore giacenze" value={formatCurrency(valoreTotale)} />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
@@ -79,7 +80,7 @@ export default async function MagazzinoPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

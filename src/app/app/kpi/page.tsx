@@ -21,6 +21,7 @@ import { salvaKpiGiorno, deleteKpiGiorno } from "@/lib/actions/kpi";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { TrendBars } from "@/components/charts/trend-bars";
 
 // Session-dependent, must never be prerendered or cached.
@@ -155,7 +156,7 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
         ))}
       </div>
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {serieVisibili.map((m) => {
           const totale = m.serie.reduce((s, x) => s + x.value, 0);
           const formatValue = m.isCurrency ? formatCurrency : (v: number) => String(v);
@@ -181,7 +182,7 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
@@ -222,7 +223,7 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

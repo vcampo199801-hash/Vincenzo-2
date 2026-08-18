@@ -28,7 +28,7 @@ export default async function ComunicazionePage() {
         acquistate) e aggiungi immagini e una spiegazione in linguaggio semplice, organizzati per trattamento.
       </p>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {materiali.map((m) => (
           <Link
             key={m.id}

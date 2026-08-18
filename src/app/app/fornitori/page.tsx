@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { deleteFornitore } from "@/lib/actions/fornitori";
 
 // Session-dependent, must never be prerendered or cached.
@@ -35,7 +36,7 @@ function FornitoriTable({ title, items }: { title: string; items: Awaited<Return
   return (
     <div>
       <h2 className="mb-3 text-lg font-semibold text-slate-900">{title}</h2>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
@@ -76,7 +77,7 @@ function FornitoriTable({ title, items }: { title: string; items: Awaited<Return
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

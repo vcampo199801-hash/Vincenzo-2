@@ -335,7 +335,7 @@ export default async function DashboardPage({
           )}
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <DashRow label="Ricavi del periodo (fatturato KPI)" value={formatCurrency(ricaviPeriodo)} />
             <DashRow label="Costi totali stimati" value={formatCurrency(costoPeriodoTotale)} bad={costoPeriodoTotale > ricaviPeriodo} />
@@ -351,7 +351,7 @@ export default async function DashboardPage({
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="min-w-0 rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Le tue prossime 5 scadenze</h2>

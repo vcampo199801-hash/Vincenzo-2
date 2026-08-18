@@ -20,6 +20,7 @@ import { eliminaSpesa } from "@/lib/actions/spese";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { StatusDonut } from "@/components/charts/donut";
 import { BRAND_SEQUENTIAL } from "@/components/charts/colors";
 
@@ -147,7 +148,7 @@ export default async function SpesePage({
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
@@ -192,7 +193,7 @@ export default async function SpesePage({
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
     </div>
   );
 }

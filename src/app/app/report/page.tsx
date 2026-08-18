@@ -185,34 +185,36 @@ function SummaryBox({ label, value }: { label: string; value: string | number })
 
 function ReportTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
   return (
-    <table className="w-full border-collapse text-sm">
-      <thead>
-        <tr className="border-b border-slate-300 text-left text-xs uppercase tracking-wide text-slate-500">
-          {headers.map((h) => (
-            <th key={h} className="py-2 pr-3">
-              {h}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row, i) => (
-          <tr key={i} className="border-b border-slate-100">
-            {row.map((cell, j) => (
-              <td key={j} className="py-2 pr-3 text-slate-700">
-                {cell}
-              </td>
+    <div className="overflow-x-auto print:overflow-visible">
+      <table className="w-full min-w-[560px] border-collapse text-sm print:min-w-0">
+        <thead>
+          <tr className="border-b border-slate-300 text-left text-xs uppercase tracking-wide text-slate-500">
+            {headers.map((h) => (
+              <th key={h} className="whitespace-nowrap py-2 pr-3">
+                {h}
+              </th>
             ))}
           </tr>
-        ))}
-        {rows.length === 0 && (
-          <tr>
-            <td colSpan={headers.length} className="py-4 text-center text-slate-400">
-              Nessun dato censito.
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className="border-b border-slate-100">
+              {row.map((cell, j) => (
+                <td key={j} className="whitespace-nowrap py-2 pr-3 text-slate-700">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+          {rows.length === 0 && (
+            <tr>
+              <td colSpan={headers.length} className="py-4 text-center text-slate-400">
+                Nessun dato censito.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }

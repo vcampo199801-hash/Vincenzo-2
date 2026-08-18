@@ -49,25 +49,30 @@ export function DraggableSections({ studioId, sections }: { studioId: string; se
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-xs text-slate-400">Usa le frecce per riordinare le card come preferisci.</p>
         {orderedKeys.join("|") !== defaultOrder.join("|") && (
-          <button type="button" onClick={() => persist(defaultOrder)} className="text-xs font-medium text-slate-500 hover:text-brand-600">
+          <button
+            type="button"
+            onClick={() => persist(defaultOrder)}
+            className="shrink-0 text-xs font-medium text-slate-500 hover:text-brand-600"
+          >
             Ripristina ordine predefinito
           </button>
         )}
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {orderedKeys.map((key, i) => (
           <div key={key}>
-            <div className="mb-1.5 flex justify-end gap-1">
+            <div className="mb-2 flex items-center justify-end gap-1.5 rounded-lg bg-slate-100/80 px-2 py-1.5">
+              <span className="mr-auto text-xs font-medium text-slate-500">Sposta</span>
               <button
                 type="button"
                 onClick={() => sposta(key, -1)}
                 disabled={i === 0}
                 aria-label="Sposta su"
                 title="Sposta su"
-                className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-xs text-slate-500 shadow-sm hover:bg-slate-50 hover:text-brand-600 disabled:opacity-30"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-base font-semibold text-slate-600 shadow-sm hover:border-brand-300 hover:text-brand-600 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-300"
               >
                 ↑
               </button>
@@ -77,7 +82,7 @@ export function DraggableSections({ studioId, sections }: { studioId: string; se
                 disabled={i === orderedKeys.length - 1}
                 aria-label="Sposta giù"
                 title="Sposta giù"
-                className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-xs text-slate-500 shadow-sm hover:bg-slate-50 hover:text-brand-600 disabled:opacity-30"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-base font-semibold text-slate-600 shadow-sm hover:border-brand-300 hover:text-brand-600 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-300"
               >
                 ↓
               </button>
