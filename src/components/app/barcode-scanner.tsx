@@ -146,9 +146,14 @@ export function BarcodeScanner({
   return (
     <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-4">
       <p className="mb-1 text-sm font-medium text-brand-800">Scansiona codice a barre / QR / DataMatrix</p>
-      <p className="mb-3 text-xs text-brand-700">
+      <p className="mb-1.5 text-xs text-brand-700">
         Con un lettore esterno (USB o Bluetooth) collegato al telefono o al PC: clicca nel campo e scansiona,
         i dati si compilano da soli.
+      </p>
+      <p className="mb-3 text-xs text-brand-700/80">
+        La scansione conviene soprattutto sui riordini: se il codice è già stato censito una volta, i campi
+        come nome, categoria e fornitore si compilano da soli e resta da inserire solo la scadenza del nuovo
+        lotto. Non è comunque obbligatoria: puoi sempre compilare la scheda a mano.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <input
