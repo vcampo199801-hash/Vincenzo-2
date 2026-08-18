@@ -256,6 +256,7 @@ model Farmaco {
   nome               String
   categoriaUso       String?
   doveSiTrova        String?
+  fornitore          String?
   quantita           Int       @default(1)
   lotto              String?
   scadenza           DateTime?
@@ -293,6 +294,7 @@ model FarmacoCodiceMemoria {
   nome         String
   categoriaUso String?
   doveSiTrova  String?
+  fornitore    String?
   aggiornatoIl DateTime @updatedAt
 
   @@unique([studioId, codice])

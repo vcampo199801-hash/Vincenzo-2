@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { updateFarmaco } from "@/lib/actions/farmaci";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
+import { FornitoreField } from "@/components/ui/fornitore-field";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
 
 // Session-dependent, must never be prerendered or cached.
@@ -12,8 +13,12 @@ export const dynamic = "force-dynamic";
 export default async function EditFarmacoPage({ params }: { params: Promise<{ id: string }> }) {
   const { studio } = await requireActiveSubscription("farmaci");
   const { id } = await params;
-  const item = await prisma.farmaco.findFirst({ where: { id, studioId: studio.id } });
+  const [item, fornitoriMateriali] = await Promise.all([
+    prisma.farmaco.findFirst({ where: { id, studioId: studio.id } }),
+    prisma.fornitore.findMany({ where: { studioId: studio.id, tipo: "MATERIALI", nome: { not: null } }, orderBy: { nome: "asc" } }),
+  ]);
   if (!item) notFound();
+  const opzioniFornitore = [...new Set(fornitoriMateriali.map((f) => f.nome!).filter(Boolean))];
 
   const updateWithId = updateFarmaco.bind(null, item.id);
 
@@ -27,6 +32,7 @@ export default async function EditFarmacoPage({ params }: { params: Promise<{ id
           <Field label="Categoria d'uso" name="categoriaUso" defaultValue={item.categoriaUso} />
           <Field label="Dove si trova" name="doveSiTrova" defaultValue={item.doveSiTrova} />
         </div>
+        <FornitoreField defaultValue={item.fornitore} opzioni={opzioniFornitore} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Quantità" name="quantita" type="number" defaultValue={item.quantita} />
           <Field label="Lotto" name="lotto" defaultValue={item.lotto} />

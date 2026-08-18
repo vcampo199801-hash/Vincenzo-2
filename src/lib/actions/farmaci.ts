@@ -15,6 +15,7 @@ function payload(formData: FormData) {
     nome: String(formData.get("nome") ?? "").trim(),
     categoriaUso: String(formData.get("categoriaUso") ?? "").trim() || null,
     doveSiTrova: String(formData.get("doveSiTrova") ?? "").trim() || null,
+    fornitore: String(formData.get("fornitore") ?? "").trim() || null,
     quantita: Number(formData.get("quantita") ?? 1) || 1,
     lotto: String(formData.get("lotto") ?? "").trim() || null,
     scadenza: parseDate(formData.get("scadenza")),
@@ -34,11 +35,13 @@ async function ricordaCodice(studioId: string, data: ReturnType<typeof payload>)
       nome: data.nome,
       categoriaUso: data.categoriaUso,
       doveSiTrova: data.doveSiTrova,
+      fornitore: data.fornitore,
     },
     update: {
       nome: data.nome,
       categoriaUso: data.categoriaUso,
       doveSiTrova: data.doveSiTrova,
+      fornitore: data.fornitore,
     },
   });
 }
@@ -88,6 +91,7 @@ export async function cercaFarmacoPerCodice(codice: string) {
     nome: ricordo.nome,
     categoriaUso: ricordo.categoriaUso ?? "",
     doveSiTrova: ricordo.doveSiTrova ?? "",
+    fornitore: ricordo.fornitore ?? "",
   };
 }
 

@@ -1,14 +1,22 @@
 import { requireActiveSubscription } from "@/lib/auth-guards";
+import { prisma } from "@/lib/prisma";
 import { createFarmaco, cercaFarmacoPerCodice } from "@/lib/actions/farmaci";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { FornitoreField } from "@/components/ui/fornitore-field";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
 export default async function NewFarmacoPage() {
-  await requireActiveSubscription("farmaci");
+  const { studio } = await requireActiveSubscription("farmaci");
+
+  const fornitoriMateriali = await prisma.fornitore.findMany({
+    where: { studioId: studio.id, tipo: "MATERIALI", nome: { not: null } },
+    orderBy: { nome: "asc" },
+  });
+  const opzioniFornitore = [...new Set(fornitoriMateriali.map((f) => f.nome!).filter(Boolean))];
 
   return (
     <div className="max-w-2xl">
@@ -20,6 +28,7 @@ export default async function NewFarmacoPage() {
           <Field label="Categoria d'uso" name="categoriaUso" placeholder="Es. Emergenza allergica" />
           <Field label="Dove si trova" name="doveSiTrova" placeholder="Es. Carrello emergenza" />
         </div>
+        <FornitoreField opzioni={opzioniFornitore} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Quantità" name="quantita" type="number" defaultValue={1} />
           <Field label="Lotto" name="lotto" />

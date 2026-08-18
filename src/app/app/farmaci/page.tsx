@@ -65,6 +65,7 @@ export default async function FarmaciPage() {
                   <td className="px-4 py-3">
                     <p className="font-medium text-slate-900">{f.nome}</p>
                     {f.categoriaUso && <p className="text-xs text-slate-500">{f.categoriaUso}</p>}
+                    {f.fornitore && <p className="text-xs text-slate-400">{f.fornitore}</p>}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{f.doveSiTrova ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{f.quantita}</td>
