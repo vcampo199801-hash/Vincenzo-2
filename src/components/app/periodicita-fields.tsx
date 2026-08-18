@@ -22,7 +22,7 @@ export function PeriodicitaFields({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-slate-700">Periodicità</span>
         <select

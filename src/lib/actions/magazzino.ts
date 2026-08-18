@@ -26,9 +26,36 @@ function payload(formData: FormData) {
   };
 }
 
+async function ricordaCodice(studioId: string, data: ReturnType<typeof payload>) {
+  if (!data.codice) return;
+  await prisma.magazzinoCodiceMemoria.upsert({
+    where: { studioId_codice: { studioId, codice: data.codice } },
+    create: {
+      studioId,
+      codice: data.codice,
+      categoria: data.categoria,
+      prodotto: data.prodotto,
+      fornitore: data.fornitore,
+      unita: data.unita,
+      scortaMinima: data.scortaMinima,
+      prezzoUnitario: data.prezzoUnitario,
+    },
+    update: {
+      categoria: data.categoria,
+      prodotto: data.prodotto,
+      fornitore: data.fornitore,
+      unita: data.unita,
+      scortaMinima: data.scortaMinima,
+      prezzoUnitario: data.prezzoUnitario,
+    },
+  });
+}
+
 export async function createMagazzinoItem(formData: FormData) {
   const { studio } = await requireStudio();
-  await prisma.magazzinoItem.create({ data: { studioId: studio.id, ...payload(formData) } });
+  const data = payload(formData);
+  await prisma.magazzinoItem.create({ data: { studioId: studio.id, ...data } });
+  await ricordaCodice(studio.id, data);
   revalidatePath("/app/magazzino");
   revalidatePath("/app");
   redirect("/app/magazzino");
@@ -36,7 +63,9 @@ export async function createMagazzinoItem(formData: FormData) {
 
 export async function updateMagazzinoItem(id: string, formData: FormData) {
   const { studio } = await requireStudio();
-  await prisma.magazzinoItem.updateMany({ where: { id, studioId: studio.id }, data: payload(formData) });
+  const data = payload(formData);
+  await prisma.magazzinoItem.updateMany({ where: { id, studioId: studio.id }, data });
+  await ricordaCodice(studio.id, data);
   revalidatePath("/app/magazzino");
   revalidatePath("/app");
   redirect("/app/magazzino");
@@ -49,26 +78,30 @@ export async function deleteMagazzinoItem(id: string) {
   revalidatePath("/app");
 }
 
-/** Cerca un articolo già censito con lo stesso codice a barre, per
- * precompilare la scheda quando si scansiona un prodotto già visto in
- * passato (es. un riordino) — così la scansione non serve solo a leggere il
- * codice, ma evita di riscrivere da capo nome, categoria, fornitore ecc.
- * Restituisce i soli campi descrittivi: quantità, lotto e scadenza restano
- * quelli letti dalla scansione appena fatta (o da inserire a mano), perché
- * cambiano a ogni arrivo di merce. */
+/** Cerca nella memoria dei codici già scansionati in passato, per
+ * precompilare la scheda quando si scansiona un prodotto già visto (es. un
+ * riordino) — così la scansione non serve solo a leggere il codice, ma
+ * evita di riscrivere da capo nome, categoria, fornitore ecc. La memoria
+ * sopravvive alla cancellazione dell'articolo dal magazzino: se un prodotto
+ * esaurito viene tolto e poi riordinato mesi dopo, il codice lo ritrova lo
+ * stesso. Restituisce i soli campi descrittivi: quantità, lotto e scadenza
+ * restano quelli letti dalla scansione appena fatta (o da inserire a mano),
+ * perché cambiano a ogni arrivo di merce. */
 export async function cercaArticoloPerCodice(codice: string) {
   const { studio } = await requireStudio();
   const trimmed = codice.trim();
   if (!trimmed) return null;
-  const item = await prisma.magazzinoItem.findFirst({ where: { studioId: studio.id, codice: trimmed } });
-  if (!item) return null;
+  const ricordo = await prisma.magazzinoCodiceMemoria.findUnique({
+    where: { studioId_codice: { studioId: studio.id, codice: trimmed } },
+  });
+  if (!ricordo) return null;
   return {
-    prodotto: item.prodotto,
-    categoria: item.categoria,
-    fornitore: item.fornitore ?? "",
-    unita: item.unita,
-    scortaMinima: String(item.scortaMinima),
-    prezzoUnitario: String(item.prezzoUnitario),
+    prodotto: ricordo.prodotto,
+    categoria: ricordo.categoria,
+    fornitore: ricordo.fornitore ?? "",
+    unita: ricordo.unita,
+    scortaMinima: String(ricordo.scortaMinima),
+    prezzoUnitario: String(ricordo.prezzoUnitario),
   };
 }
 

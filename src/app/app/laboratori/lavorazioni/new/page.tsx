@@ -43,16 +43,16 @@ export default async function NewLavorazionePage({ searchParams }: { searchParam
           defaultValue={laboratorioId ?? laboratori[0].id}
           options={laboratori.map((l) => ({ value: l.id, label: l.ragioneSociale }))}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Riferimento paziente" name="riferimentoPaziente" required placeholder="Es. Rossi Mario, o codice interno" />
           <SelectField label="Tipo di lavorazione" name="tipoLavorazione" defaultValue="ALTRO" options={TIPOLOGIA_LAVORAZIONE_OPTIONS} />
         </div>
         <Field label="Elementi dentali" name="elementiDentali" placeholder="Es. 1.6, 1.7" hint="Facoltativo. Notazione libera." />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Data invio" name="dataInvio" type="date" required />
           <Field label="Data consegna prevista" name="dataConsegnaPrevista" type="date" hint="Facoltativo." />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField label="Stato" name="stato" defaultValue="INVIATO" options={STATO_LAVORAZIONE_OPTIONS} />
           <Field label="Costo (€)" name="costo" type="number" step="0.01" hint="Facoltativo." />
         </div>

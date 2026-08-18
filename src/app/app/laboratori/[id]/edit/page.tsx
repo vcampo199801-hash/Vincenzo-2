@@ -23,16 +23,16 @@ export default async function EditLaboratorioPage({ params }: { params: Promise<
       <PageHeader title="Modifica laboratorio" />
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Ragione sociale" name="ragioneSociale" required defaultValue={item.ragioneSociale} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Partita IVA" name="partitaIva" defaultValue={item.partitaIva} />
           <Field label="Referente" name="referente" defaultValue={item.referente} />
         </div>
         <Field label="Indirizzo" name="indirizzo" defaultValue={item.indirizzo} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Telefono" name="telefono" defaultValue={item.telefono} />
           <Field label="Email" name="email" type="email" defaultValue={item.email} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="N. registrazione Ministero della Salute"
             name="numeroRegistrazioneMinisteriale"

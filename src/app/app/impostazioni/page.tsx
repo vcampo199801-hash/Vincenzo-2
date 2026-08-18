@@ -39,7 +39,7 @@ export default async function ImpostazioniPage() {
         <PageHeader title="Impostazioni studio" description="Dati anagrafici che compaiono nel cruscotto e nei documenti." />
         <form action={updateStudioInfo} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <Field label="Nome dello studio" name="name" required defaultValue={studio.name} />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Titolare" name="titolare" defaultValue={studio.titolare} />
             <Field
               label="N. iscrizione Albo del titolare"
@@ -49,7 +49,7 @@ export default async function ImpostazioniPage() {
             />
           </div>
           <Field label="Indirizzo" name="indirizzo" defaultValue={studio.indirizzo} hint="Compare nell'intestazione dei moduli di consenso informato." />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Città" name="citta" defaultValue={studio.citta} />
             <Field label="Telefono" name="telefono" defaultValue={studio.telefono} />
           </div>

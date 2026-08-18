@@ -15,16 +15,16 @@ export default async function NewLaboratorioPage() {
       <PageHeader title="Nuovo laboratorio" description="Anagrafica del laboratorio odontotecnico." />
       <form action={createLaboratorio} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Ragione sociale" name="ragioneSociale" required />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Partita IVA" name="partitaIva" />
           <Field label="Referente" name="referente" />
         </div>
         <Field label="Indirizzo" name="indirizzo" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Telefono" name="telefono" />
           <Field label="Email" name="email" type="email" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="N. registrazione Ministero della Salute"
             name="numeroRegistrazioneMinisteriale"

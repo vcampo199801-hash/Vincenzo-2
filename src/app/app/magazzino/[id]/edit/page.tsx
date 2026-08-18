@@ -29,16 +29,16 @@ export default async function EditMagazzinoPage({ params }: { params: Promise<{ 
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <BarcodeScanner targets={{ codice: "codice", scadenza: "scadenzaLotto" }} />
         <Field label="Prodotto" name="prodotto" required defaultValue={item.prodotto} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField label="Categoria" name="categoria" defaultValue={item.categoria} options={MAGAZZINO_CATEGORIE.map((c) => ({ value: c, label: c }))} />
           <FornitoreField defaultValue={item.fornitore} opzioni={opzioniFornitore} />
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Unità" name="unita" defaultValue={item.unita} />
           <Field label="Scorta minima" name="scortaMinima" type="number" step="0.01" defaultValue={item.scortaMinima} />
           <Field label="Quantità attuale" name="quantitaAttuale" type="number" step="0.01" defaultValue={item.quantitaAttuale} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Scadenza lotto" name="scadenzaLotto" type="date" defaultValue={item.scadenzaLotto?.toISOString().slice(0, 10)} />
           <Field label="Prezzo unitario (€)" name="prezzoUnitario" type="number" step="0.01" defaultValue={item.prezzoUnitario} />
         </div>

@@ -14,7 +14,7 @@ export default async function NewEcmPage() {
       <PageHeader title="Aggiungi professionista" description="Traccia i crediti ECM per il triennio in corso." />
       <form action={createEcm} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Professionista" name="professionista" required placeholder="Dott. Mario Rossi" />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Crediti anno 1" name="crediti2026" type="number" defaultValue={0} />
           <Field label="Crediti anno 2" name="crediti2027" type="number" defaultValue={0} />
           <Field label="Crediti anno 3" name="crediti2028" type="number" defaultValue={0} />

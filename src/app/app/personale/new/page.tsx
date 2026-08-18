@@ -14,15 +14,15 @@ export default async function NewDipendentePage() {
     <div className="max-w-2xl">
       <PageHeader title="Nuovo dipendente" description="Dati anagrafici e contrattuali." />
       <form action={createDipendente} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nome" name="nome" required />
           <Field label="Cognome" name="cognome" required />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField label="Mansione" name="mansione" defaultValue="ALTRO" options={MANSIONE_OPTIONS} />
           <SelectField label="Tipo contratto" name="tipoContratto" defaultValue="INDETERMINATO" options={TIPO_CONTRATTO_OPTIONS} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Data assunzione" name="dataAssunzione" type="date" required />
           <Field
             label="Data scadenza contratto"
@@ -31,7 +31,7 @@ export default async function NewDipendentePage() {
             hint="Facoltativo. Solo per i contratti a tempo determinato."
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="Fine periodo di prova"
             name="finePeriodoProva"
@@ -47,7 +47,7 @@ export default async function NewDipendentePage() {
             hint="Facoltativo. Es. 36-38 per il tempo pieno."
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="Stipendio lordo mensile (€)"
             name="stipendioLordoMensile"

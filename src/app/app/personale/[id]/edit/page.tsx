@@ -21,15 +21,15 @@ export default async function EditDipendentePage({ params }: { params: Promise<{
     <div className="max-w-2xl">
       <PageHeader title="Modifica dipendente" />
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nome" name="nome" required defaultValue={item.nome} />
           <Field label="Cognome" name="cognome" required defaultValue={item.cognome} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField label="Mansione" name="mansione" defaultValue={item.mansione} options={MANSIONE_OPTIONS} />
           <SelectField label="Tipo contratto" name="tipoContratto" defaultValue={item.tipoContratto} options={TIPO_CONTRATTO_OPTIONS} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Data assunzione" name="dataAssunzione" type="date" required defaultValue={item.dataAssunzione?.toISOString().slice(0, 10)} />
           <Field
             label="Data scadenza contratto"
@@ -39,7 +39,7 @@ export default async function EditDipendentePage({ params }: { params: Promise<{
             hint="Facoltativo. Solo per i contratti a tempo determinato."
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="Fine periodo di prova"
             name="finePeriodoProva"
@@ -56,7 +56,7 @@ export default async function EditDipendentePage({ params }: { params: Promise<{
             hint="Facoltativo. Es. 36-38 per il tempo pieno."
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="Stipendio lordo mensile (€)"
             name="stipendioLordoMensile"

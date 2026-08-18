@@ -30,7 +30,7 @@ export function InviteMemberForm({ atCap }: { atCap: boolean }) {
 
   return (
     <form action={formAction} className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Nome" name="name" placeholder="Facoltativo" />
         <Field label="Email" name="email" type="email" required placeholder="collega@studiorossi.it" />
       </div>

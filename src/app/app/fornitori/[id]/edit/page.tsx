@@ -31,7 +31,7 @@ export default async function EditFornitorePage({ params }: { params: Promise<{ 
         />
         <Field label="Ruolo / categoria" name="ruolo" required defaultValue={item.ruolo} />
         <Field label="Nome / Ditta" name="nome" defaultValue={item.nome} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Telefono" name="telefono" defaultValue={item.telefono} />
           <Field label="Email" name="email" type="email" defaultValue={item.email} />
         </div>

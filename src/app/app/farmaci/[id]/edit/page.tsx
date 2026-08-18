@@ -23,11 +23,11 @@ export default async function EditFarmacoPage({ params }: { params: Promise<{ id
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <BarcodeScanner targets={{ codice: "codice", lotto: "lotto", scadenza: "scadenza" }} />
         <Field label="Farmaco / Presidio" name="nome" required defaultValue={item.nome} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Categoria d'uso" name="categoriaUso" defaultValue={item.categoriaUso} />
           <Field label="Dove si trova" name="doveSiTrova" defaultValue={item.doveSiTrova} />
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Quantità" name="quantita" type="number" defaultValue={item.quantita} />
           <Field label="Lotto" name="lotto" defaultValue={item.lotto} />
           <Field label="Scadenza" name="scadenza" type="date" defaultValue={item.scadenza?.toISOString().slice(0, 10)} />

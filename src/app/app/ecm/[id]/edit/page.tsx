@@ -21,7 +21,7 @@ export default async function EditEcmPage({ params }: { params: Promise<{ id: st
       <PageHeader title="Modifica crediti ECM" />
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Professionista" name="professionista" required defaultValue={item.professionista} />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Crediti anno 1" name="crediti2026" type="number" defaultValue={item.crediti2026} />
           <Field label="Crediti anno 2" name="crediti2027" type="number" defaultValue={item.crediti2027} />
           <Field label="Crediti anno 3" name="crediti2028" type="number" defaultValue={item.crediti2028} />

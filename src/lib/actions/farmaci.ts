@@ -24,9 +24,30 @@ function payload(formData: FormData) {
   };
 }
 
+async function ricordaCodice(studioId: string, data: ReturnType<typeof payload>) {
+  if (!data.codice) return;
+  await prisma.farmacoCodiceMemoria.upsert({
+    where: { studioId_codice: { studioId, codice: data.codice } },
+    create: {
+      studioId,
+      codice: data.codice,
+      nome: data.nome,
+      categoriaUso: data.categoriaUso,
+      doveSiTrova: data.doveSiTrova,
+    },
+    update: {
+      nome: data.nome,
+      categoriaUso: data.categoriaUso,
+      doveSiTrova: data.doveSiTrova,
+    },
+  });
+}
+
 export async function createFarmaco(formData: FormData) {
   const { studio } = await requireStudio();
-  await prisma.farmaco.create({ data: { studioId: studio.id, ...payload(formData) } });
+  const data = payload(formData);
+  await prisma.farmaco.create({ data: { studioId: studio.id, ...data } });
+  await ricordaCodice(studio.id, data);
   revalidatePath("/app/farmaci");
   revalidatePath("/app");
   redirect("/app/farmaci");
@@ -34,7 +55,9 @@ export async function createFarmaco(formData: FormData) {
 
 export async function updateFarmaco(id: string, formData: FormData) {
   const { studio } = await requireStudio();
-  await prisma.farmaco.updateMany({ where: { id, studioId: studio.id }, data: payload(formData) });
+  const data = payload(formData);
+  await prisma.farmaco.updateMany({ where: { id, studioId: studio.id }, data });
+  await ricordaCodice(studio.id, data);
   revalidatePath("/app/farmaci");
   revalidatePath("/app");
   redirect("/app/farmaci");
@@ -47,20 +70,24 @@ export async function deleteFarmaco(id: string) {
   revalidatePath("/app");
 }
 
-/** Come cercaArticoloPerCodice del magazzino: trova un farmaco/presidio già
- * censito con lo stesso codice a barre per precompilare i campi descrittivi
- * alla scansione di un riordino. Quantità, lotto e scadenza restano quelli
- * appena letti (o da inserire a mano). */
+/** Come cercaArticoloPerCodice del magazzino: cerca nella memoria dei codici
+ * già scansionati per precompilare i campi descrittivi alla scansione di un
+ * riordino. La memoria sopravvive alla cancellazione del farmaco/presidio,
+ * quindi funziona anche mesi dopo che l'ultima scorta è stata esaurita e
+ * tolta dal registro. Quantità, lotto e scadenza restano quelli appena letti
+ * (o da inserire a mano). */
 export async function cercaFarmacoPerCodice(codice: string) {
   const { studio } = await requireStudio();
   const trimmed = codice.trim();
   if (!trimmed) return null;
-  const farmaco = await prisma.farmaco.findFirst({ where: { studioId: studio.id, codice: trimmed } });
-  if (!farmaco) return null;
+  const ricordo = await prisma.farmacoCodiceMemoria.findUnique({
+    where: { studioId_codice: { studioId: studio.id, codice: trimmed } },
+  });
+  if (!ricordo) return null;
   return {
-    nome: farmaco.nome,
-    categoriaUso: farmaco.categoriaUso ?? "",
-    doveSiTrova: farmaco.doveSiTrova ?? "",
+    nome: ricordo.nome,
+    categoriaUso: ricordo.categoriaUso ?? "",
+    doveSiTrova: ricordo.doveSiTrova ?? "",
   };
 }
 
