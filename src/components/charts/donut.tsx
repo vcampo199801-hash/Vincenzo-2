@@ -59,12 +59,12 @@ export function StatusDonut({
           </div>
         )}
       </div>
-      <ul className="space-y-1.5 text-sm">
+      <ul className="min-w-0 flex-1 space-y-1.5 text-sm">
         {segments.map((seg) => (
           <li key={seg.label} className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: seg.color }} />
-            <span className="text-slate-600">{seg.label}</span>
-            <span className="ml-auto pl-3 font-medium tabular-nums text-slate-900">{formatValue(seg.value)}</span>
+            <span className="min-w-0 truncate text-slate-600">{seg.label}</span>
+            <span className="ml-auto shrink-0 pl-3 font-medium tabular-nums text-slate-900">{formatValue(seg.value)}</span>
           </li>
         ))}
       </ul>

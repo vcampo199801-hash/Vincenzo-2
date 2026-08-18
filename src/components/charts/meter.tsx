@@ -24,8 +24,8 @@ export function Meter({
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
-        <span className="text-slate-600">{label}</span>
-        <span className="font-medium tabular-nums text-slate-900">{valueLabel ?? `${Math.round(pct * 100)}%`}</span>
+        <span className="min-w-0 truncate text-slate-600">{label}</span>
+        <span className="shrink-0 font-medium tabular-nums text-slate-900">{valueLabel ?? `${Math.round(pct * 100)}%`}</span>
       </div>
       <div className="h-2.5 rounded-full" style={{ backgroundColor: t.track }}>
         <div
