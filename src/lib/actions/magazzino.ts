@@ -49,6 +49,29 @@ export async function deleteMagazzinoItem(id: string) {
   revalidatePath("/app");
 }
 
+/** Cerca un articolo già censito con lo stesso codice a barre, per
+ * precompilare la scheda quando si scansiona un prodotto già visto in
+ * passato (es. un riordino) — così la scansione non serve solo a leggere il
+ * codice, ma evita di riscrivere da capo nome, categoria, fornitore ecc.
+ * Restituisce i soli campi descrittivi: quantità, lotto e scadenza restano
+ * quelli letti dalla scansione appena fatta (o da inserire a mano), perché
+ * cambiano a ogni arrivo di merce. */
+export async function cercaArticoloPerCodice(codice: string) {
+  const { studio } = await requireStudio();
+  const trimmed = codice.trim();
+  if (!trimmed) return null;
+  const item = await prisma.magazzinoItem.findFirst({ where: { studioId: studio.id, codice: trimmed } });
+  if (!item) return null;
+  return {
+    prodotto: item.prodotto,
+    categoria: item.categoria,
+    fornitore: item.fornitore ?? "",
+    unita: item.unita,
+    scortaMinima: String(item.scortaMinima),
+    prezzoUnitario: String(item.prezzoUnitario),
+  };
+}
+
 /** Regola rapidamente la quantità attuale dall'elenco, senza aprire la scheda
  * dell'articolo (frecce +/- nella tabella). Non scende mai sotto zero. */
 export async function regolaQuantita(id: string, delta: number) {

@@ -22,7 +22,7 @@ export function Field({
   hint?: string;
 }) {
   return (
-    <label className="block text-sm">
+    <label className="block min-w-0 text-sm">
       <span className="mb-1 block font-medium text-slate-700">
         {label} {required && <span className="text-red-500">*</span>}
       </span>
@@ -54,7 +54,7 @@ export function TextAreaField({
   hint?: string;
 }) {
   return (
-    <label className="block text-sm">
+    <label className="block min-w-0 text-sm">
       <span className="mb-1 block font-medium text-slate-700">{label}</span>
       <textarea
         name={name}
@@ -84,7 +84,7 @@ export function SelectField({
   hint?: string;
 }) {
   return (
-    <label className="block text-sm">
+    <label className="block min-w-0 text-sm">
       <span className="mb-1 block font-medium text-slate-700">
         {label} {required && <span className="text-red-500">*</span>}
       </span>

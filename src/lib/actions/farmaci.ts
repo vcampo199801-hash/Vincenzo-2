@@ -47,6 +47,23 @@ export async function deleteFarmaco(id: string) {
   revalidatePath("/app");
 }
 
+/** Come cercaArticoloPerCodice del magazzino: trova un farmaco/presidio già
+ * censito con lo stesso codice a barre per precompilare i campi descrittivi
+ * alla scansione di un riordino. Quantità, lotto e scadenza restano quelli
+ * appena letti (o da inserire a mano). */
+export async function cercaFarmacoPerCodice(codice: string) {
+  const { studio } = await requireStudio();
+  const trimmed = codice.trim();
+  if (!trimmed) return null;
+  const farmaco = await prisma.farmaco.findFirst({ where: { studioId: studio.id, codice: trimmed } });
+  if (!farmaco) return null;
+  return {
+    nome: farmaco.nome,
+    categoriaUso: farmaco.categoriaUso ?? "",
+    doveSiTrova: farmaco.doveSiTrova ?? "",
+  };
+}
+
 export async function updateControlloMensile(
   id: string,
   data: { dataControllo: string; operatore: string; fatto: boolean; note: string }

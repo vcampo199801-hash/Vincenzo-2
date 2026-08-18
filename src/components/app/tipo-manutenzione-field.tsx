@@ -9,7 +9,7 @@ export function TipoManutenzioneField({ tipi }: { tipi: { chiave: string; nome: 
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm">
+      <label className="block min-w-0 text-sm">
         <span className="mb-1 block font-medium text-slate-700">Tipo di controllo</span>
         <select
           name="tipoEsistente"
@@ -27,7 +27,7 @@ export function TipoManutenzioneField({ tipi }: { tipi: { chiave: string; nome: 
       </label>
 
       {selezione === NUOVO_TIPO_VALUE ? (
-        <label className="block text-sm">
+        <label className="block min-w-0 text-sm">
           <span className="mb-1 block font-medium text-slate-700">Nome del nuovo tipo</span>
           <input
             name="tipoNuovo"

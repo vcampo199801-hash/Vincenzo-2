@@ -29,7 +29,7 @@ export function RicorrenzaField({
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm">
+      <label className="block min-w-0 text-sm">
         <span className="mb-1 block font-medium text-slate-700">Ricorrenza</span>
         <select
           value={selezione}
@@ -45,7 +45,7 @@ export function RicorrenzaField({
       </label>
 
       {selezione === "custom" ? (
-        <label className="block text-sm">
+        <label className="block min-w-0 text-sm">
           <span className="mb-1 block font-medium text-slate-700">Ogni quanti mesi si ripete?</span>
           <input
             name="ricorrenzaMesi"
@@ -65,7 +65,7 @@ export function RicorrenzaField({
       )}
 
       {ricorrente && (
-        <label className="block text-sm">
+        <label className="block min-w-0 text-sm">
           <span className="mb-1 block font-medium text-slate-700">Scadenza (facoltativa)</span>
           <input
             name="dataFineRicorrenza"

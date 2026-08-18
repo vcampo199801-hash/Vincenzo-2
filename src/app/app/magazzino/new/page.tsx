@@ -1,6 +1,6 @@
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { createMagazzinoItem } from "@/lib/actions/magazzino";
+import { createMagazzinoItem, cercaArticoloPerCodice } from "@/lib/actions/magazzino";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { FornitoreField } from "@/components/ui/fornitore-field";
@@ -23,7 +23,7 @@ export default async function NewMagazzinoPage() {
     <div className="max-w-2xl">
       <PageHeader title="Aggiungi articolo di magazzino" />
       <form action={createMagazzinoItem} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <BarcodeScanner targets={{ codice: "codice", scadenza: "scadenzaLotto" }} />
+        <BarcodeScanner targets={{ codice: "codice", scadenza: "scadenzaLotto" }} cerca={cercaArticoloPerCodice} />
         <Field label="Prodotto" name="prodotto" required placeholder="Es. Guanti nitrile taglia M" />
         <div className="grid grid-cols-2 gap-4">
           <SelectField label="Categoria" name="categoria" defaultValue="Altro" options={MAGAZZINO_CATEGORIE.map((c) => ({ value: c, label: c }))} />

@@ -17,13 +17,27 @@ export type ScannerTargets = {
  * needed to capture it. The camera button decodes frames with ZXing (pure JS,
  * canvas-based) instead of the native BarcodeDetector API, which Safari/iOS
  * never implemented — this way the camera works on every phone, not just
- * Chrome on Android. */
-export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
+ * Chrome on Android.
+ *
+ * If `cerca` is passed, a scan also looks up whether this exact barcode was
+ * already saved on a previous item — a reorder of the same product — and, if
+ * found, fills in the rest of the form (name, category, supplier...) too.
+ * Without this, scanning would only ever save typing on the GTIN/lot/expiry
+ * fields, which is why the camera felt pointless on a brand-new item: the
+ * value shows up starting from the second time you stock the same product. */
+export function BarcodeScanner({
+  targets,
+  cerca,
+}: {
+  targets: ScannerTargets;
+  cerca?: (codice: string) => Promise<Record<string, string> | null>;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
 
   const [lastScan, setLastScan] = useState<string | null>(null);
+  const [trovato, setTrovato] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraSupported, setCameraSupported] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -32,7 +46,7 @@ export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
     setCameraSupported(typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia);
   }, []);
 
-  function fillForm(raw: string) {
+  async function fillForm(raw: string) {
     const parsed = parseGs1Barcode(raw);
     const form = inputRef.current?.closest("form");
     if (form) {
@@ -53,13 +67,29 @@ export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
     if (parsed.lotto) parts.push(`lotto ${parsed.lotto}`);
     if (parsed.scadenza) parts.push(`scadenza ${parsed.scadenza}`);
     setLastScan(parts.join(" · "));
+    setTrovato(null);
+
+    if (cerca && form) {
+      try {
+        const trovatoDati = await cerca(parsed.gtin ?? raw);
+        if (trovatoDati) {
+          for (const [nome, valore] of Object.entries(trovatoDati)) {
+            const el = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${nome}"]`);
+            if (el && valore) el.value = valore;
+          }
+          setTrovato(trovatoDati.prodotto ?? trovatoDati.nome ?? "articolo già censito");
+        }
+      } catch {
+        // La ricerca è solo un bonus di comodità: se fallisce si compila a mano.
+      }
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();
       const value = e.currentTarget.value.trim();
-      if (value) fillForm(value);
+      if (value) void fillForm(value);
       e.currentTarget.value = "";
     }
   }
@@ -96,7 +126,7 @@ export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
         videoRef.current,
         (result, error) => {
           if (result) {
-            fillForm(result.getText());
+            void fillForm(result.getText());
             stopCamera();
           } else if (error && !(error instanceof NotFoundException)) {
             // NotFoundException fires on every frame with no code in view —
@@ -146,6 +176,11 @@ export function BarcodeScanner({ targets }: { targets: ScannerTargets }) {
       )}
       {cameraError && <p className="mt-2 text-xs text-red-700">{cameraError}</p>}
       {lastScan && <p className="mt-2 text-xs text-emerald-700">✓ Acquisito: {lastScan}</p>}
+      {trovato && (
+        <p className="mt-1 text-xs font-medium text-emerald-800">
+          ✓ Già censito come &laquo;{trovato}&raquo;: gli altri campi sono stati precompilati, controllali prima di salvare.
+        </p>
+      )}
 
       {cameraOpen && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 p-4">
