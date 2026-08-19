@@ -145,11 +145,11 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-semibold text-slate-900">6. Cookie</h2>
             <p className="mt-2 leading-relaxed">
               Il sito usa solo i cookie tecnici necessari al funzionamento (es. mantenere la sessione di accesso) e,
-              se acconsenti tramite il banner mostrato alla prima visita, cookie di misurazione pubblicitaria —
-              in particolare il Pixel di Meta (Facebook/Instagram), usato per capire quanto rendono le nostre
-              campagne pubblicitarie. Questi ultimi cookie vengono caricati solo dopo il tuo consenso esplicito:
-              se rifiuti o non scegli, restano disattivati. Puoi cambiare la tua scelta in qualsiasi momento dal
-              link &quot;Gestisci cookie&quot; in fondo alla pagina.
+              se acconsenti tramite il banner mostrato alla prima visita, cookie di misurazione pubblicitaria,
+              usati per capire quanto rendono le nostre campagne pubblicitarie sui social. Questi ultimi cookie
+              vengono caricati solo dopo il tuo consenso esplicito: se rifiuti o non scegli, restano disattivati.
+              Puoi cambiare la tua scelta in qualsiasi momento dal link &quot;Gestisci cookie&quot; in fondo alla
+              pagina.
             </p>
           </section>
 

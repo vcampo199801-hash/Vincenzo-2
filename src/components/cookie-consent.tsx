@@ -60,7 +60,7 @@ export function CookieConsent() {
       <div className="mx-auto flex max-w-4xl flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-600">
           Usiamo cookie tecnici necessari al funzionamento del sito e, solo se acconsenti, cookie di misurazione
-          pubblicitaria (es. Meta/Facebook) per capire l&apos;efficacia delle nostre campagne. Dettagli nella{" "}
+          pubblicitaria per capire l&apos;efficacia delle nostre campagne. Dettagli nella{" "}
           <a href="/privacy" className="underline hover:text-slate-800">Privacy Policy</a>.
         </p>
         <div className="flex shrink-0 gap-2">
