@@ -27,6 +27,17 @@ export default function SignupPage() {
           <Field label="Email" name="email" type="email" required placeholder="mario@studiorossi.it" />
           <Field label="Password" name="password" type="password" required placeholder="Almeno 8 caratteri" />
           <FormError error={state?.error} />
+          <p className="text-xs text-slate-500">
+            Creando l&apos;account accetti i{" "}
+            <Link href="/termini" className="font-medium text-brand-700 underline">
+              Termini di servizio
+            </Link>{" "}
+            e l&apos;
+            <Link href="/privacy" className="font-medium text-brand-700 underline">
+              Informativa Privacy
+            </Link>
+            .
+          </p>
           <SubmitButton>Crea account</SubmitButton>
         </form>
 

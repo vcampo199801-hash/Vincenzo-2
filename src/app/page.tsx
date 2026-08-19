@@ -151,6 +151,10 @@ export default function Home() {
             Scadenze in Regola — by Sorrisi in Regola. Questo strumento è un supporto organizzativo e non sostituisce gli
             obblighi di verifica con i propri consulenti.
           </p>
+          <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
+            <Link href="/privacy" className="hover:text-slate-800">Privacy Policy</Link>
+            <Link href="/termini" className="hover:text-slate-800">Termini di servizio</Link>
+          </div>
         </div>
       </footer>
     </div>
