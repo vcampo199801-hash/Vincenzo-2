@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavLinks } from "./nav-links";
+import { InstallAppButton } from "./install-app-button";
+import { logoutAction } from "@/lib/actions/auth";
 import type { ModuleKey } from "@/lib/modules";
 
 /** Hamburger + slide-in drawer — the sidebar in AppLayout is hidden below md,
- * so this is the only way to reach the module list (Scadenzario, Magazzino, …) on phones. */
+ * so this is the only way to reach the module list (Scadenzario, Magazzino, …) and to log out on phones. */
 export function MobileNav({ allowedKeys }: { allowedKeys: ModuleKey[] | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -51,6 +53,14 @@ export function MobileNav({ allowedKeys }: { allowedKeys: ModuleKey[] | null }) 
             <nav className="space-y-1">
               <NavLinks allowedKeys={allowedKeys} />
             </nav>
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <InstallAppButton />
+            </div>
+            <form action={logoutAction} className="mt-3">
+              <button type="submit" className="text-sm font-medium text-slate-500 hover:text-slate-800">
+                Esci
+              </button>
+            </form>
           </div>
         </div>
       )}

@@ -49,13 +49,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="no-print flex h-16 items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 md:px-8">
-          <div className="flex min-w-0 flex-1 items-center gap-2 md:hidden">
+          <div className="flex min-w-0 items-center gap-2 md:hidden">
             <MobileNav allowedKeys={allowedKeys} />
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50">
               <Image src="/brand/monogram.png" alt="" width={20} height={20} className="h-5 w-5" />
             </span>
-            <span className="min-w-0 flex-1 truncate text-lg font-semibold text-brand-700">Scadenze in Regola</span>
           </div>
+          <div className="min-w-0 flex-1 md:hidden" />
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {sub?.status === "TRIALING" && (
               <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700 sm:px-3">
@@ -68,7 +68,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 Pagamento non riuscito
               </span>
             )}
-            <InstallAppButton />
+            <span className="hidden md:inline-flex">
+              <InstallAppButton />
+            </span>
             <Link
               href="/app/impostazioni"
               title="Impostazioni"
