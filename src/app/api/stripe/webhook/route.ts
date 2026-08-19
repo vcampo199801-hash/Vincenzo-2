@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       if (studioId && subscriptionId) {
         const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
         await syncSubscription(studioId, stripeSub, customerId);
+        await syncDatiFatturazione(studioId, checkoutSession.customer_details);
       }
       break;
     }
@@ -75,6 +76,27 @@ function mapStatus(status: Stripe.Subscription.Status): string {
     default:
       return "INCOMPLETE";
   }
+}
+
+/** Partita IVA e indirizzo raccolti da Stripe Checkout (tax_id_collection +
+ * billing_address_collection) al momento dell'acquisto: li salviamo sulla
+ * scheda dello studio così non deve reinserirli a mano in Impostazioni. Non
+ * sovrascrive un indirizzo/P.IVA già presenti con un dato mancante. */
+async function syncDatiFatturazione(studioId: string, details: Stripe.Checkout.Session.CustomerDetails | null) {
+  if (!details) return;
+
+  const partitaIva = details.tax_ids?.find((t) => t.value)?.value ?? undefined;
+  const address = details.address;
+  const indirizzo = address ? [address.line1, address.line2].filter(Boolean).join(" ") : undefined;
+  const citta = address?.city ?? undefined;
+
+  const data: Record<string, string> = {};
+  if (partitaIva) data.partitaIva = partitaIva;
+  if (indirizzo) data.indirizzo = indirizzo;
+  if (citta) data.citta = citta;
+  if (Object.keys(data).length === 0) return;
+
+  await prisma.studio.update({ where: { id: studioId }, data });
 }
 
 async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription, customerId?: string) {

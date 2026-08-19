@@ -53,6 +53,7 @@ export default async function FatturazionePage() {
             <tr>
               <th className="px-4 py-3">Studio</th>
               <th className="px-4 py-3">Partita IVA</th>
+              <th className="px-4 py-3">Codice Fiscale</th>
               <th className="px-4 py-3">PEC / SDI</th>
               <th className="px-4 py-3">Indirizzo</th>
               <th className="px-4 py-3">Piano</th>
@@ -70,6 +71,7 @@ export default async function FatturazionePage() {
                 <td className="px-4 py-3">
                   {studio.partitaIva ?? <span className="text-amber-600">mancante</span>}
                 </td>
+                <td className="px-4 py-3">{studio.codiceFiscale ?? "—"}</td>
                 <td className="px-4 py-3">{studio.pec ?? "—"}</td>
                 <td className="px-4 py-3 text-slate-600">
                   {[studio.indirizzo, studio.citta].filter(Boolean).join(", ") || "—"}
@@ -86,7 +88,7 @@ export default async function FatturazionePage() {
             ))}
             {righe.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-8 text-center text-slate-400">
                   Nessun abbonato attivo al momento.
                 </td>
               </tr>

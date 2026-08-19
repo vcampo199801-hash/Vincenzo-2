@@ -184,6 +184,12 @@ export default async function AbbonamentoPage({
         })}
       </div>
 
+      <p className="mt-4 text-center text-sm text-slate-500">
+        📄 Ricevi sempre fattura per l&apos;abbonamento: è una spesa deducibile per lo studio. Al primo pagamento ti
+        chiediamo Partita IVA e indirizzo di fatturazione — puoi correggerli in qualsiasi momento da{" "}
+        <a href="/app/impostazioni" className="underline hover:text-slate-700">Impostazioni</a>.
+      </p>
+
       <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-medium text-slate-500">Hai un codice di attivazione?</p>
         <p className="mt-1 text-sm text-slate-500">

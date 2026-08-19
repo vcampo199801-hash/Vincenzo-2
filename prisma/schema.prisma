@@ -35,7 +35,11 @@ model Studio {
   numeroAlboTitolare             String?
   // Dati di fatturazione dell'abbonamento (non delle vendite Shopify): servono
   // al titolare della piattaforma per emettere la fattura elettronica mensile.
+  // partitaIva viene anche raccolta automaticamente da Stripe Checkout al
+  // momento dell'acquisto (tax_id_collection); codiceFiscale no, va inserito
+  // a mano perché Stripe non lo chiede.
   partitaIva                     String?
+  codiceFiscale                  String?
   pec                            String?
   // Il forum è tra studi (non ognuno vede solo il proprio, come tutto il
   // resto dell'app): questo flag è il consenso esplicito a parteciparvi —

@@ -75,6 +75,11 @@ export async function startCheckout(formData: FormData) {
     cancel_url: `${appUrl()}/app/abbonamento?canceled=1`,
     client_reference_id: studio.id,
     subscription_data: { metadata: { studioId: studio.id, piano } },
+    // Chiede Partita IVA e indirizzo di fatturazione direttamente in Checkout,
+    // così lo studio non deve reinserirli a mano in Impostazioni: il webhook
+    // li salva sulla scheda dello studio non appena l'acquisto va a buon fine.
+    tax_id_collection: { enabled: true },
+    billing_address_collection: "required",
   });
 
   if (!checkoutSession.url) {

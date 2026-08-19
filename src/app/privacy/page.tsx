@@ -128,7 +128,7 @@ export default function PrivacyPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  <tr><td className="px-4 py-2 font-medium text-slate-900">Stripe, Inc.</td><td className="px-4 py-2">Pagamenti e fatturazione dell&apos;abbonamento</td><td className="px-4 py-2">Dati della carta, email, nome dello studio</td></tr>
+                  <tr><td className="px-4 py-2 font-medium text-slate-900">Stripe, Inc.</td><td className="px-4 py-2">Pagamenti e fatturazione dell&apos;abbonamento</td><td className="px-4 py-2">Dati della carta, email, nome dello studio, Partita IVA e indirizzo di fatturazione</td></tr>
                   <tr><td className="px-4 py-2 font-medium text-slate-900">Resend</td><td className="px-4 py-2">Invio delle email di promemoria e notifica</td><td className="px-4 py-2">Indirizzo email, contenuto del promemoria</td></tr>
                   <tr><td className="px-4 py-2 font-medium text-slate-900">Vercel Inc.</td><td className="px-4 py-2">Hosting dell&apos;applicazione</td><td className="px-4 py-2">Tutti i dati dell&apos;app, in transito ed elaborazione</td></tr>
                   <tr><td className="px-4 py-2 font-medium text-slate-900">Neon Inc.</td><td className="px-4 py-2">Database (archiviazione dei dati)</td><td className="px-4 py-2">Tutti i dati dell&apos;app, a riposo</td></tr>

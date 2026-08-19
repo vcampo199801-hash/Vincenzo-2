@@ -60,12 +60,18 @@ export default async function ImpostazioniPage() {
               hint="Serve per ricevere la fattura elettronica dell'abbonamento."
             />
             <Field
-              label="PEC o Codice Destinatario SDI"
-              name="pec"
-              defaultValue={studio.pec}
-              hint="Dove va inviata la fattura elettronica dell'abbonamento."
+              label="Codice Fiscale"
+              name="codiceFiscale"
+              defaultValue={studio.codiceFiscale}
+              hint="Se diverso dalla Partita IVA (es. libero professionista)."
             />
           </div>
+          <Field
+            label="PEC o Codice Destinatario SDI"
+            name="pec"
+            defaultValue={studio.pec}
+            hint="Dove va inviata la fattura elettronica dell'abbonamento."
+          />
           <CheckboxField
             label="Ricevi via email un riepilogo delle scadenze in arrivo o già scadute"
             name="notificheAttive"
