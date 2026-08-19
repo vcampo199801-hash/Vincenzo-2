@@ -19,6 +19,8 @@ export async function updateStudioInfo(formData: FormData) {
       email: String(formData.get("email") ?? "").trim() || null,
       indirizzo: String(formData.get("indirizzo") ?? "").trim() || null,
       numeroAlboTitolare: String(formData.get("numeroAlboTitolare") ?? "").trim() || null,
+      partitaIva: String(formData.get("partitaIva") ?? "").trim() || null,
+      pec: String(formData.get("pec") ?? "").trim() || null,
       notificheAttive: formData.get("notificheAttive") === "on",
     },
   });

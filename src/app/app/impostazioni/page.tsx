@@ -52,6 +52,20 @@ export default async function ImpostazioniPage() {
             <Field label="Telefono" name="telefono" defaultValue={studio.telefono} />
           </div>
           <Field label="Email" name="email" type="email" defaultValue={studio.email} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field
+              label="Partita IVA"
+              name="partitaIva"
+              defaultValue={studio.partitaIva}
+              hint="Serve per ricevere la fattura elettronica dell'abbonamento."
+            />
+            <Field
+              label="PEC o Codice Destinatario SDI"
+              name="pec"
+              defaultValue={studio.pec}
+              hint="Dove va inviata la fattura elettronica dell'abbonamento."
+            />
+          </div>
           <CheckboxField
             label="Ricevi via email un riepilogo delle scadenze in arrivo o già scadute"
             name="notificheAttive"
