@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
   const toggleToken = await creaTokenSilenzia({ studioId, tipo, id, silenzia: !silenzia });
   const toggleUrl = `${APP_URL()}/api/silenzia?token=${encodeURIComponent(toggleToken)}`;
   const messaggio = silenzia
-    ? `Promemoria silenziato per <strong>${nome}</strong>. Non riceverai più email o SMS per questa voce, finché non lo riattivi.`
+    ? `Promemoria silenziato per <strong>${nome}</strong>. Non riceverai più email per questa voce, finché non lo riattivi.`
     : `Promemoria riattivato per <strong>${nome}</strong>. Tornerà a comparire nei riepiloghi finché la scadenza non è risolta.`;
   const azioneLabel = silenzia ? "Riattiva questo promemoria" : "Silenzia di nuovo";
 

@@ -1,13 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail, isEmailConfigured } from "@/lib/email";
-import { sendSms, isSmsConfigured } from "@/lib/sms";
 import { scadenzaStato, lottoStato, daysUntil } from "@/lib/compliance";
 import { ultimoControlloPerTipo } from "@/lib/manutenzione";
 import { creaTokenSilenzia, type TipoVoce } from "@/lib/silence-token";
 
 const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-// Finestra di preavviso del promemoria email/SMS: più stretta delle soglie
+// Finestra di preavviso del promemoria email: più stretta delle soglie
 // "in scadenza" mostrate nell'app (30gg scadenzario, 90gg farmaci/magazzino),
 // così il promemoria arriva quando l'azione è davvero imminente. Il cron
 // gira ogni giorno e questa funzione ricalcola lo stato da zero, quindi una
@@ -114,46 +113,23 @@ export async function renderDigestHtml(studioName: string, digest: Digest) {
   `;
 }
 
-export function renderDigestText(studioName: string, digest: Digest) {
-  const all = [...digest.scadenzeUrgenti, ...digest.farmaciUrgenti, ...digest.lottiUrgenti, ...digest.manutenzioniUrgenti];
-  const top = all
-    .slice(0, 3)
-    .map((i) => `${i.nome} (${i.scaduto ? `scaduto da ${Math.abs(i.giorni)}gg` : `scade tra ${i.giorni}gg`})`);
-  const extra = all.length > top.length ? ` e altri ${all.length - top.length}` : "";
-
-  return `Scadenze in Regola — ${studioName}: ${all.length} ${
-    all.length === 1 ? "cosa richiede" : "cose richiedono"
-  } attenzione. ${top.join("; ")}${extra}. Apri l'app: ${APP_URL()}/app`;
-}
-
 export async function sendDigestForStudio(studio: {
   id: string;
   name: string;
   email: string | null;
-  telefonoSms: string | null;
   notificheAttive: boolean;
-  notificheSms: boolean;
 }) {
   const digest = await buildDigestForStudio(studio.id);
   if (!digest) return false;
 
+  if (!studio.notificheAttive || !studio.email || !isEmailConfigured()) return false;
+
   const totalCount =
     digest.scadenzeUrgenti.length + digest.farmaciUrgenti.length + digest.lottiUrgenti.length + digest.manutenzioniUrgenti.length;
-  let sent = false;
-
-  if (studio.notificheAttive && studio.email && isEmailConfigured()) {
-    await sendEmail({
-      to: studio.email,
-      subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,
-      html: await renderDigestHtml(studio.name, digest),
-    });
-    sent = true;
-  }
-
-  if (studio.notificheSms && studio.telefonoSms && isSmsConfigured()) {
-    await sendSms({ to: studio.telefonoSms, body: renderDigestText(studio.name, digest) });
-    sent = true;
-  }
-
-  return sent;
+  await sendEmail({
+    to: studio.email,
+    subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,
+    html: await renderDigestHtml(studio.name, digest),
+  });
+  return true;
 }

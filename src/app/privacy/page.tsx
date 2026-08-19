@@ -62,7 +62,7 @@ export default function PrivacyPage() {
             <p className="mt-1 leading-relaxed">
               Al momento della registrazione raccogliamo nome dello studio, nome del titolare, email, password
               (conservata sotto forma di hash, mai in chiaro), indirizzo, telefono e — se attivate — le preferenze
-              di notifica email/SMS.
+              di notifica email.
             </p>
             <h3 className="mt-3 font-medium text-slate-900">2.2 — Dati inseriti nei moduli di compliance</h3>
             <p className="mt-1 leading-relaxed">
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
               <li><strong className="text-slate-900">Fatturazione e gestione dell&apos;abbonamento</strong> (esecuzione del contratto / obbligo legale, art. 6.1.b–c): tramite Stripe.</li>
               <li><strong className="text-slate-900">Trattamento dei dati sanitari del personale</strong> (art. 9.2.b, adempimento di obblighi in materia di diritto del lavoro e protezione sociale): solo su iniziativa e responsabilità del titolare dello studio, che agisce come titolare autonomo per questi dati.</li>
               <li><strong className="text-slate-900">Sicurezza e prevenzione abusi</strong> (legittimo interesse, art. 6.1.f).</li>
-              <li><strong className="text-slate-900">Comunicazioni di servizio</strong> (esecuzione del contratto): email/SMS di promemoria, se attivati dallo studio nelle impostazioni.</li>
+              <li><strong className="text-slate-900">Comunicazioni di servizio</strong> (esecuzione del contratto): email di promemoria, se attivate dallo studio nelle impostazioni.</li>
             </ul>
           </section>
 
@@ -130,7 +130,6 @@ export default function PrivacyPage() {
                 <tbody className="divide-y divide-slate-100">
                   <tr><td className="px-4 py-2 font-medium text-slate-900">Stripe, Inc.</td><td className="px-4 py-2">Pagamenti e fatturazione dell&apos;abbonamento</td><td className="px-4 py-2">Dati della carta, email, nome dello studio</td></tr>
                   <tr><td className="px-4 py-2 font-medium text-slate-900">Resend</td><td className="px-4 py-2">Invio delle email di promemoria e notifica</td><td className="px-4 py-2">Indirizzo email, contenuto del promemoria</td></tr>
-                  <tr><td className="px-4 py-2 font-medium text-slate-900">Twilio Inc.</td><td className="px-4 py-2">Invio degli SMS di promemoria (se attivati)</td><td className="px-4 py-2">Numero di telefono, contenuto del promemoria</td></tr>
                   <tr><td className="px-4 py-2 font-medium text-slate-900">Vercel Inc.</td><td className="px-4 py-2">Hosting dell&apos;applicazione</td><td className="px-4 py-2">Tutti i dati dell&apos;app, in transito ed elaborazione</td></tr>
                   <tr><td className="px-4 py-2 font-medium text-slate-900">Neon Inc.</td><td className="px-4 py-2">Database (archiviazione dei dati)</td><td className="px-4 py-2">Tutti i dati dell&apos;app, a riposo</td></tr>
                 </tbody>
@@ -145,7 +144,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-slate-900">6. Trasferimento dei dati extra-UE</h2>
             <p className="mt-2 leading-relaxed">
-              Stripe, Resend, Twilio, Vercel e Neon sono società con sede (anche) negli Stati Uniti. Ove i dati
+              Stripe, Resend, Vercel e Neon sono società con sede (anche) negli Stati Uniti. Ove i dati
               vengano trattati al di fuori dello Spazio Economico Europeo, il trasferimento avviene sulla base
               delle Clausole Contrattuali Standard approvate dalla Commissione Europea o di altro meccanismo di
               adeguatezza equivalente previsto dal GDPR.

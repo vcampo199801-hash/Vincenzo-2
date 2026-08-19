@@ -41,7 +41,7 @@ export default async function EditFarmacoPage({ params }: { params: Promise<{ id
         <Field label="Codice a barre / GTIN" name="codice" defaultValue={item.codice} />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <CheckboxField
-          label="Silenzia i promemoria email/SMS per questo farmaco/presidio"
+          label="Silenzia i promemoria email per questo farmaco/presidio"
           name="notificaSilenziata"
           defaultChecked={item.notificaSilenziata}
         />

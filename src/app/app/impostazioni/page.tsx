@@ -8,10 +8,8 @@ import { DeleteButton } from "@/components/ui/delete-button";
 import { InviteMemberForm } from "@/components/app/invite-member-form";
 import { MemberPermissionsForm } from "@/components/app/member-permissions-form";
 import { TestDigestButton } from "@/components/app/test-digest-button";
-import { TestSmsButton } from "@/components/app/test-sms-button";
 import { formatDate } from "@/lib/compliance";
 import { isEmailConfigured } from "@/lib/email";
-import { isSmsConfigured } from "@/lib/sms";
 import { parsePermessi, APP_MODULES } from "@/lib/modules";
 
 const MAX_COLLABORATORS = 2;
@@ -59,17 +57,6 @@ export default async function ImpostazioniPage() {
             name="notificheAttive"
             defaultChecked={studio.notificheAttive}
           />
-          <Field
-            label="Cellulare per gli SMS di promemoria"
-            name="telefonoSms"
-            defaultValue={studio.telefonoSms}
-            placeholder="333 1234567"
-          />
-          <CheckboxField
-            label="Ricevi anche via SMS un riepilogo delle scadenze in arrivo o già scadute"
-            name="notificheSms"
-            defaultChecked={studio.notificheSms}
-          />
           <SubmitButton>Salva impostazioni</SubmitButton>
         </form>
       </div>
@@ -78,8 +65,7 @@ export default async function ImpostazioniPage() {
         <h2 className="mb-3 text-lg font-semibold text-slate-900">Notifiche</h2>
         <p className="mb-3 text-sm text-slate-500">
           Ogni giorno controlliamo scadenze, farmaci e lotti di magazzino in scadenza o scaduti: se c&apos;è
-          qualcosa da segnalare, arriva un promemoria automatico via email e/o SMS, a seconda di cosa hai attivato
-          qui sopra.
+          qualcosa da segnalare, arriva un promemoria automatico via email, se attivato qui sopra.
         </p>
         <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>
@@ -88,16 +74,6 @@ export default async function ImpostazioniPage() {
             {!isEmailConfigured() && (
               <p className="mt-3 text-xs text-slate-400">
                 Nota per lo sviluppatore: imposta RESEND_API_KEY e EMAIL_FROM in .env per abilitare l&apos;invio reale.
-              </p>
-            )}
-          </div>
-          <div className="border-t border-slate-100 pt-4">
-            <p className="mb-2 text-sm font-medium text-slate-700">SMS</p>
-            <TestSmsButton />
-            {!isSmsConfigured() && (
-              <p className="mt-3 text-xs text-slate-400">
-                Nota per lo sviluppatore: imposta TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN e TWILIO_FROM_NUMBER in .env
-                per abilitare l&apos;invio reale.
               </p>
             )}
           </div>

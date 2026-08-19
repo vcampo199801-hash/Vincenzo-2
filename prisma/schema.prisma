@@ -38,8 +38,6 @@ model Studio {
   // di default spento, ogni studio decide se aderire o meno.
   forumAttivo                    Boolean  @default(false)
   notificheAttive                Boolean  @default(true)
-  notificheSms                   Boolean  @default(false)
-  telefonoSms                    String?
   createdAt                      DateTime @default(now())
   // Fase 2 (modulo Laboratori): testo modificabile che finirà nel PDF "Consegna
   // dispositivo al paziente" — il PDF non è ancora generato, il campo è già pronto.

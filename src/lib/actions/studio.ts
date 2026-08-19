@@ -4,13 +4,10 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireStudio } from "@/lib/auth-guards";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
-import { isSmsConfigured, sendSms, normalizePhoneForSms } from "@/lib/sms";
-import { buildDigestForStudio, renderDigestHtml, renderDigestText } from "@/lib/notifications";
+import { buildDigestForStudio, renderDigestHtml } from "@/lib/notifications";
 
 export async function updateStudioInfo(formData: FormData) {
   const { studio } = await requireStudio();
-
-  const telefonoSmsRaw = String(formData.get("telefonoSms") ?? "").trim();
 
   await prisma.studio.update({
     where: { id: studio.id },
@@ -23,8 +20,6 @@ export async function updateStudioInfo(formData: FormData) {
       indirizzo: String(formData.get("indirizzo") ?? "").trim() || null,
       numeroAlboTitolare: String(formData.get("numeroAlboTitolare") ?? "").trim() || null,
       notificheAttive: formData.get("notificheAttive") === "on",
-      notificheSms: formData.get("notificheSms") === "on",
-      telefonoSms: normalizePhoneForSms(telefonoSmsRaw),
     },
   });
 
@@ -57,28 +52,6 @@ export async function sendTestDigest(): Promise<TestDigestState> {
       html: await renderDigestHtml(studio.name, digest),
     });
     return { success: `Email di riepilogo inviata a ${studio.email}.` };
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : "Invio non riuscito." };
-  }
-}
-
-export async function sendTestSms(): Promise<TestDigestState> {
-  const { studio } = await requireStudio();
-
-  if (!isSmsConfigured()) {
-    return { error: "Gli SMS non sono ancora configurati su questa istanza (manca TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_FROM_NUMBER)." };
-  }
-  if (!studio.telefonoSms) {
-    return { error: "Imposta prima un cellulare per gli SMS qui sopra." };
-  }
-
-  try {
-    const digest = await buildDigestForStudio(studio.id);
-    if (!digest) {
-      return { success: "Nessuna scadenza urgente al momento: non c'è nulla da segnalare, quindi non è stato inviato alcun SMS." };
-    }
-    await sendSms({ to: studio.telefonoSms, body: renderDigestText(studio.name, digest) });
-    return { success: `SMS di riepilogo inviato a ${studio.telefonoSms}.` };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Invio non riuscito." };
   }

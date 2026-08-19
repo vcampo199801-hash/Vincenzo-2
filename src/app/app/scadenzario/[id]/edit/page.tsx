@@ -33,7 +33,7 @@ export default async function EditAdempimentoPage({ params }: { params: Promise<
         />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <CheckboxField
-          label="Silenzia i promemoria email/SMS per questo adempimento"
+          label="Silenzia i promemoria email per questo adempimento"
           name="notificaSilenziata"
           defaultChecked={item.notificaSilenziata}
         />

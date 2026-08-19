@@ -45,7 +45,7 @@ export default async function EditMagazzinoPage({ params }: { params: Promise<{ 
         <Field label="Codice a barre / GTIN" name="codice" defaultValue={item.codice} />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <CheckboxField
-          label="Silenzia i promemoria email/SMS per questo articolo"
+          label="Silenzia i promemoria email per questo articolo"
           name="notificaSilenziata"
           defaultChecked={item.notificaSilenziata}
         />
