@@ -142,7 +142,19 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-slate-900">6. Trasferimento dei dati extra-UE</h2>
+            <h2 className="text-lg font-semibold text-slate-900">6. Cookie</h2>
+            <p className="mt-2 leading-relaxed">
+              Il sito usa solo i cookie tecnici necessari al funzionamento (es. mantenere la sessione di accesso) e,
+              se acconsenti tramite il banner mostrato alla prima visita, cookie di misurazione pubblicitaria —
+              in particolare il Pixel di Meta (Facebook/Instagram), usato per capire quanto rendono le nostre
+              campagne pubblicitarie. Questi ultimi cookie vengono caricati solo dopo il tuo consenso esplicito:
+              se rifiuti o non scegli, restano disattivati. Puoi cambiare la tua scelta in qualsiasi momento dal
+              link &quot;Gestisci cookie&quot; in fondo alla pagina.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-slate-900">7. Trasferimento dei dati extra-UE</h2>
             <p className="mt-2 leading-relaxed">
               Stripe, Resend, Vercel e Neon sono società con sede (anche) negli Stati Uniti. Ove i dati
               vengano trattati al di fuori dello Spazio Economico Europeo, il trasferimento avviene sulla base
@@ -152,7 +164,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-slate-900">7. Conservazione dei dati</h2>
+            <h2 className="text-lg font-semibold text-slate-900">8. Conservazione dei dati</h2>
             <p className="mt-2 leading-relaxed">
               I dati sono conservati per tutta la durata dell&apos;abbonamento e per il periodo successivo
               necessario ad adempiere a obblighi contabili e fiscali (di norma 10 anni per i dati di fatturazione).
@@ -162,7 +174,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-slate-900">8. Diritti dell&apos;interessato</h2>
+            <h2 className="text-lg font-semibold text-slate-900">9. Diritti dell&apos;interessato</h2>
             <p className="mt-2 leading-relaxed">
               In qualità di interessato hai diritto di accesso, rettifica, cancellazione, limitazione,
               portabilità e opposizione al trattamento dei tuoi dati (artt. 15–22 GDPR), oltre al diritto di
@@ -172,7 +184,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-slate-900">9. Dati dei pazienti dello studio</h2>
+            <h2 className="text-lg font-semibold text-slate-900">10. Dati dei pazienti dello studio</h2>
             <div className="mt-2 rounded-lg border-l-4 border-brand-500 bg-brand-50 px-4 py-3 leading-relaxed">
               Se lo studio utilizza il modulo &quot;Comunicazione Pazienti&quot; per condividere documenti o
               informazioni con i propri pazienti, lo studio odontoiatrico resta l&apos;unico titolare del
@@ -183,7 +195,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-slate-900">10. Modifiche alla presente informativa</h2>
+            <h2 className="text-lg font-semibold text-slate-900">11. Modifiche alla presente informativa</h2>
             <p className="mt-2 leading-relaxed">
               Questa informativa può essere aggiornata nel tempo. In caso di modifiche sostanziali, gli utenti
               registrati saranno avvisati via email prima dell&apos;entrata in vigore delle nuove condizioni.

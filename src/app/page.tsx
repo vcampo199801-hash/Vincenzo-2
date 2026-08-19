@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PIANI, PIANI_ORDINE } from "@/lib/plans";
+import { CookieSettingsLink } from "@/components/cookie-settings-link";
 
 const MODULES = [
   { icon: "🗓️", title: "Scadenzario", desc: "24 adempimenti normativi standard già pronti: estintori, autoclave, messa a terra, sorveglianza sanitaria e altro. Stato calcolato in automatico." },
@@ -154,6 +155,7 @@ export default function Home() {
           <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
             <Link href="/privacy" className="hover:text-slate-800">Privacy Policy</Link>
             <Link href="/termini" className="hover:text-slate-800">Termini di servizio</Link>
+            <CookieSettingsLink />
           </div>
         </div>
       </footer>

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/app/service-worker-register";
+import { CookieConsent } from "@/components/cookie-consent";
+import { MetaPixel } from "@/components/meta-pixel";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,6 +41,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
         {children}
         <ServiceWorkerRegister />
+        <MetaPixel />
+        <CookieConsent />
       </body>
     </html>
   );
