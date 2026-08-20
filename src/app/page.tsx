@@ -202,7 +202,7 @@ export default function Home() {
                     €{piano.prezzoEuro}
                     <span className="text-base font-medium text-slate-500">/mese</span>
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">IVA esclusa · fatturazione mensile</p>
+                  <p className="mt-1 text-xs text-slate-400">IVA inclusa · fatturazione mensile</p>
                   <p className="mt-4 text-sm text-slate-600">{piano.descrizione}</p>
                   <ul className="mt-4 flex-1 space-y-1.5 text-sm text-slate-600">
                     {piano.puntiChiave.map((punto) => (
