@@ -8,6 +8,7 @@ import { DeleteButton } from "@/components/ui/delete-button";
 import { InviteMemberForm } from "@/components/app/invite-member-form";
 import { MemberPermissionsForm } from "@/components/app/member-permissions-form";
 import { TestDigestButton } from "@/components/app/test-digest-button";
+import { TableScroll } from "@/components/ui/table-scroll";
 import { formatDate } from "@/lib/compliance";
 import { isEmailConfigured } from "@/lib/email";
 import { parsePermessi, APP_MODULES } from "@/lib/modules";
@@ -129,7 +130,7 @@ export default async function ImpostazioniPage() {
             </>
           )}
         </p>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
               <tr>
@@ -154,12 +155,12 @@ export default async function ImpostazioniPage() {
                         : `${allowedKeys.length}/${APP_MODULES.length}`;
                 return (
                   <tr key={m.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-slate-900">{m.user.name ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{m.user.email}</td>
-                    <td className="px-4 py-3 text-slate-600">{ROLE_LABELS[m.role] ?? m.role}</td>
-                    <td className="px-4 py-3 text-slate-600">{formatDate(m.createdAt)}</td>
-                    <td className="px-4 py-3 text-slate-600">{m.role !== "OWNER" ? sectionsLabel : "—"}</td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">{m.user.name ?? "—"}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">{m.user.email}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">{ROLE_LABELS[m.role] ?? m.role}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">{formatDate(m.createdAt)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">{m.role !== "OWNER" ? sectionsLabel : "—"}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
                       {isOwner && m.role !== "OWNER" && (
                         <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
                       )}
@@ -169,7 +170,7 @@ export default async function ImpostazioniPage() {
               })}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
 
         {isOwner &&
           memberships
