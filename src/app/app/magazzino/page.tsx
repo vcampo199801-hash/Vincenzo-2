@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { scortaStato, lottoStato, formatCurrency } from "@/lib/compliance";
+import { pianoConsenteModulo } from "@/lib/plans";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { MagazzinoRow } from "@/components/app/magazzino-row";
@@ -12,7 +13,8 @@ import { TableScroll } from "@/components/ui/table-scroll";
 export const dynamic = "force-dynamic";
 
 export default async function MagazzinoPage() {
-  const { studio } = await requireActiveSubscription("magazzino");
+  const { studio, subscription } = await requireActiveSubscription("magazzino");
+  const haBilancio = pianoConsenteModulo(subscription.plan, "bilancio");
   const items = await prisma.magazzinoItem.findMany({ where: { studioId: studio.id }, orderBy: { prodotto: "asc" } });
 
   const rows = items.map((i) => ({
@@ -44,7 +46,7 @@ export default async function MagazzinoPage() {
       </div>
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <MagazzinoBilancioToggle attivo={studio.magazzinoInBilancio} />
+        {haBilancio ? <MagazzinoBilancioToggle attivo={studio.magazzinoInBilancio} /> : <span />}
         <Link
           href="/app/magazzino/resoconto"
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"

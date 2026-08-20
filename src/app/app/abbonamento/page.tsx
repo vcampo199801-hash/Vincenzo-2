@@ -99,14 +99,20 @@ export default async function AbbonamentoPage({
               <dd className="font-medium text-slate-900">{formatDate(sub!.trialEndsAt)}</dd>
             </div>
           )}
-          {sub?.currentPeriodEnd && (
+          {sub?.currentPeriodEnd && sub.status === "ACTIVE" && (
             <div>
-              <dt className="text-slate-500">Prossimo rinnovo</dt>
+              <dt className="text-slate-500">{sub.cancelAtPeriodEnd ? "Accesso attivo fino al" : "Prossimo rinnovo"}</dt>
               <dd className="font-medium text-slate-900">{formatDate(sub.currentPeriodEnd)}</dd>
             </div>
           )}
         </dl>
 
+        {sub?.cancelAtPeriodEnd && sub.status === "ACTIVE" && (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            Hai annullato l&apos;abbonamento: resta attivo fino alla data qui sopra, poi non verrà più rinnovato. Puoi
+            riattivarlo in qualsiasi momento da &quot;Fatturazione e annullamento&quot; qui sotto.
+          </p>
+        )}
       </div>
 
       {sub?.stripeCustomerId && (

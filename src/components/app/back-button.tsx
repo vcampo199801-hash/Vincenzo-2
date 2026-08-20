@@ -1,12 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
-/** Torna alla pagina precedente nella cronologia del browser — sempre visibile
- * in alto, così non serve passare dal menu laterale o ricaricare la pagina
- * per tornare indietro. */
+/** Torna alla pagina precedente nella cronologia del browser — visibile in
+ * alto in ogni pagina TRANNE la Dashboard: appena dopo il login si atterra
+ * lì e non c'è ancora nessuna cronologia in-app a cui tornare, quindi la
+ * freccia comparirebbe senza motivo. Ricompare non appena si apre una
+ * qualsiasi altra sezione. */
 export function BackButton() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  if (pathname === "/app") return null;
 
   return (
     <button

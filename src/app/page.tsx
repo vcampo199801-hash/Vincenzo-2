@@ -62,17 +62,14 @@ export default function Home() {
 
           <div className="mx-auto mt-6 flex max-w-2xl flex-wrap justify-center gap-2">
             {[
-              { t: "🗓️ Scadenze sempre sotto controllo" },
-              { t: "📧 Promemoria automatici via email" },
-              { t: "⚖️ Bilancio e KPI dello studio", piano: "Plus" },
-              { t: "📦 Magazzino e scadenza farmaci" },
-              { t: "📋 Report pronto per le ispezioni ASL" },
-            ].map(({ t, piano }) => (
-              <span key={t} className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-800 shadow-sm">
+              "🗓️ Scadenze sempre sotto controllo",
+              "📧 Promemoria automatici via email",
+              "⚖️ Bilancio e KPI dello studio",
+              "📦 Magazzino e scadenza farmaci",
+              "📋 Report pronto per le ispezioni ASL",
+            ].map((t) => (
+              <span key={t} className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-800 shadow-sm">
                 {t}
-                {piano && (
-                  <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700">{piano}</span>
-                )}
               </span>
             ))}
           </div>
