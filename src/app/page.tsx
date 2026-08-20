@@ -17,7 +17,7 @@ const MODULES = [
   { icon: "💶", title: "Spese", desc: "Le voci di spesa dello studio (affitto, utenze, collaboratori) con proiezione del costo annuo e riepilogo per categoria.", piano: "Plus" },
   { icon: "⚖️", title: "Bilancio aziendale", desc: "Sai subito se lo studio è in utile o in perdita: il fatturato si confronta da solo con tutti i costi — spese, personale, laboratori, manutenzioni — vista per anno, mese o un periodo a tua scelta. Niente più fogli Excel o attese per il commercialista. Completo dal piano Plus.", piano: "Plus" },
   { icon: "🧰", title: "Manutenzione", desc: "Controlli di routine dello staff — vacuum test, helix test e indicatori dell'autoclave, lubrificazione manipoli, pulizia aspiratori — ognuno con la propria cadenza, l'avviso quando è in ritardo e la firma di chi lo ha eseguito: sai sempre chi ha fatto cosa e quando.", piano: "Plus" },
-  { icon: "📈", title: "KPI Studio", desc: "Fatturato, prime visite, appuntamenti e preventivi giorno per giorno, con grafici e resoconti settimanali, mensili e annuali." },
+  { icon: "📈", title: "KPI Studio", desc: "Fatturato, prime visite, appuntamenti e preventivi giorno per giorno, con grafici e resoconti settimanali, mensili e annuali.", piano: "Plus" },
   { icon: "🎬", title: "Comunicazione Pazienti", desc: "Materiali informativi pronti da mostrare in studio o condividere con un link prima dell'appuntamento.", piano: "Plus" },
   { icon: "📋", title: "Report ispezione", desc: "Report stampabile con lo stato di tutte le scadenze, pronto da mostrare in caso di ispezione ASL." },
   { icon: "💬", title: "Forum", desc: "Il confronto tra colleghi degli studi iscritti: dubbi clinici e gestionali, consigli, bacheca — mai anonimo, con adesione facoltativa." },
@@ -62,14 +62,17 @@ export default function Home() {
 
           <div className="mx-auto mt-6 flex max-w-2xl flex-wrap justify-center gap-2">
             {[
-              "🗓️ Scadenze sempre sotto controllo",
-              "📧 Promemoria automatici via email",
-              "⚖️ Bilancio dello studio in tempo reale",
-              "📦 Magazzino e scadenza farmaci",
-              "📋 Report pronto per le ispezioni ASL",
-            ].map((t) => (
-              <span key={t} className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-800 shadow-sm">
+              { t: "🗓️ Scadenze sempre sotto controllo" },
+              { t: "📧 Promemoria automatici via email" },
+              { t: "⚖️ Bilancio e KPI dello studio", piano: "Plus" },
+              { t: "📦 Magazzino e scadenza farmaci" },
+              { t: "📋 Report pronto per le ispezioni ASL" },
+            ].map(({ t, piano }) => (
+              <span key={t} className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-800 shadow-sm">
                 {t}
+                {piano && (
+                  <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700">{piano}</span>
+                )}
               </span>
             ))}
           </div>

@@ -6,7 +6,6 @@ export type PianoKey = "BASE" | "PLUS" | "COMPLETO";
 // studio con un abbonamento attivo ha diritto.
 const MODULI_BASE: ModuleKey[] = [
   "dashboard",
-  "bilancio",
   "scadenzario",
   "controlli",
   "ecm",
@@ -15,15 +14,13 @@ const MODULI_BASE: ModuleKey[] = [
   "farmaci",
   "fornitori",
   "report",
-  "kpi",
   "forum",
 ];
 
-// Spese, Manutenzione e Personale sono anche i tre moduli di costo che
-// alimentano il Bilancio dell'attività in Dashboard: senza questi, il
-// Bilancio di uno studio Base resta visibile ma parziale (solo Registro
-// controlli) — è la leva principale per convincere a passare a Plus.
-const MODULI_PLUS_EXTRA: ModuleKey[] = ["spese", "manutenzione", "personale", "comunicazione"];
+// Bilancio, KPI, Spese, Manutenzione e Personale sono i moduli di gestione
+// economica dello studio, tutti riservati al piano Plus — è la leva
+// principale per convincere a passare dal Base.
+const MODULI_PLUS_EXTRA: ModuleKey[] = ["bilancio", "kpi", "spese", "manutenzione", "personale", "comunicazione"];
 
 const MODULI_COMPLETO_EXTRA: ModuleKey[] = ["laboratori"];
 
@@ -51,7 +48,7 @@ export const PIANI: Record<
     puntiChiave: [
       "Scadenzario, Registro controlli e Report ispezione",
       "Farmaci emergenza, Magazzino e Fornitori",
-      "Formazione ECM e KPI dello studio",
+      "Formazione ECM",
       "1 collaboratore oltre al titolare",
     ],
     maxCollaboratori: 1,
@@ -65,7 +62,7 @@ export const PIANI: Record<
     descrizione: "Il compromesso migliore: tutto il Base più la gestione economica completa dello studio.",
     puntiChiave: [
       "Tutto il piano Base",
-      "Bilancio completo dello studio",
+      "Bilancio dell'attività e KPI Studio",
       "Gestione Personale, Spese e Manutenzione",
       "Comunicazione Pazienti",
       "3 collaboratori oltre al titolare",
