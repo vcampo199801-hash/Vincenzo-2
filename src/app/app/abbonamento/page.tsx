@@ -6,7 +6,6 @@ import { APP_MODULES, type ModuleKey } from "@/lib/modules";
 import { startCheckout, changePlan, openBillingPortal, estendiProvaSviluppo } from "@/lib/actions/billing";
 import { PageHeader } from "@/components/ui/page-header";
 import { SubmitButton } from "@/components/ui/form";
-import { RedeemCodeForm } from "@/components/app/redeem-code-form";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -199,17 +198,6 @@ export default async function AbbonamentoPage({
         chiediamo Partita IVA e indirizzo di fatturazione — puoi correggerli in qualsiasi momento da{" "}
         <a href="/app/impostazioni" className="underline hover:text-slate-700">Impostazioni</a>.
       </p>
-
-      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-medium text-slate-500">Hai un codice di attivazione?</p>
-        <p className="mt-1 text-sm text-slate-500">
-          Se hai acquistato Scadenze in Regola sul nostro shop, inserisci qui il codice ricevuto per
-          attivare o estendere l&apos;abbonamento.
-        </p>
-        <div className="mt-4 max-w-sm">
-          <RedeemCodeForm />
-        </div>
-      </div>
     </div>
   );
 }
