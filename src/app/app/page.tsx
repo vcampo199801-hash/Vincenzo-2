@@ -36,7 +36,8 @@ import {
   costoAnnuoProiettato,
 } from "@/lib/spese";
 import { ultimoControlloPerTipo, contaAnomalie } from "@/lib/manutenzione";
-import { normalizzaPiano } from "@/lib/plans";
+import { normalizzaPiano, pianoConsenteModulo } from "@/lib/plans";
+import type { ModuleKey } from "@/lib/modules";
 import { DraggableSections } from "@/components/app/draggable-sections";
 import { DateRangeForm } from "@/components/ui/date-range-form";
 import { StatCard } from "@/components/ui/stat-card";
@@ -550,7 +551,13 @@ export default async function DashboardPage({
           },
           {
             key: "personale",
-            node: (
+            node: !pianoConsenteModulo(studio.subscription?.plan, "personale") ? (
+              <LockedDashboardCard
+                titolo="Personale"
+                descrizione="Anagrafica dipendenti, costo aziendale e scadenze contrattuali — disponibile dal piano Plus."
+                moduleKey="personale"
+              />
+            ) : (
               <section key="personale" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -586,7 +593,13 @@ export default async function DashboardPage({
           },
           {
             key: "laboratori",
-            node: (
+            node: !pianoConsenteModulo(studio.subscription?.plan, "laboratori") ? (
+              <LockedDashboardCard
+                titolo="Laboratori"
+                descrizione="Lavorazioni, consegne e dichiarazioni di conformità dei laboratori esterni — disponibile dal piano Completo."
+                moduleKey="laboratori"
+              />
+            ) : (
               <Link
                 key="laboratori"
                 href="/app/laboratori"
@@ -658,7 +671,13 @@ export default async function DashboardPage({
           },
           {
             key: "comunicazione",
-            node: (
+            node: !pianoConsenteModulo(studio.subscription?.plan, "comunicazione") ? (
+              <LockedDashboardCard
+                titolo="Comunicazione Pazienti"
+                descrizione="Materiali informativi pronti da condividere con i pazienti — disponibile dal piano Plus."
+                moduleKey="comunicazione"
+              />
+            ) : (
               <Link
                 key="comunicazione"
                 href="/app/comunicazione"
@@ -677,7 +696,13 @@ export default async function DashboardPage({
           },
           {
             key: "spese",
-            node: (
+            node: !pianoConsenteModulo(studio.subscription?.plan, "spese") ? (
+              <LockedDashboardCard
+                titolo="Spese"
+                descrizione="Voci di spesa dello studio con proiezione del costo annuo — disponibile dal piano Plus."
+                moduleKey="spese"
+              />
+            ) : (
               <section key="spese" className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-base font-semibold text-slate-900">Spese</h2>
@@ -703,7 +728,13 @@ export default async function DashboardPage({
           },
           {
             key: "manutenzione-staff",
-            node: (
+            node: !pianoConsenteModulo(studio.subscription?.plan, "manutenzione") ? (
+              <LockedDashboardCard
+                titolo="Manutenzione staff"
+                descrizione="Controlli di routine, test autoclave e cadenze — disponibile dal piano Plus."
+                moduleKey="manutenzione"
+              />
+            ) : (
               <Link
                 key="manutenzione-staff"
                 href="/app/manutenzione"
@@ -731,6 +762,20 @@ export default async function DashboardPage({
         Suggerimento: apri lo Scadenzario e aggiorna la data dell&apos;ultimo controllo dopo ogni intervento — il cruscotto si aggiorna da solo.
       </p>
     </div>
+  );
+}
+
+function LockedDashboardCard({ titolo, descrizione, moduleKey }: { titolo: string; descrizione: string; moduleKey: ModuleKey }) {
+  return (
+    <Link
+      href={`/app/abbonamento?upgrade=${moduleKey}`}
+      className="min-w-0 flex flex-col justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 transition-colors hover:border-brand-300"
+    >
+      <h2 className="flex items-center gap-2 text-base font-semibold text-slate-700">
+        <span aria-hidden>🔒</span> {titolo}
+      </h2>
+      <p className="mt-1 text-sm text-slate-500">{descrizione}</p>
+    </Link>
   );
 }
 
