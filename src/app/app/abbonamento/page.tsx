@@ -99,17 +99,6 @@ export default async function AbbonamentoPage({
           )}
         </dl>
 
-        {sub?.stripeCustomerId && (
-          <form action={openBillingPortal} className="mt-6">
-            <button
-              type="submit"
-              className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Gestisci fatturazione
-            </button>
-          </form>
-        )}
-
         {membership.role === "OWNER" && (
           <form action={estendiProvaSviluppo} className="mt-6 border-t border-slate-100 pt-4">
             <p className="mb-2 text-xs text-slate-400">
@@ -124,6 +113,24 @@ export default async function AbbonamentoPage({
           </form>
         )}
       </div>
+
+      {sub?.stripeCustomerId && (
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">Fatturazione e annullamento</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Scarica le fatture, cambia il metodo di pagamento o annulla l&apos;abbonamento in qualsiasi momento — se
+            annulli resti comunque attivo fino alla fine del periodo già pagato, nessun rimborso automatico a metà mese.
+          </p>
+          <form action={openBillingPortal} className="mt-4">
+            <button
+              type="submit"
+              className="inline-flex items-center rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900"
+            >
+              Apri fatture, pagamento e annullamento
+            </button>
+          </form>
+        </div>
+      )}
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
         {PIANI_ORDINE.map((key) => {
