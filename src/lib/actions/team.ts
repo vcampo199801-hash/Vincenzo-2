@@ -5,13 +5,11 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { requireStudio } from "@/lib/auth-guards";
 import { APP_MODULES } from "@/lib/modules";
+import { PIANI, normalizzaPiano } from "@/lib/plans";
 
 export type TeamFormState = { error?: string; success?: string } | undefined;
 
 const TEMP_PASSWORD_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
-
-// Titolare + al massimo 2 collaboratori per studio.
-const MAX_COLLABORATORS = 2;
 
 function generateTempPassword(length = 10) {
   let out = "";
@@ -43,9 +41,12 @@ export async function inviteMember(_prev: TeamFormState, formData: FormData): Pr
   const name = String(formData.get("name") ?? "").trim();
   if (!email) return { error: "Inserisci un'email." };
 
+  const maxCollaboratori = PIANI[normalizzaPiano(studio.subscription?.plan)].maxCollaboratori;
   const collaboratorCount = await prisma.membership.count({ where: { studioId: studio.id, role: "MEMBER" } });
-  if (collaboratorCount >= MAX_COLLABORATORS) {
-    return { error: `Hai già ${MAX_COLLABORATORS} collaboratori, il massimo per studio oltre al titolare.` };
+  if (collaboratorCount >= maxCollaboratori) {
+    return {
+      error: `Hai già ${maxCollaboratori} collaborat${maxCollaboratori === 1 ? "ore" : "ori"}, il massimo per il tuo piano. Passa a un piano superiore per invitarne altri.`,
+    };
   }
 
   const permessi = readPermessi(formData);

@@ -2,8 +2,8 @@ import type { ModuleKey } from "@/lib/modules";
 
 export type PianoKey = "BASE" | "PLUS" | "COMPLETO";
 
-// Dashboard e Abbonamento non sono mai limitati dal piano: sono l'accesso di base
-// a cui ogni studio con un abbonamento attivo ha diritto.
+// Dashboard non è mai limitata dal piano: è l'accesso di base a cui ogni
+// studio con un abbonamento attivo ha diritto.
 const MODULI_BASE: ModuleKey[] = [
   "dashboard",
   "scadenzario",
@@ -15,11 +15,16 @@ const MODULI_BASE: ModuleKey[] = [
   "fornitori",
   "report",
   "kpi",
-  "comunicazione",
-  "spese",
-  "manutenzione",
   "forum",
 ];
+
+// Spese, Manutenzione e Personale sono anche i tre moduli di costo che
+// alimentano il Bilancio dell'attività in Dashboard: senza questi, il
+// Bilancio di uno studio Base resta visibile ma parziale (solo Registro
+// controlli) — è la leva principale per convincere a passare a Plus.
+const MODULI_PLUS_EXTRA: ModuleKey[] = ["spese", "manutenzione", "personale", "comunicazione"];
+
+const MODULI_COMPLETO_EXTRA: ModuleKey[] = ["laboratori"];
 
 export const PIANI: Record<
   PianoKey,
@@ -30,6 +35,9 @@ export const PIANI: Record<
     stripePriceEnvVar: string;
     moduli: ModuleKey[];
     descrizione: string;
+    puntiChiave: string[];
+    maxCollaboratori: number;
+    consigliato?: boolean;
   }
 > = {
   BASE: {
@@ -38,25 +46,46 @@ export const PIANI: Record<
     prezzoEuro: 14,
     stripePriceEnvVar: "STRIPE_PRICE_ID_BASE",
     moduli: MODULI_BASE,
-    descrizione:
-      "Tutti i moduli di compliance e gestione: scadenzario, registro controlli, formazione ECM, documenti, magazzino, farmaci emergenza, fornitori, report ispezione, KPI dello studio, comunicazione con i pazienti, spese, manutenzione staff e il forum tra colleghi.",
+    descrizione: "Le funzioni essenziali per iniziare a tenere lo studio in regola.",
+    puntiChiave: [
+      "Scadenzario, Registro controlli e Report ispezione",
+      "Farmaci emergenza, Magazzino e Fornitori",
+      "Formazione ECM e KPI dello studio",
+      "1 collaboratore oltre al titolare",
+    ],
+    maxCollaboratori: 1,
   },
   PLUS: {
     key: "PLUS",
     label: "Plus",
     prezzoEuro: 18,
     stripePriceEnvVar: "STRIPE_PRICE_ID_PLUS",
-    moduli: [...MODULI_BASE, "personale"],
-    descrizione: "Tutto il piano Base, più l'anagrafica del personale e l'archivio cedolini.",
+    moduli: [...MODULI_BASE, ...MODULI_PLUS_EXTRA],
+    descrizione: "Il compromesso migliore: tutto il Base più la gestione economica completa dello studio.",
+    puntiChiave: [
+      "Tutto il piano Base",
+      "Bilancio completo dello studio",
+      "Gestione Personale, Spese e Manutenzione",
+      "Comunicazione Pazienti",
+      "3 collaboratori oltre al titolare",
+    ],
+    maxCollaboratori: 3,
+    consigliato: true,
   },
   COMPLETO: {
     key: "COMPLETO",
     label: "Completo",
     prezzoEuro: 23,
     stripePriceEnvVar: "STRIPE_PRICE_ID_COMPLETO",
-    moduli: [...MODULI_BASE, "personale", "laboratori"],
-    descrizione:
-      "Tutto il piano Plus, più la gestione dei laboratori odontotecnici e la conformità dei dispositivi su misura.",
+    moduli: [...MODULI_BASE, ...MODULI_PLUS_EXTRA, ...MODULI_COMPLETO_EXTRA],
+    descrizione: "Tutto il Plus, più la gestione dei laboratori esterni e supporto dedicato.",
+    puntiChiave: [
+      "Tutto il piano Plus",
+      "Modulo Laboratori odontotecnici",
+      "Supporto dedicato prioritario",
+      "5 collaboratori oltre al titolare",
+    ],
+    maxCollaboratori: 5,
   },
 };
 

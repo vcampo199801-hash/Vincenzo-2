@@ -11,8 +11,7 @@ import { TestDigestButton } from "@/components/app/test-digest-button";
 import { formatDate } from "@/lib/compliance";
 import { isEmailConfigured } from "@/lib/email";
 import { parsePermessi, APP_MODULES } from "@/lib/modules";
-
-const MAX_COLLABORATORS = 2;
+import { PIANI, normalizzaPiano } from "@/lib/plans";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -29,7 +28,8 @@ export default async function ImpostazioniPage() {
   });
   const isOwner = memberships.find((m) => m.userId === session.userId)?.role === "OWNER";
   const collaboratorCount = memberships.filter((m) => m.role === "MEMBER").length;
-  const atCap = collaboratorCount >= MAX_COLLABORATORS;
+  const maxCollaboratori = PIANI[normalizzaPiano(studio.subscription?.plan)].maxCollaboratori;
+  const atCap = collaboratorCount >= maxCollaboratori;
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -110,9 +110,18 @@ export default async function ImpostazioniPage() {
       <div>
         <h2 className="mb-3 text-lg font-semibold text-slate-900">Team dello studio</h2>
         <p className="mb-3 text-sm text-slate-500">
-          Il titolare più un massimo di {MAX_COLLABORATORS} collaboratori per studio ({collaboratorCount}/
-          {MAX_COLLABORATORS} usati) — tutti possono accedere in contemporanea da telefono e computer. Per ogni
-          collaboratore puoi scegliere quali sezioni può vedere.
+          Il titolare più un massimo di {maxCollaboratori} collaborator{maxCollaboratori === 1 ? "e" : "i"} per il
+          tuo piano ({collaboratorCount}/{maxCollaboratori} usati) — tutti possono accedere in contemporanea da
+          telefono e computer. Per ogni collaboratore puoi scegliere quali sezioni può vedere.
+          {atCap && (
+            <>
+              {" "}
+              <a href="/app/abbonamento" className="font-medium text-brand-700 underline">
+                Passa a un piano superiore
+              </a>{" "}
+              per invitarne altri.
+            </>
+          )}
         </p>
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-slate-200 text-sm">

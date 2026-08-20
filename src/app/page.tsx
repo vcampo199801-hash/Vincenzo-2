@@ -14,11 +14,11 @@ const MODULES = [
   { icon: "🎓", title: "Formazione ECM", desc: "Crediti ECM del team tracciati per il triennio, con avanzamento verso il target." },
   { icon: "👥", title: "Personale", desc: "Anagrafica dei dipendenti e archivio cedolini, senza la complessità di un gestionale HR.", piano: "Plus" },
   { icon: "🦷", title: "Laboratori", desc: "Registro lavorazioni e dichiarazioni di conformità dei dispositivi su misura, come richiesto dal Reg. UE 2017/745.", piano: "Completo" },
-  { icon: "💶", title: "Spese", desc: "Le voci di spesa dello studio (affitto, utenze, collaboratori) con proiezione del costo annuo e riepilogo per categoria." },
-  { icon: "⚖️", title: "Bilancio aziendale", desc: "Sai subito se lo studio è in utile o in perdita: il fatturato si confronta da solo con tutti i costi — spese, personale, laboratori, manutenzioni — vista per anno, mese o un periodo a tua scelta. Niente più fogli Excel o attese per il commercialista." },
-  { icon: "🧰", title: "Manutenzione", desc: "Controlli di routine dello staff — autoclave, lubrificazione manipoli e altro — con cadenza personalizzabile e avviso quando sono in ritardo." },
+  { icon: "💶", title: "Spese", desc: "Le voci di spesa dello studio (affitto, utenze, collaboratori) con proiezione del costo annuo e riepilogo per categoria.", piano: "Plus" },
+  { icon: "⚖️", title: "Bilancio aziendale", desc: "Sai subito se lo studio è in utile o in perdita: il fatturato si confronta da solo con tutti i costi — spese, personale, laboratori, manutenzioni — vista per anno, mese o un periodo a tua scelta. Niente più fogli Excel o attese per il commercialista. Completo dal piano Plus." },
+  { icon: "🧰", title: "Manutenzione", desc: "Controlli di routine dello staff — autoclave, lubrificazione manipoli e altro — con cadenza personalizzabile e avviso quando sono in ritardo.", piano: "Plus" },
   { icon: "📈", title: "KPI Studio", desc: "Fatturato, prime visite, appuntamenti e preventivi giorno per giorno, con grafici e resoconti settimanali, mensili e annuali." },
-  { icon: "🎬", title: "Comunicazione Pazienti", desc: "Materiali informativi pronti da mostrare in studio o condividere con un link prima dell'appuntamento." },
+  { icon: "🎬", title: "Comunicazione Pazienti", desc: "Materiali informativi pronti da mostrare in studio o condividere con un link prima dell'appuntamento.", piano: "Plus" },
   { icon: "📋", title: "Report ispezione", desc: "Report stampabile con lo stato di tutte le scadenze, pronto da mostrare in caso di ispezione ASL." },
   { icon: "💬", title: "Forum", desc: "Il confronto tra colleghi degli studi iscritti: dubbi clinici e gestionali, consigli, bacheca — mai anonimo, con adesione facoltativa." },
 ];
@@ -109,10 +109,15 @@ export default function Home() {
               return (
                 <div
                   key={key}
-                  className={`flex flex-col rounded-2xl border p-8 text-left shadow-sm ${
-                    key === "PLUS" ? "border-brand-400 ring-2 ring-brand-100" : "border-slate-200"
+                  className={`relative flex flex-col rounded-2xl border p-8 text-left shadow-sm ${
+                    piano.consigliato ? "border-brand-400 ring-2 ring-brand-100" : "border-slate-200"
                   } bg-white`}
                 >
+                  {piano.consigliato && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+                      Consigliato
+                    </span>
+                  )}
                   <p className="text-sm font-medium text-brand-700">{piano.label}</p>
                   <p className="mt-2 text-4xl font-bold text-slate-900">
                     €{piano.prezzoEuro}
@@ -120,6 +125,11 @@ export default function Home() {
                   </p>
                   <p className="mt-1 text-xs text-slate-400">IVA esclusa · fatturazione mensile</p>
                   <p className="mt-4 text-sm text-slate-600">{piano.descrizione}</p>
+                  <ul className="mt-4 flex-1 space-y-1.5 text-sm text-slate-600">
+                    {piano.puntiChiave.map((punto) => (
+                      <li key={punto}>✓ {punto}</li>
+                    ))}
+                  </ul>
                   <Link
                     href="/signup"
                     className="mt-6 block rounded-lg bg-brand-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
@@ -132,8 +142,8 @@ export default function Home() {
           </div>
 
           <p className="mt-8 text-sm text-slate-500">
-            Ogni piano include 7 giorni di prova gratuita, utenti e team illimitati, promemoria scadenze automatici e
-            report stampabile per le ispezioni ASL.
+            Ogni piano include 7 giorni di prova gratuita, promemoria scadenze automatici e report stampabile per le
+            ispezioni ASL.
           </p>
 
           <p className="mt-6 text-sm text-slate-500">

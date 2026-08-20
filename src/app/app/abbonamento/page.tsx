@@ -130,15 +130,19 @@ export default async function AbbonamentoPage({
           const piano = PIANI[key];
           const isCurrent = active && pianoAttuale === key;
           const configured = isPianoConfigured(key);
-          const moduli = piano.moduli.filter((m) => m !== "dashboard");
 
           return (
             <div
               key={key}
-              className={`flex flex-col rounded-2xl border p-6 shadow-sm ${
-                isCurrent ? "border-brand-400 ring-2 ring-brand-100" : "border-slate-200"
+              className={`relative flex flex-col rounded-2xl border p-6 shadow-sm ${
+                isCurrent || piano.consigliato ? "border-brand-400 ring-2 ring-brand-100" : "border-slate-200"
               } bg-white`}
             >
+              {piano.consigliato && !isCurrent && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+                  Consigliato
+                </span>
+              )}
               <p className="text-sm font-semibold text-brand-700">{piano.label}</p>
               <p className="mt-2 text-3xl font-bold text-slate-900">
                 €{piano.prezzoEuro}
@@ -148,10 +152,9 @@ export default async function AbbonamentoPage({
               <p className="mt-4 text-sm text-slate-600">{piano.descrizione}</p>
 
               <ul className="mt-4 flex-1 space-y-1.5 text-sm text-slate-600">
-                {moduli.map((m) => {
-                  const mod = APP_MODULES.find((x) => x.key === m);
-                  return mod ? <li key={m}>✓ {mod.label}</li> : null;
-                })}
+                {piano.puntiChiave.map((punto) => (
+                  <li key={punto}>✓ {punto}</li>
+                ))}
               </ul>
 
               <div className="mt-6">

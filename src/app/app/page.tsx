@@ -36,6 +36,7 @@ import {
   costoAnnuoProiettato,
 } from "@/lib/spese";
 import { ultimoControlloPerTipo, contaAnomalie } from "@/lib/manutenzione";
+import { normalizzaPiano } from "@/lib/plans";
 import { DraggableSections } from "@/components/app/draggable-sections";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
@@ -55,6 +56,7 @@ export default async function DashboardPage({
 }) {
   const { studio } = await requireActiveSubscription("dashboard");
   const params = await searchParams;
+  const pianoStudio = normalizzaPiano(studio.subscription?.plan);
 
   const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni, tipiManutenzione, movimentiMagazzino] =
     await Promise.all([
@@ -308,6 +310,13 @@ export default async function DashboardPage({
                 </>
               )}
             </p>
+            {pianoStudio === "BASE" && (
+              <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                Bilancio parziale: il piano Base non include Spese, Personale e Manutenzione.{" "}
+                <Link href="/app/abbonamento" className="font-medium underline">Passa a Plus</Link> per il quadro
+                completo.
+              </p>
+            )}
           </div>
           <span className={`shrink-0 text-2xl font-bold ${bilancioPeriodo >= 0 ? "text-emerald-600" : "text-red-600"}`}>
             {bilancioPeriodo >= 0 ? "+" : ""}
