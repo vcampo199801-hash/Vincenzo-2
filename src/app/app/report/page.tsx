@@ -3,8 +3,6 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { scadenzaStato, scortaStato, lottoStato, ecmPercent, formatDate, formatCurrency, STATO_LABELS } from "@/lib/compliance";
 import { ultimoControlloPerTipo, ESITO_MANUTENZIONE_OPTIONS, optionLabel as optionLabelManutenzione } from "@/lib/manutenzione";
-import { pianoConsenteModulo } from "@/lib/plans";
-import { CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
 import { PrintButton } from "@/components/app/print-button";
 import { StatusDonut } from "@/components/charts/donut";
 import { BarList } from "@/components/charts/bar-list";
@@ -14,26 +12,20 @@ import { STATUS_HEX } from "@/components/charts/colors";
 export const dynamic = "force-dynamic";
 
 export default async function ReportPage() {
-  const { studio, subscription } = await requireActiveSubscription("report");
-  const haLaboratori = pianoConsenteModulo(subscription.plan, "laboratori");
+  const { studio } = await requireActiveSubscription("report");
 
-  const [adempimenti, magazzino, farmaci, documenti, controlli, manutenzioni, tipiManutenzione, ecmCrediti, lavorazioniLab] =
-    await Promise.all([
-      prisma.adempimento.findMany({ where: { studioId: studio.id }, orderBy: { ordine: "asc" } }),
-      prisma.magazzinoItem.findMany({ where: { studioId: studio.id }, orderBy: { prodotto: "asc" } }),
-      prisma.farmaco.findMany({ where: { studioId: studio.id }, orderBy: { nome: "asc" } }),
-      prisma.documento.findMany({ where: { studioId: studio.id }, orderBy: { ordine: "asc" } }),
-      prisma.controlloLog.findMany({ where: { studioId: studio.id }, orderBy: { dataIntervento: "desc" } }),
-      prisma.manutenzioneLog.findMany({ where: { studioId: studio.id } }),
-      prisma.tipoManutenzione.findMany({ where: { studioId: studio.id } }),
-      prisma.ecmCredito.findMany({ where: { studioId: studio.id }, orderBy: { professionista: "asc" } }),
-      haLaboratori
-        ? prisma.lavorazione.findMany({ where: { studioId: studio.id }, include: { laboratorio: true, allegati: true } })
-        : Promise.resolve([]),
-    ]);
+  const [adempimenti, magazzino, farmaci, documenti, controlli, manutenzioni, tipiManutenzione, ecmCrediti] = await Promise.all([
+    prisma.adempimento.findMany({ where: { studioId: studio.id }, orderBy: { ordine: "asc" } }),
+    prisma.magazzinoItem.findMany({ where: { studioId: studio.id }, orderBy: { prodotto: "asc" } }),
+    prisma.farmaco.findMany({ where: { studioId: studio.id }, orderBy: { nome: "asc" } }),
+    prisma.documento.findMany({ where: { studioId: studio.id }, orderBy: { ordine: "asc" } }),
+    prisma.controlloLog.findMany({ where: { studioId: studio.id }, orderBy: { dataIntervento: "desc" } }),
+    prisma.manutenzioneLog.findMany({ where: { studioId: studio.id } }),
+    prisma.tipoManutenzione.findMany({ where: { studioId: studio.id } }),
+    prisma.ecmCredito.findMany({ where: { studioId: studio.id }, orderBy: { professionista: "asc" } }),
+  ]);
 
   const manutenzionePerTipo = ultimoControlloPerTipo(manutenzioni, tipiManutenzione);
-  const lavorazioniConsegnate = lavorazioniLab.filter((l) => l.stato === "CONSEGNATO_STUDIO" || l.stato === "CONSEGNATO_PAZIENTE");
 
   const scadenze = adempimenti
     .map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }))
@@ -218,23 +210,6 @@ export default async function ReportPage() {
             })}
           />
         </section>
-
-        {haLaboratori && (
-          <section className="mb-8 print:break-inside-avoid">
-            <h2 className="mb-3 text-base font-semibold text-slate-900">
-              Laboratori — dichiarazioni di conformità (Reg. UE 2017/745)
-            </h2>
-            <ReportTable
-              headers={["Paziente", "Laboratorio", "Consegnato il", "Dichiarazione di conformità"]}
-              rows={lavorazioniConsegnate.map((l) => [
-                l.riferimentoPaziente,
-                l.laboratorio.ragioneSociale,
-                l.dataConsegnaEffettiva ? formatDate(l.dataConsegnaEffettiva) : "—",
-                l.allegati.some((a) => a.categoria === CATEGORIA_DICHIARAZIONE_CONFORMITA) ? "Presente" : "Mancante",
-              ])}
-            />
-          </section>
-        )}
 
         <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-400">
           Documento generato automaticamente da Scadenze in Regola. È un supporto organizzativo e non sostituisce gli
