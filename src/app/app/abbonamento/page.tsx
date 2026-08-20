@@ -26,6 +26,7 @@ export default async function AbbonamentoPage({
   const sub = studio.subscription;
 
   const trialActive = sub?.status === "TRIALING" && sub.trialEndsAt && sub.trialEndsAt > new Date();
+  const trialExpired = sub?.status === "TRIALING" && sub.trialEndsAt !== null && sub.trialEndsAt < new Date();
   const active = sub?.status === "ACTIVE" || Boolean(trialActive);
   const pianoAttuale: PianoKey | null = sub ? normalizzaPiano(sub.plan) : null;
 
@@ -35,6 +36,14 @@ export default async function AbbonamentoPage({
   return (
     <div className="max-w-5xl">
       <PageHeader title="Abbonamento" description="Scegli il piano più adatto al tuo studio e gestisci la fatturazione." />
+
+      {trialExpired && (
+        <p className="mb-4 rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-800">
+          ⏳ La tua prova gratuita di 7 giorni è terminata. Nessun dato è andato perso: tutto quello che hai
+          compilato in questa settimana ti aspetta così com&apos;è. Scegli un piano qui sotto per sbloccare subito
+          l&apos;accesso.
+        </p>
+      )}
 
       {params.success && (
         <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -155,7 +164,7 @@ export default async function AbbonamentoPage({
                   <span className="block rounded-lg bg-brand-50 px-4 py-2 text-center text-sm font-semibold text-brand-700">
                     Piano attuale
                   </span>
-                ) : active ? (
+                ) : sub?.stripeSubscriptionId ? (
                   <form action={changePlan}>
                     <input type="hidden" name="piano" value={key} />
                     <SubmitButton disabled={!configured} className="w-full">
