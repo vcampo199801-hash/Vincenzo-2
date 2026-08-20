@@ -11,28 +11,6 @@ function appUrl() {
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
-/** Comodità per il titolare mentre l'app è ancora in fase di allestimento:
- * allunga la prova gratuita di 30 giorni con accesso a tutti i moduli, senza
- * dover passare da Stripe o da un codice. Solo il titolare (OWNER) può usarla,
- * e solo sul proprio studio. */
-export async function estendiProvaSviluppo() {
-  const { studio, membership } = await requireStudio();
-  if (membership.role !== "OWNER") {
-    redirect("/app/abbonamento");
-  }
-
-  const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  await prisma.subscription.upsert({
-    where: { studioId: studio.id },
-    update: { status: "TRIALING", trialEndsAt, plan: "COMPLETO" },
-    create: { studioId: studio.id, status: "TRIALING", trialEndsAt, plan: "COMPLETO" },
-  });
-
-  revalidatePath("/app/abbonamento");
-  revalidatePath("/app");
-  redirect("/app/abbonamento");
-}
-
 export async function startCheckout(formData: FormData) {
   const { session, studio } = await requireStudio();
 

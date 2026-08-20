@@ -3,7 +3,7 @@ import { isPianoConfigured } from "@/lib/stripe";
 import { formatDate } from "@/lib/compliance";
 import { PIANI, PIANI_ORDINE, normalizzaPiano, pianoMinimoPerModulo, type PianoKey } from "@/lib/plans";
 import { APP_MODULES, type ModuleKey } from "@/lib/modules";
-import { startCheckout, changePlan, openBillingPortal, estendiProvaSviluppo } from "@/lib/actions/billing";
+import { startCheckout, changePlan, openBillingPortal } from "@/lib/actions/billing";
 import { PageHeader } from "@/components/ui/page-header";
 import { SubmitButton } from "@/components/ui/form";
 
@@ -21,7 +21,7 @@ export default async function AbbonamentoPage({
     upgrade?: string;
   }>;
 }) {
-  const { studio, membership } = await requireStudio();
+  const { studio } = await requireStudio();
   const params = await searchParams;
   const sub = studio.subscription;
 
@@ -98,19 +98,6 @@ export default async function AbbonamentoPage({
           )}
         </dl>
 
-        {membership.role === "OWNER" && (
-          <form action={estendiProvaSviluppo} className="mt-6 border-t border-slate-100 pt-4">
-            <p className="mb-2 text-xs text-slate-400">
-              Stai ancora allestendo lo studio? Allunga la prova di 30 giorni con accesso a tutti i moduli, senza carta.
-            </p>
-            <button
-              type="submit"
-              className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Estendi prova gratuita (+30 giorni)
-            </button>
-          </form>
-        )}
       </div>
 
       {sub?.stripeCustomerId && (
