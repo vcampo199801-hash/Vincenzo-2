@@ -4,6 +4,7 @@ import { requireStudio, isAdminEmail } from "@/lib/auth-guards";
 import { logoutAction } from "@/lib/actions/auth";
 import { NavLinks } from "@/components/app/nav-links";
 import { InstallAppButton } from "@/components/app/install-app-button";
+import { BackButton } from "@/components/app/back-button";
 import { MobileNav } from "@/components/app/mobile-nav";
 import { daysUntil } from "@/lib/compliance";
 import { parsePermessi } from "@/lib/modules";
@@ -55,13 +56,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="no-print flex h-16 items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 md:px-8">
-          <div className="flex min-w-0 items-center gap-2 md:hidden">
-            <MobileNav allowedKeys={allowedKeys} piano={piano} isAdmin={isAdmin} />
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50">
-              <Image src="/brand/monogram.png" alt="" width={20} height={20} className="h-5 w-5" />
-            </span>
+          <div className="flex min-w-0 items-center gap-2">
+            <BackButton />
+            <div className="flex min-w-0 items-center gap-2 md:hidden">
+              <MobileNav allowedKeys={allowedKeys} piano={piano} isAdmin={isAdmin} />
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50">
+                <Image src="/brand/monogram.png" alt="" width={20} height={20} className="h-5 w-5" />
+              </span>
+            </div>
           </div>
-          <div className="min-w-0 flex-1 md:hidden" />
+          <div className="min-w-0 flex-1" />
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {sub?.status === "TRIALING" && (
               <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700 sm:px-3">

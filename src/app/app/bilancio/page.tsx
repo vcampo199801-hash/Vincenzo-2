@@ -16,6 +16,7 @@ import { spesaAttivaNelMese, costoAnnuoRiga, optionLabel as optionLabelSpesa, CA
 import { normalizzaPiano, pianoConsenteModulo } from "@/lib/plans";
 import { PageHeader } from "@/components/ui/page-header";
 import { TableScroll } from "@/components/ui/table-scroll";
+import { DateRangeForm } from "@/components/ui/date-range-form";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -177,15 +178,25 @@ export default async function BilancioPage({
       key: "controlli",
       label: "Registro controlli",
       icon: "🛠️",
+      sezioneHref: "/app/controlli",
       locked: false,
       righe: righeControlli,
       totale: costoControlli,
     },
-    { key: "spese", label: "Spese", icon: "💶", locked: speseLocked, righe: righeSpese, totale: costoSpese },
+    {
+      key: "spese",
+      label: "Spese",
+      icon: "💶",
+      sezioneHref: "/app/spese",
+      locked: speseLocked,
+      righe: righeSpese,
+      totale: costoSpese,
+    },
     {
       key: "personale",
       label: "Personale",
       icon: "🧑‍⚕️",
+      sezioneHref: "/app/personale",
       locked: personaleLocked,
       righe: righePersonale,
       totale: costoPersonale,
@@ -194,6 +205,7 @@ export default async function BilancioPage({
       key: "manutenzione",
       label: "Manutenzione staff",
       icon: "🧯",
+      sezioneHref: "/app/manutenzione",
       locked: manutenzioneLocked,
       righe: righeManutenzione,
       totale: costoManutenzione,
@@ -202,12 +214,23 @@ export default async function BilancioPage({
       key: "laboratori",
       label: "Laboratori odontotecnici",
       icon: "🧪",
+      sezioneHref: "/app/laboratori",
       locked: laboratoriLocked,
       righe: righeLaboratori,
       totale: costoLaboratori,
     },
     ...(studio.magazzinoInBilancio || movimentiInPeriodo.length > 0
-      ? [{ key: "magazzino", label: "Magazzino", icon: "📦", locked: false, righe: righeMagazzino, totale: costoMagazzino }]
+      ? [
+          {
+            key: "magazzino",
+            label: "Magazzino",
+            icon: "📦",
+            sezioneHref: "/app/magazzino",
+            locked: false,
+            righe: righeMagazzino,
+            totale: costoMagazzino,
+          },
+        ]
       : []),
   ];
 
@@ -283,6 +306,7 @@ export default async function BilancioPage({
           <Link
             key={p.value}
             href={`/app/bilancio?periodo=${p.value}`}
+            scroll={false}
             className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
               periodo === p.value ? "bg-brand-600 text-white" : "border border-slate-300 text-slate-700 hover:bg-slate-50"
             }`}
@@ -291,15 +315,14 @@ export default async function BilancioPage({
           </Link>
         ))}
         {periodo === "personalizzato" && (
-          <form method="get" className="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="periodo" value="personalizzato" />
-            <input type="date" name="da" defaultValue={daIso} className="rounded-lg border border-slate-300 px-2 py-1 text-sm" />
-            <span className="text-sm text-slate-400">—</span>
-            <input type="date" name="a" defaultValue={aIso} className="rounded-lg border border-slate-300 px-2 py-1 text-sm" />
-            <button type="submit" className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
-              Applica
-            </button>
-          </form>
+          <DateRangeForm
+            basePath="/app/bilancio"
+            hiddenParams={{ periodo: "personalizzato" }}
+            daName="da"
+            aName="a"
+            daDefault={daIso}
+            aDefault={aIso}
+          />
         )}
       </div>
 
@@ -342,7 +365,13 @@ export default async function BilancioPage({
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-4">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                 <span aria-hidden>{c.icon}</span>
-                {c.label}
+                {c.locked ? (
+                  c.label
+                ) : (
+                  <Link href={c.sezioneHref} className="hover:text-brand-700 hover:underline">
+                    {c.label} <span className="text-slate-400">→</span>
+                  </Link>
+                )}
               </h3>
               <span className="text-base font-semibold text-slate-900">{c.locked ? "—" : formatCurrency(c.totale)}</span>
             </div>

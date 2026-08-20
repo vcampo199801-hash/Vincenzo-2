@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDate, formatCurrency } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { TableScroll } from "@/components/ui/table-scroll";
+import { DateRangeForm } from "@/components/ui/date-range-form";
 import {
   PERIODI_BILANCIO,
   type PeriodoBilancio,
@@ -94,15 +95,14 @@ export default async function ResocontoMagazzinoPage({
           </Link>
         ))}
         {periodo === "personalizzato" && (
-          <form method="get" className="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="periodo" value="personalizzato" />
-            <input type="date" name="da" defaultValue={daIso} className="rounded-lg border border-slate-300 px-2 py-1 text-sm" />
-            <span className="text-sm text-slate-400">—</span>
-            <input type="date" name="a" defaultValue={aIso} className="rounded-lg border border-slate-300 px-2 py-1 text-sm" />
-            <button type="submit" className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
-              Applica
-            </button>
-          </form>
+          <DateRangeForm
+            basePath="/app/magazzino/resoconto"
+            hiddenParams={{ periodo: "personalizzato" }}
+            daName="da"
+            aName="a"
+            daDefault={daIso}
+            aDefault={aIso}
+          />
         )}
       </div>
 

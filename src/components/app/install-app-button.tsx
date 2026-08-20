@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -122,14 +123,22 @@ export function InstallAppButton() {
         </div>
       )}
       {hint === "desktop" && (
-        <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-lg">
+        <div className="absolute right-0 top-full z-20 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-lg">
           <p className="mb-2 font-medium text-slate-900">Installa sul computer</p>
           <p>
-            Su <strong>Chrome</strong> o <strong>Edge</strong>: cerca l&apos;icona{" "}
-            <strong>⊕ / Installa</strong> nella barra degli indirizzi (a destra, vicino ai preferiti), oppure apri il
-            menu <strong>⋮</strong> in alto a destra e scegli &quot;Installa Scadenze in Regola&quot;.
+            Su <strong>Chrome</strong>: se compare, tocca l&apos;icona <strong>⊕</strong> nella barra degli indirizzi.
+            Altrimenti apri il menu <strong>⋮</strong> in alto a destra, scorri fino a <strong>&quot;Salva&quot;</strong> e
+            scegli <strong>&quot;Installa pagina come app...&quot;</strong>.
           </p>
+          <p className="mt-2">Su <strong>Edge</strong> il percorso è simile, dal menu <strong>⋯</strong> in alto a destra.</p>
           <p className="mt-2">Su Safari da computer l&apos;installazione come app non è supportata.</p>
+          <p className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
+            Non ci riesci?{" "}
+            <Link href="/app/guida" className="font-medium text-brand-700 hover:underline">
+              Scrivici dalla pagina Guida e supporto
+            </Link>
+            , ti guidiamo noi passo passo.
+          </p>
           <button
             type="button"
             onClick={() => setHint(null)}

@@ -38,6 +38,7 @@ import {
 import { ultimoControlloPerTipo, contaAnomalie } from "@/lib/manutenzione";
 import { normalizzaPiano } from "@/lib/plans";
 import { DraggableSections } from "@/components/app/draggable-sections";
+import { DateRangeForm } from "@/components/ui/date-range-form";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatoBadge } from "@/components/ui/badge";
 import { StatusDonut } from "@/components/charts/donut";
@@ -343,25 +344,14 @@ export default async function DashboardPage({
             </Link>
           ))}
           {periodoBilancio === "personalizzato" && (
-            <form method="get" className="flex flex-wrap items-center gap-2">
-              <input type="hidden" name="bilancio" value="personalizzato" />
-              <input
-                type="date"
-                name="bilancioDa"
-                defaultValue={bilancioDaIso}
-                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
-              />
-              <span className="text-sm text-slate-400">—</span>
-              <input
-                type="date"
-                name="bilancioA"
-                defaultValue={bilancioAIso}
-                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
-              />
-              <button type="submit" className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
-                Applica
-              </button>
-            </form>
+            <DateRangeForm
+              basePath="/app"
+              hiddenParams={{ bilancio: "personalizzato" }}
+              daName="bilancioDa"
+              aName="bilancioA"
+              daDefault={bilancioDaIso}
+              aDefault={bilancioAIso}
+            />
           )}
         </div>
 

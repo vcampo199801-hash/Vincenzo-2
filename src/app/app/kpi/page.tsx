@@ -147,6 +147,7 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
           <Link
             key={p.value}
             href={`/app/kpi?periodo=${p.value}`}
+            scroll={false}
             className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
               periodo === p.value ? "bg-brand-600 text-white" : "border border-slate-300 text-slate-700 hover:bg-slate-50"
             }`}

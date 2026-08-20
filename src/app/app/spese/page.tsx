@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
+import { DateRangeForm } from "@/components/ui/date-range-form";
 import { StatusDonut } from "@/components/charts/donut";
 import { BRAND_SEQUENTIAL } from "@/components/charts/colors";
 
@@ -111,6 +112,7 @@ export default async function SpesePage({
             <Link
               key={p.value}
               href={`/app/spese?ripartizione=${p.value}`}
+              scroll={false}
               className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium ${
                 periodoRipartizione === p.value ? "bg-brand-600 text-white" : "border border-slate-300 text-slate-700 hover:bg-slate-50"
               }`}
@@ -119,25 +121,14 @@ export default async function SpesePage({
             </Link>
           ))}
           {periodoRipartizione === "personalizzato" && (
-            <form method="get" className="flex flex-wrap items-center gap-2">
-              <input type="hidden" name="ripartizione" value="personalizzato" />
-              <input
-                type="date"
-                name="ripartizioneDa"
-                defaultValue={ripartizioneDaIso}
-                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
-              />
-              <span className="text-sm text-slate-400">—</span>
-              <input
-                type="date"
-                name="ripartizioneA"
-                defaultValue={ripartizioneAIso}
-                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
-              />
-              <button type="submit" className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
-                Applica
-              </button>
-            </form>
+            <DateRangeForm
+              basePath="/app/spese"
+              hiddenParams={{ ripartizione: "personalizzato" }}
+              daName="ripartizioneDa"
+              aName="ripartizioneA"
+              daDefault={ripartizioneDaIso}
+              aDefault={ripartizioneAIso}
+            />
           )}
         </div>
 
