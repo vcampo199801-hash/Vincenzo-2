@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { scortaStato, formatDate, formatCurrency } from "@/lib/compliance";
 import { StatoBadge } from "@/components/ui/badge";
@@ -8,16 +8,17 @@ import { DeleteButton } from "@/components/ui/delete-button";
 import { RegistraRiordinoButton } from "@/components/app/registra-riordino-button";
 import { regolaQuantita, deleteMagazzinoItem } from "@/lib/actions/magazzino";
 
-/** Riga di magazzino con le frecce +/- per la scorta attuale. Aggiorna il
- * numero, lo stato scorta e il valore giacenza sul momento (nessun ricarico
- * di pagina) — regolaQuantita tocca solo quantitaAttuale, mai la scorta
- * minima, che resta modificabile solo dalla scheda "Modifica". */
+/** Riga di magazzino. La freccia − scala la scorta al volo per l'uso
+ * quotidiano; per aumentarla si passa sempre dal bottone "+ Riordino", che
+ * traccia anche data e costo — così non ci sono due modi diversi di
+ * aggiungere quantità che confondono. quantita si risincronizza con la prop
+ * quando cambia (es. dopo un riordino), non solo dopo un click sulla −. */
 export function MagazzinoRow({
   id,
   prodotto,
   fornitore,
   categoria,
-  quantitaAttuale: quantitaIniziale,
+  quantitaAttuale,
   scortaMinima,
   unita,
   prezzoUnitario,
@@ -35,13 +36,17 @@ export function MagazzinoRow({
   scadenzaLotto: Date | null;
   lotto: string | null;
 }) {
-  const [quantita, setQuantita] = useState(quantitaIniziale);
+  const [quantita, setQuantita] = useState(quantitaAttuale);
   const [isPending, startTransition] = useTransition();
 
-  function aggiorna(delta: number) {
-    setQuantita((q) => Math.max(0, q + delta));
+  useEffect(() => {
+    setQuantita(quantitaAttuale);
+  }, [quantitaAttuale]);
+
+  function diminuisci() {
+    setQuantita((q) => Math.max(0, q - 1));
     startTransition(() => {
-      regolaQuantita(id, delta);
+      regolaQuantita(id, -1);
     });
   }
 
@@ -59,7 +64,7 @@ export function MagazzinoRow({
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => aggiorna(-1)}
+            onClick={diminuisci}
             disabled={quantita <= 0}
             aria-label={`Diminuisci scorta attuale di ${prodotto}`}
             className="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-slate-300 text-slate-500 hover:bg-slate-100 disabled:opacity-40"
@@ -69,14 +74,6 @@ export function MagazzinoRow({
           <span className={`min-w-[3.5rem] text-center font-medium tabular-nums ${isPending ? "opacity-60" : ""}`}>
             {quantita} {unita}
           </span>
-          <button
-            type="button"
-            onClick={() => aggiorna(1)}
-            aria-label={`Aumenta scorta attuale di ${prodotto}`}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-slate-300 text-slate-500 hover:bg-slate-100"
-          >
-            +
-          </button>
         </div>
         <p className="mt-1 text-xs text-slate-400">Minimo: {scortaMinima} {unita}</p>
         <div className="mt-1.5">

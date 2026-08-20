@@ -25,30 +25,34 @@ function isStandalone() {
   );
 }
 
-/** "Installa app" button: uses the native install prompt on Android/desktop
- * Chrome, and falls back to a step-by-step hint on iOS Safari, which has no
- * install-prompt API and requires the manual Condividi → Aggiungi a Home flow. */
-type Hint = "ios" | "android" | null;
+/** "Installa app" button: usa il prompt nativo quando il browser lo offre
+ * (beforeinstallprompt — Android Chrome, alcuni desktop Chrome/Edge), ma
+ * NON dipende da quell'evento per essere visibile: Chrome decide da solo,
+ * con logiche di "engagement" non prevedibili, se e quando spararlo, quindi
+ * affidarsi solo a quello lo fa sparire per molti utenti senza motivo
+ * apparente. Il bottone resta sempre visibile (finché non è già installata)
+ * e mostra istruzioni manuali quando il prompt nativo non è disponibile. */
+type Hint = "ios" | "android" | "desktop" | null;
 
 export function InstallAppButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [hint, setHint] = useState<Hint>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    if (isStandalone()) return;
+    if (isStandalone()) {
+      setVisible(false);
+      return;
+    }
 
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setVisible(true);
     };
     const onInstalled = () => setVisible(false);
 
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
-
-    if (isIos() || isAndroid()) setVisible(true);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
@@ -63,10 +67,9 @@ export function InstallAppButton() {
       await deferredPrompt.prompt();
       await deferredPrompt.userChoice;
       setDeferredPrompt(null);
-      setVisible(false);
       return;
     }
-    setHint((h) => (h ? null : isIos() ? "ios" : "android"));
+    setHint((h) => (h ? null : isIos() ? "ios" : isAndroid() ? "android" : "desktop"));
   };
 
   return (
@@ -109,6 +112,24 @@ export function InstallAppButton() {
             Apri Chrome su questa pagina, poi tocca il pulsante <strong>Installa app</strong> qui sopra,
             oppure il menu <strong>⋮</strong> in alto e scegli &quot;Installa app&quot;.
           </p>
+          <button
+            type="button"
+            onClick={() => setHint(null)}
+            className="mt-3 text-xs font-medium text-slate-500 hover:text-slate-800"
+          >
+            Chiudi
+          </button>
+        </div>
+      )}
+      {hint === "desktop" && (
+        <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-lg">
+          <p className="mb-2 font-medium text-slate-900">Installa sul computer</p>
+          <p>
+            Su <strong>Chrome</strong> o <strong>Edge</strong>: cerca l&apos;icona{" "}
+            <strong>⊕ / Installa</strong> nella barra degli indirizzi (a destra, vicino ai preferiti), oppure apri il
+            menu <strong>⋮</strong> in alto a destra e scegli &quot;Installa Scadenze in Regola&quot;.
+          </p>
+          <p className="mt-2">Su Safari da computer l&apos;installazione come app non è supportata.</p>
           <button
             type="button"
             onClick={() => setHint(null)}

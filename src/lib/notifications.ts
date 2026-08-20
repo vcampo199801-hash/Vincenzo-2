@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail, isEmailConfigured } from "@/lib/email";
-import { scadenzaStato, lottoStato, daysUntil } from "@/lib/compliance";
+import { scadenzaStato, lottoStato, scortaStato, daysUntil } from "@/lib/compliance";
 import { ultimoControlloPerTipo } from "@/lib/manutenzione";
 import { creaTokenSilenzia, type TipoVoce } from "@/lib/silence-token";
 
@@ -14,12 +14,21 @@ const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 // non viene risolta (o silenziata) — nessuno storico da tenere.
 const SOGLIA_PROMEMORIA_GIORNI = 21;
 
-export type DigestItem = { id: string; studioId: string; tipo: TipoVoce; nome: string; giorni: number; scaduto: boolean };
+export type DigestItem = {
+  id: string;
+  studioId: string;
+  tipo: TipoVoce;
+  nome: string;
+  giorni: number;
+  scaduto: boolean;
+  dettaglioCustom?: string;
+};
 
 export type Digest = {
   scadenzeUrgenti: DigestItem[];
   farmaciUrgenti: DigestItem[];
   lottiUrgenti: DigestItem[];
+  scorteBasseUrgenti: DigestItem[];
   manutenzioniUrgenti: DigestItem[];
 };
 
@@ -47,6 +56,20 @@ export async function buildDigestForStudio(studioId: string): Promise<Digest | n
     .filter((m) => (m.stato === "IN_SCADENZA" || m.stato === "SCADUTO") && !m.m.notificaSilenziata)
     .map((m) => ({ id: m.m.id, studioId, tipo: "magazzino", nome: m.m.prodotto, giorni: m.giorni, scaduto: m.stato === "SCADUTO" }));
 
+  // Stessa notificaSilenziata dell'articolo usata per il lotto in scadenza:
+  // un solo flag per articolo copre entrambi i promemoria (scadenza + scorta).
+  const scorteBasseUrgenti: DigestItem[] = magazzino
+    .filter((m) => scortaStato(m.scortaMinima, m.quantitaAttuale) === "DA_RIORDINARE" && !m.notificaSilenziata)
+    .map((m) => ({
+      id: m.id,
+      studioId,
+      tipo: "magazzino",
+      nome: m.prodotto,
+      giorni: 0,
+      scaduto: true,
+      dettaglioCustom: `sotto scorta minima (${m.quantitaAttuale} ${m.unita} su ${m.scortaMinima} ${m.unita} minimi)`,
+    }));
+
   const manutenzioniUrgenti: DigestItem[] = ultimoControlloPerTipo(manutenzioneLog, tipiManutenzione)
     .filter((t) => t.inRitardo)
     .map((t) => {
@@ -58,10 +81,16 @@ export async function buildDigestForStudio(studioId: string): Promise<Digest | n
     .filter((t) => !t.tipoRow.notificaSilenziata)
     .map((t) => ({ id: t.tipoRow.id, studioId, tipo: "manutenzione", nome: t.tipoRow.nome, giorni: t.giorni, scaduto: true }));
 
-  if (scadenzeUrgenti.length === 0 && farmaciUrgenti.length === 0 && lottiUrgenti.length === 0 && manutenzioniUrgenti.length === 0) {
+  if (
+    scadenzeUrgenti.length === 0 &&
+    farmaciUrgenti.length === 0 &&
+    lottiUrgenti.length === 0 &&
+    scorteBasseUrgenti.length === 0 &&
+    manutenzioniUrgenti.length === 0
+  ) {
     return null;
   }
-  return { scadenzeUrgenti, farmaciUrgenti, lottiUrgenti, manutenzioniUrgenti };
+  return { scadenzeUrgenti, farmaciUrgenti, lottiUrgenti, scorteBasseUrgenti, manutenzioniUrgenti };
 }
 
 function escapeHtml(text: string) {
@@ -74,9 +103,11 @@ async function renderList(items: DigestItem[]) {
     items.map(async (i) => {
       const token = await creaTokenSilenzia({ studioId: i.studioId, tipo: i.tipo, id: i.id, silenzia: true });
       const silenziaUrl = `${APP_URL()}/api/silenzia?token=${encodeURIComponent(token)}`;
-      const dettaglio = i.scaduto
-        ? `<span style="color:#dc2626;">scaduto da ${Math.abs(i.giorni)} giorni</span>`
-        : `<span style="color:#b45309;">scade tra ${i.giorni} giorni</span>`;
+      const dettaglio = i.dettaglioCustom
+        ? `<span style="color:#dc2626;">${escapeHtml(i.dettaglioCustom)}</span>`
+        : i.scaduto
+          ? `<span style="color:#dc2626;">scaduto da ${Math.abs(i.giorni)} giorni</span>`
+          : `<span style="color:#b45309;">scade tra ${i.giorni} giorni</span>`;
       return `<li style="margin-bottom:6px;"><strong>${escapeHtml(i.nome)}</strong> — ${dettaglio} &nbsp;<a href="${silenziaUrl}" style="font-size:12px;color:#94a3b8;text-decoration:underline;">Silenzia questa voce</a></li>`;
     })
   );
@@ -88,6 +119,7 @@ export async function renderDigestHtml(studioName: string, digest: Digest) {
     { title: "Scadenze normative", items: digest.scadenzeUrgenti },
     { title: "Farmaci di emergenza", items: digest.farmaciUrgenti },
     { title: "Lotti di magazzino", items: digest.lottiUrgenti },
+    { title: "Scorte sotto la soglia minima", items: digest.scorteBasseUrgenti },
     { title: "Manutenzione staff", items: digest.manutenzioniUrgenti },
   ].filter((s) => s.items.length > 0);
 
@@ -125,7 +157,11 @@ export async function sendDigestForStudio(studio: {
   if (!studio.notificheAttive || !studio.email || !isEmailConfigured()) return false;
 
   const totalCount =
-    digest.scadenzeUrgenti.length + digest.farmaciUrgenti.length + digest.lottiUrgenti.length + digest.manutenzioniUrgenti.length;
+    digest.scadenzeUrgenti.length +
+    digest.farmaciUrgenti.length +
+    digest.lottiUrgenti.length +
+    digest.scorteBasseUrgenti.length +
+    digest.manutenzioniUrgenti.length;
   await sendEmail({
     to: studio.email,
     subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,

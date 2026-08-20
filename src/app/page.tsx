@@ -77,6 +77,34 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="border-y border-brand-100 bg-brand-50">
+        <div className="mx-auto max-w-4xl px-6 py-12 text-center">
+          <p className="text-3xl">📧</p>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Il vero valore: non ci devi pensare tu</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-slate-600">
+            Ogni giorno l&apos;app controlla da sola lo studio e, se qualcosa richiede attenzione, arriva un{" "}
+            <strong className="text-slate-900">promemoria via email</strong> — prima che diventi un problema, non dopo.
+          </p>
+          <div className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
+            {[
+              { icon: "🗓️", text: "Scadenze normative in avvicinamento (estintori, autoclave, sorveglianza sanitaria…)" },
+              { icon: "💊", text: "Farmaci di emergenza vicini alla scadenza" },
+              { icon: "📦", text: "Scorte di magazzino sotto la soglia minima, non solo i lotti in scadenza" },
+              { icon: "🧰", text: "Manutenzioni dello staff in ritardo rispetto alla cadenza prevista" },
+            ].map((v) => (
+              <div key={v.text} className="flex items-start gap-3 rounded-xl bg-white p-4 shadow-sm">
+                <span className="text-xl" aria-hidden>{v.icon}</span>
+                <p className="text-sm text-slate-600">{v.text}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mx-auto mt-6 max-w-2xl text-xs text-slate-500">
+            Puoi disattivare le email in blocco dalle Impostazioni, oppure silenziare una singola voce con un clic
+            direttamente dall&apos;email — resta tutto sotto il tuo controllo.
+          </p>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-center text-2xl font-semibold text-slate-900">Tutto quello che serve, in un unico posto</h2>
         <p className="mx-auto mt-2 max-w-2xl text-center text-slate-500">
