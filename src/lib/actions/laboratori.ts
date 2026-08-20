@@ -34,6 +34,7 @@ function laboratorioPayload(formData: FormData) {
     dataUltimaVerificaRegistrazione: parseDate(formData.get("dataUltimaVerificaRegistrazione")),
     tipologieLavorazione: serializeTipologie(tipologie),
     stato: String(formData.get("stato") ?? "ATTIVO"),
+    tracciaConformita: formData.get("tracciaConformita") === "on",
     note: String(formData.get("note") ?? "").trim() || null,
   };
 }

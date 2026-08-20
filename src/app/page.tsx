@@ -59,6 +59,21 @@ export default function Home() {
             La app <span className="text-slate-900 font-medium">di Sorrisi in Regola</span> che tiene sotto controllo
             scadenze, controlli, magazzino, farmaci e documenti del tuo studio odontoiatrico — così non ci pensi più tu.
           </p>
+
+          <div className="mx-auto mt-6 flex max-w-2xl flex-wrap justify-center gap-2">
+            {[
+              "🗓️ Scadenze sempre sotto controllo",
+              "📧 Promemoria automatici via email",
+              "⚖️ Bilancio dello studio in tempo reale",
+              "📦 Magazzino e scadenza farmaci",
+              "📋 Report pronto per le ispezioni ASL",
+            ].map((t) => (
+              <span key={t} className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-800 shadow-sm">
+                {t}
+              </span>
+            ))}
+          </div>
+
           <div className="mt-8 flex justify-center gap-4">
             <Link
               href="/signup"
@@ -74,6 +89,10 @@ export default function Home() {
             </a>
           </div>
           <p className="mt-3 text-xs text-slate-400">7 giorni gratis, nessuna carta richiesta.</p>
+          <p className="mt-6 text-sm text-slate-500">
+            Un progetto di <span className="font-medium text-slate-700">Sorrisi in Regola</span> — lo store che ha già
+            venduto i suoi prodotti a oltre <span className="font-medium text-slate-700">4.000 dentisti</span> in Italia.
+          </p>
         </div>
       </section>
 
@@ -99,8 +118,7 @@ export default function Home() {
             ))}
           </div>
           <p className="mx-auto mt-6 max-w-2xl text-xs text-slate-500">
-            Puoi disattivare le email in blocco dalle Impostazioni, oppure silenziare una singola voce con un clic
-            direttamente dall&apos;email — resta tutto sotto il tuo controllo.
+            Un clic direttamente dall&apos;email per silenziare una singola voce, senza bisogno di aprire l&apos;app.
           </p>
         </div>
       </section>

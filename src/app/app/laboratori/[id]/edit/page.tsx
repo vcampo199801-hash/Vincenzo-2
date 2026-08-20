@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { updateLaboratorio } from "@/lib/actions/laboratori";
 import { TIPOLOGIA_LAVORAZIONE_OPTIONS, STATO_LABORATORIO_OPTIONS, parseTipologie } from "@/lib/laboratori";
 import { PageHeader } from "@/components/ui/page-header";
-import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { Field, SelectField, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -65,6 +65,18 @@ export default async function EditLaboratorioPage({ params }: { params: Promise<
           </div>
         </fieldset>
         <SelectField label="Stato" name="stato" defaultValue={item.stato} options={STATO_LABORATORIO_OPTIONS} />
+        <div>
+          <CheckboxField
+            label="Traccia dichiarazioni di conformità e registrazione"
+            name="tracciaConformita"
+            defaultChecked={item.tracciaConformita}
+          />
+          <p className="mt-1 text-xs text-slate-400">
+            Disattivalo se con questo laboratorio gestisci solo lavori e prezzi, senza caricare le dichiarazioni di
+            conformità: non comparirà più negli avvisi &quot;Dichiarazioni mancanti&quot; e &quot;Registrazione da
+            verificare&quot;.
+          </p>
+        </div>
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>

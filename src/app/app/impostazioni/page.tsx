@@ -51,7 +51,13 @@ export default async function ImpostazioniPage() {
             <Field label="Città" name="citta" defaultValue={studio.citta} />
             <Field label="Telefono" name="telefono" defaultValue={studio.telefono} />
           </div>
-          <Field label="Email" name="email" type="email" defaultValue={studio.email} />
+          <Field
+            label="Email"
+            name="email"
+            type="email"
+            defaultValue={studio.email}
+            hint="È anche l'indirizzo dove arrivano i promemoria automatici di scadenze, farmaci, magazzino e manutenzioni."
+          />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field
               label="Partita IVA"

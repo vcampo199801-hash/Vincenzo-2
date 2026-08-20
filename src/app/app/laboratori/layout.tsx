@@ -32,13 +32,14 @@ export default async function LaboratoriLayout({ children }: { children: React.R
   const dichiarazioniMancanti = lavorazioni
     .filter(
       (l) =>
+        l.laboratorio.tracciaConformita &&
         (l.stato === "CONSEGNATO_STUDIO" || l.stato === "CONSEGNATO_PAZIENTE") &&
         !l.allegati.some((a) => a.categoria === CATEGORIA_DICHIARAZIONE_CONFORMITA)
     )
     .map((l) => ({ id: l.id, riferimentoPaziente: l.riferimentoPaziente, laboratorio: l.laboratorio.ragioneSociale }));
 
   const laboratoriDaVerificare = laboratori
-    .filter((lab) => registrazioneDaVerificare(lab.dataUltimaVerificaRegistrazione))
+    .filter((lab) => lab.tracciaConformita && registrazioneDaVerificare(lab.dataUltimaVerificaRegistrazione))
     .map((lab) => ({ id: lab.id, ragioneSociale: lab.ragioneSociale }));
 
   return (

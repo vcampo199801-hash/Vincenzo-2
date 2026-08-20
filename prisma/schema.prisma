@@ -428,6 +428,10 @@ model Laboratorio {
   // JSON array di TipologiaLavorazione — vedi src/lib/laboratori.ts.
   tipologieLavorazione            String?
   stato                           String    @default("ATTIVO") // ATTIVO | NON_ATTIVO
+  // Spento = lo studio gestisce questo laboratorio solo per lavori e prezzi,
+  // senza caricare dichiarazioni di conformità: gli avvisi "Dichiarazioni
+  // mancanti" e "Registrazione da verificare" non compaiono per questo lab.
+  tracciaConformita               Boolean   @default(true)
   note                            String?
   createdAt                       DateTime  @default(now())
   updatedAt                       DateTime  @updatedAt

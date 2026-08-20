@@ -2,7 +2,7 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { createLaboratorio } from "@/lib/actions/laboratori";
 import { TIPOLOGIA_LAVORAZIONE_OPTIONS, STATO_LABORATORIO_OPTIONS } from "@/lib/laboratori";
 import { PageHeader } from "@/components/ui/page-header";
-import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { Field, SelectField, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -49,6 +49,14 @@ export default async function NewLaboratorioPage() {
           </div>
         </fieldset>
         <SelectField label="Stato" name="stato" defaultValue="ATTIVO" options={STATO_LABORATORIO_OPTIONS} />
+        <div>
+          <CheckboxField label="Traccia dichiarazioni di conformità e registrazione" name="tracciaConformita" defaultChecked={true} />
+          <p className="mt-1 text-xs text-slate-400">
+            Disattivalo se con questo laboratorio gestisci solo lavori e prezzi, senza caricare le dichiarazioni di
+            conformità: non comparirà più negli avvisi &quot;Dichiarazioni mancanti&quot; e &quot;Registrazione da
+            verificare&quot;.
+          </p>
+        </div>
         <TextAreaField label="Note" name="note" />
         <p className="text-xs text-slate-400">
           Dopo il salvataggio potrai caricare i documenti (visura, autorizzazione sanitaria, certificazioni) dalla

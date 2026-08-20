@@ -45,8 +45,11 @@ export default async function MagazzinoPage() {
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <MagazzinoBilancioToggle attivo={studio.magazzinoInBilancio} />
-        <Link href="/app/magazzino/resoconto" className="text-sm font-medium text-brand-600 hover:text-brand-800">
-          Resoconto spese magazzino →
+        <Link
+          href="/app/magazzino/resoconto"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+        >
+          📊 Resoconto spese magazzino
         </Link>
       </div>
 
