@@ -93,6 +93,35 @@ export default function Home() {
             Un progetto di <span className="font-medium text-slate-700">Sorrisi in Regola</span> — lo store che ha già
             venduto i suoi prodotti a oltre <span className="font-medium text-slate-700">4.000 dentisti</span> in Italia.
           </p>
+
+          <div className="mx-auto mt-8 flex max-w-xl flex-col items-center gap-3 rounded-xl border border-brand-200 bg-white px-6 py-4 shadow-sm sm:flex-row sm:justify-center sm:gap-6">
+            <p className="text-sm font-medium text-slate-700">
+              Hai dubbi o domande? Un team di esperti è pronto ad assisterti.
+            </p>
+            <div className="flex items-center gap-4">
+              <a
+                href="https://wa.me/393793899831?text=Ciao%2C%20ho%20una%20domanda%20su%20Scadenze%20in%20Regola"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
+                  <path d="M17.5 14.4c-.3-.1-1.6-.8-1.9-.9-.3-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-1.5-.7-2.5-1.3-3.5-3-.3-.5.3-.4.7-1.4.1-.2.1-.4 0-.5-.1-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1 0 1.2.9 2.4 1 2.6.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z" />
+                  <path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5.1-1.3C8.6 21.5 10.3 22 12 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3.2.8.9-3.1-.2-.3C4.2 14.7 3.8 13.4 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2z" />
+                </svg>
+                +39 379 389 9831
+              </a>
+              <a
+                href="mailto:sorrisiinregola@gmail.com"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
+                  <path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h17A1.5 1.5 0 0 1 22 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-13Zm2.2.5 7.3 5.7a.75.75 0 0 0 .92 0L19.72 6H4.2ZM20 7.6l-6.87 5.36a2.25 2.25 0 0 1-2.76 0L4 7.6V18h16V7.6Z" />
+                </svg>
+                sorrisiinregola@gmail.com
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
