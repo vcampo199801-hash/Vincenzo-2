@@ -14,6 +14,19 @@ export default async function GuidaPage() {
     <div className="max-w-3xl">
       <PageHeader title="Guida e supporto" description="Scegli una sezione per capire come si usa, oppure scrivici direttamente." />
 
+      <a
+        href="https://wa.me/393793899831?text=Ciao%2C%20ho%20bisogno%20di%20aiuto%20con%20Scadenze%20in%20Regola"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-100"
+      >
+        <span className="text-2xl" aria-hidden>💬</span>
+        <div>
+          <p className="font-medium text-emerald-900">Scrivici su WhatsApp</p>
+          <p className="mt-0.5 text-xs text-emerald-700">Risposta rapida per problemi o domande — +39 379 389 9831</p>
+        </div>
+      </a>
+
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {voci.map((v) => (
           <Link

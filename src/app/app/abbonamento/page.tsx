@@ -124,6 +124,18 @@ export default async function AbbonamentoPage({
               Apri fatture, pagamento e annullamento
             </button>
           </form>
+          <p className="mt-3 text-xs text-slate-400">
+            Dubbi su un pagamento o sul tuo piano?{" "}
+            <a
+              href="https://wa.me/393793899831?text=Ciao%2C%20ho%20un%20dubbio%20sul%20mio%20abbonamento%20a%20Scadenze%20in%20Regola"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-emerald-700 underline"
+            >
+              Scrivici su WhatsApp
+            </a>
+            .
+          </p>
         </div>
       )}
 
