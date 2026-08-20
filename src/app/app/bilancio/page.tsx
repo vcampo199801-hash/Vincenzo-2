@@ -273,6 +273,11 @@ export default async function BilancioPage({
     <div className="space-y-6">
       <PageHeader title="Bilancio dell'attività" description="Tutte le voci di ricavo e di costo, con accesso diretto a ogni singola registrazione." />
 
+      <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+        <span aria-hidden>⚠️</span>
+        Stima indicativa basata sui dati inseriti nell&apos;app: non sostituisce la contabilità del commercialista.
+      </p>
+
       <div className="flex flex-wrap items-center gap-2">
         {PERIODI_BILANCIO.map((p) => (
           <Link
@@ -380,9 +385,6 @@ export default async function BilancioPage({
         ))}
       </div>
 
-      <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-500">
-        Stima indicativa basata sui dati inseriti nell&apos;app, non sostituisce la contabilità del commercialista.
-      </p>
     </div>
   );
 }

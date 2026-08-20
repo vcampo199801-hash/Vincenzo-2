@@ -123,6 +123,35 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-4xl px-6 py-12 text-center">
+          <p className="text-3xl">🧑‍⚕️</p>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Ogni controllo ha una firma</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-slate-600">
+            Non sei sempre in studio, ma puoi comunque tenere sotto controllo{" "}
+            <strong className="text-slate-900">chi fa cosa</strong>: ogni test dello staff riporta data, esito e il
+            nome di chi lo ha eseguito, così sai sempre se i collaboratori stanno facendo il dovuto — non solo se lo
+            studio è in regola.
+          </p>
+          <div className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2">
+            {[
+              { icon: "🧴", text: "Autoclave: vacuum test, helix test, indicatore chimico e biologico — ognuno tracciato a parte, con la sua cadenza" },
+              { icon: "🧽", text: "Lubrificazione manipoli e pulizia aspiratori, sempre registrate" },
+              { icon: "✍️", text: "Ogni controllo è firmato da chi lo ha eseguito: nessun dubbio su chi ha fatto cosa e quando" },
+              { icon: "⏰", text: "Avviso automatico se un collaboratore salta un controllo dovuto rispetto alla cadenza" },
+            ].map((v) => (
+              <div key={v.text} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <span className="text-xl" aria-hidden>{v.icon}</span>
+                <p className="text-sm text-slate-600">{v.text}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mx-auto mt-6 max-w-2xl text-xs text-slate-500">
+            Un controllo in più su chi lavora in studio, senza dover chiedere ogni volta.
+          </p>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-center text-2xl font-semibold text-slate-900">Tutto quello che serve, in un unico posto</h2>
         <p className="mx-auto mt-2 max-w-2xl text-center text-slate-500">
