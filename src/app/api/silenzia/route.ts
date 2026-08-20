@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verificaTokenSilenzia, creaTokenSilenzia, type TipoVoce } from "@/lib/silence-token";
+import { verificaTokenSilenzia, creaTokenSilenzia, sezioneApp, type TipoVoce } from "@/lib/silence-token";
 
 // Pagina pubblica raggiunta dal link "Silenzia questa voce" nelle email di
 // riepilogo: nessun login richiesto, l'autorizzazione è il token firmato
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
     `<p>${messaggio}</p>
      <p style="margin-top:24px;"><a href="${toggleUrl}" style="color:#4e888f;text-decoration:underline;">${azioneLabel}</a></p>
      <p style="margin-top:24px;">
-       <a href="${APP_URL()}/app" style="background:#4e888f;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:14px;">Apri l'app</a>
+       <a href="${APP_URL()}${sezioneApp(tipo, id)}" style="background:#4e888f;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:14px;">Vai a questa voce</a>
      </p>`
   );
 }

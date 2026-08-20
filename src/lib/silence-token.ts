@@ -24,3 +24,22 @@ export async function verificaTokenSilenzia(token: string): Promise<SilenziaPayl
   const { payload } = await jwtVerify(token, getSecret());
   return payload as unknown as SilenziaPayload;
 }
+
+/** Dove portare l'utente per vedere/gestire una voce specifica del riepilogo
+ * email — usato sia nel link del nome voce sia nel bottone "Apri l'app" della
+ * pagina di conferma silenziamento. La manutenzione non ha una scheda per
+ * singolo record (solo l'elenco), quindi porta al modulo intero. */
+export function sezioneApp(tipo: TipoVoce, id: string): string {
+  switch (tipo) {
+    case "adempimento":
+      return `/app/scadenzario/${id}/edit`;
+    case "farmaco":
+      return `/app/farmaci/${id}/edit`;
+    case "magazzino":
+      return `/app/magazzino/${id}/edit`;
+    case "manutenzione":
+      return `/app/manutenzione`;
+    case "forum":
+      return `/app/forum/${id}`;
+  }
+}

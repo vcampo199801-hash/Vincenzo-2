@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { scadenzaStato, lottoStato, scortaStato, daysUntil } from "@/lib/compliance";
 import { ultimoControlloPerTipo } from "@/lib/manutenzione";
-import { creaTokenSilenzia, type TipoVoce } from "@/lib/silence-token";
+import { creaTokenSilenzia, sezioneApp, type TipoVoce } from "@/lib/silence-token";
 
 const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -119,12 +119,13 @@ async function renderList(items: DigestItem[]) {
     items.map(async (i) => {
       const token = await creaTokenSilenzia({ studioId: i.studioId, tipo: i.tipo, id: i.id, silenzia: true });
       const silenziaUrl = `${APP_URL()}/api/silenzia?token=${encodeURIComponent(token)}`;
+      const sezioneUrl = `${APP_URL()}${sezioneApp(i.tipo, i.id)}`;
       const dettaglio = i.dettaglioCustom
         ? `<span style="color:#dc2626;">${escapeHtml(i.dettaglioCustom)}</span>`
         : i.scaduto
           ? `<span style="color:#dc2626;">scaduto da ${Math.abs(i.giorni)} giorni</span>`
           : `<span style="color:#b45309;">scade tra ${i.giorni} giorni</span>`;
-      return `<li style="margin-bottom:6px;"><strong>${escapeHtml(i.nome)}</strong> — ${dettaglio} &nbsp;<a href="${silenziaUrl}" style="font-size:12px;color:#94a3b8;text-decoration:underline;">Silenzia questa voce</a></li>`;
+      return `<li style="margin-bottom:6px;"><a href="${sezioneUrl}" style="color:#0f172a;font-weight:bold;text-decoration:none;">${escapeHtml(i.nome)}</a> — ${dettaglio} &nbsp;<a href="${silenziaUrl}" style="font-size:12px;color:#94a3b8;text-decoration:underline;">Silenzia questa voce</a></li>`;
     })
   );
   return `<ul style="padding-left:20px;margin:8px 0;">${righe.join("")}</ul>`;
