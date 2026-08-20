@@ -7,14 +7,20 @@ import {
   ultimoControlloPerTipo,
   contaAnomalie,
 } from "@/lib/manutenzione";
-import { creaManutenzione, eliminaManutenzione, aggiornaCadenzaTipo, ensureTipiManutenzione } from "@/lib/actions/manutenzione";
+import {
+  creaManutenzione,
+  eliminaManutenzione,
+  aggiornaCadenzaTipo,
+  ensureTipiManutenzione,
+  eliminaTipoManutenzione,
+} from "@/lib/actions/manutenzione";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { TipoManutenzioneField } from "@/components/app/tipo-manutenzione-field";
-import { AUTOCLAVE_PREFIX } from "@/lib/manutenzione";
+import { AUTOCLAVE_PREFIX, TIPI_MANUTENZIONE_DEFAULT } from "@/lib/manutenzione";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -57,9 +63,20 @@ export default async function ManutenzionePage() {
       {(() => {
         const perTipoAutoclave = perTipo.filter((t) => t.tipo.startsWith(AUTOCLAVE_PREFIX));
         const perTipoSingoli = perTipo.filter((t) => !t.tipo.startsWith(AUTOCLAVE_PREFIX));
-        const renderCard = (t: (typeof perTipo)[number], etichetta?: string) => (
-          <div key={t.tipo} className={`rounded-xl border p-4 ${t.inRitardo ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-white"} shadow-sm`}>
-            <p className="text-sm font-semibold text-slate-900">{etichetta ?? t.label}</p>
+        const renderCard = (t: (typeof perTipo)[number], etichetta?: string) => {
+          const isPredefinito = TIPI_MANUTENZIONE_DEFAULT.some((d) => d.chiave === t.tipo);
+          return (
+          <div key={t.tipo} className={`relative rounded-xl border p-4 ${t.inRitardo ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-white"} shadow-sm`}>
+            {!isPredefinito && (
+              <div className="absolute right-2 top-2" title="Rimuovi questo tipo personalizzato">
+                <DeleteButton
+                  action={eliminaTipoManutenzione.bind(null, tipi.find((x) => x.chiave === t.tipo)!.id)}
+                  label="✕"
+                  confirmMessage={`Rimuovere "${etichetta ?? t.label}" dai controlli tracciati? Le registrazioni già fatte restano nello storico, ma non comparirà più questa scheda né i promemoria di cadenza.`}
+                />
+              </div>
+            )}
+            <p className="pr-6 text-sm font-semibold text-slate-900">{etichetta ?? t.label}</p>
             {t.ultima ? (
               <p className="mt-1 text-xs text-slate-500">
                 Ultimo il {formatDate(t.ultima.data)} — {t.ultima.esito === "OK" ? "OK" : optionLabel(ESITO_MANUTENZIONE_OPTIONS, t.ultima.esito)}
@@ -97,7 +114,8 @@ export default async function ManutenzionePage() {
               </label>
             </form>
           </div>
-        );
+          );
+        };
         return (
           <div className="mb-6 space-y-4">
             {perTipoAutoclave.length > 0 && (

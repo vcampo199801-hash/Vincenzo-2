@@ -76,6 +76,21 @@ export async function eliminaManutenzione(id: string) {
   revalidatePath("/app");
 }
 
+/** Elimina un tipo di controllo personalizzato (creato dalla voce "Altro" o
+ * "+ Nuovo test autoclave"): sparisce la scheda di riepilogo/cadenza, ma le
+ * registrazioni già fatte restano nello storico. I tipi predefiniti non si
+ * possono eliminare da qui — ensureTipiManutenzione li ricrea a ogni
+ * apertura della pagina, quindi ricomparirebbero subito. */
+export async function eliminaTipoManutenzione(id: string) {
+  const { studio } = await requireStudio();
+  const tipo = await prisma.tipoManutenzione.findFirst({ where: { id, studioId: studio.id } });
+  if (!tipo) return;
+  const isPredefinito = TIPI_MANUTENZIONE_DEFAULT.some((t) => t.chiave === tipo.chiave);
+  if (isPredefinito) return;
+  await prisma.tipoManutenzione.delete({ where: { id } });
+  revalidatePath("/app/manutenzione");
+}
+
 /** Aggiorna la cadenza attesa (in giorni) di un tipo di controllo. Vuoto/0 =
  * nessuna cadenza impostata: quel tipo non genera mai l'avviso "in ritardo". */
 export async function aggiornaCadenzaTipo(id: string, formData: FormData) {
