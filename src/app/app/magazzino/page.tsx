@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { scortaStato, lottoStato, formatCurrency } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { MagazzinoRow } from "@/components/app/magazzino-row";
+import { MagazzinoBilancioToggle } from "@/components/app/magazzino-bilancio-toggle";
 import { TableScroll } from "@/components/ui/table-scroll";
 
 // Session-dependent, must never be prerendered or cached.
@@ -39,6 +41,13 @@ export default async function MagazzinoPage() {
         <StatCard label="Scorta bassa" value={scortaBassa} tone={scortaBassa > 0 ? "warn" : "good"} />
         <StatCard label="Lotti scaduti/in scadenza" value={lottiCritici} tone={lottiCritici > 0 ? "bad" : "good"} />
         <StatCard label="Valore giacenze" value={formatCurrency(valoreTotale)} />
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <MagazzinoBilancioToggle attivo={studio.magazzinoInBilancio} />
+        <Link href="/app/magazzino/resoconto" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+          Resoconto spese magazzino →
+        </Link>
       </div>
 
       <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">

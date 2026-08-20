@@ -41,12 +41,14 @@ async function risolviTipo(studioId: string, formData: FormData): Promise<string
 
 function payload(tipo: string, formData: FormData) {
   const dataRaw = String(formData.get("data") ?? "");
+  const costoRaw = String(formData.get("costo") ?? "").trim();
   return {
     tipo,
     data: dataRaw ? new Date(dataRaw) : new Date(),
     operatore: String(formData.get("operatore") ?? "").trim(),
     esito: String(formData.get("esito") ?? "OK"),
     note: String(formData.get("note") ?? "").trim() || null,
+    costo: costoRaw ? Math.max(0, Number(costoRaw) || 0) : 0,
   };
 }
 

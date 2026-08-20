@@ -46,6 +46,10 @@ model Studio {
   // di default spento, ogni studio decide se aderire o meno.
   forumAttivo                    Boolean  @default(false)
   notificheAttive                Boolean  @default(true)
+  // Se true, i riordini registrati in Magazzino (MovimentoMagazzino) contano
+  // anche nel Bilancio generale della Dashboard, non solo nel resoconto
+  // interno al modulo Magazzino.
+  magazzinoInBilancio            Boolean  @default(false)
   createdAt                      DateTime @default(now())
   // Fase 2 (modulo Laboratori): testo modificabile che finirà nel PDF "Consegna
   // dispositivo al paziente" — il PDF non è ancora generato, il campo è già pronto.
@@ -78,6 +82,7 @@ model Studio {
   materialiInformativi MaterialeInformativo[]
   speseStudio          SpesaStudio[]
   manutenzioniLog      ManutenzioneLog[]
+  movimentiMagazzino   MovimentoMagazzino[]
   tipiManutenzione     TipoManutenzione[]
   forumPost            ForumPost[]
   forumCommenti        ForumCommento[]
@@ -246,7 +251,28 @@ model MagazzinoItem {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  movimenti MovimentoMagazzino[]
+
   @@index([studioId])
+}
+
+// Un riordino registrato esplicitamente (bottone "+ Riordino"), distinto
+// dalle frecce +/- di regolaQuantita che restano per le correzioni rapide
+// senza costo. È l'unica fonte con data+costo per il resoconto Magazzino e,
+// se lo studio lo attiva, per il Bilancio generale.
+model MovimentoMagazzino {
+  id               String        @id @default(cuid())
+  studioId         String
+  studio           Studio        @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  magazzinoItemId  String
+  magazzinoItem    MagazzinoItem @relation(fields: [magazzinoItemId], references: [id], onDelete: Cascade)
+  quantita         Float
+  costo            Float         @default(0)
+  data             DateTime      @default(now())
+  createdAt        DateTime      @default(now())
+
+  @@index([studioId])
+  @@index([magazzinoItemId])
 }
 
 // Memoria dei codici a barre/QR scansionati: sopravvive alla cancellazione
@@ -637,6 +663,9 @@ model ManutenzioneLog {
   operatore String
   esito     String   @default("OK")
   note      String?
+  // Facoltativo: solo quando il controllo comporta un costo reale (es.
+  // tecnico esterno), non per i controlli fatti dallo staff interno.
+  costo     Float    @default(0)
   createdAt DateTime @default(now())
 
   @@index([studioId])

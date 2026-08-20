@@ -1,6 +1,6 @@
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { formatDate } from "@/lib/compliance";
+import { formatDate, formatCurrency } from "@/lib/compliance";
 import {
   ESITO_MANUTENZIONE_OPTIONS,
   optionLabel,
@@ -108,6 +108,14 @@ export default async function ManutenzionePage() {
             <Field label="Operatore (firma)" name="operatore" required placeholder="Nome di chi ha eseguito il controllo" hint="Obbligatorio: è l'attestazione di chi ha eseguito il controllo." />
             <SelectField label="Esito" name="esito" options={ESITO_MANUTENZIONE_OPTIONS} defaultValue="OK" required />
           </div>
+          <Field
+            label="Costo (facoltativo)"
+            name="costo"
+            type="number"
+            step="0.01"
+            placeholder="0"
+            hint="Solo se il controllo ha comportato una spesa (es. tecnico esterno): entra nel Bilancio dell'attività."
+          />
           <TextAreaField label="Note" name="note" placeholder="Es. numero ciclo, lotto indicatore biologico, dettagli anomalia..." />
           <SubmitButton>Registra controllo</SubmitButton>
         </form>
@@ -121,6 +129,7 @@ export default async function ManutenzionePage() {
               <th className="px-4 py-3">Tipo</th>
               <th className="px-4 py-3">Operatore</th>
               <th className="px-4 py-3">Esito</th>
+              <th className="px-4 py-3">Costo</th>
               <th className="px-4 py-3">Note</th>
               <th className="px-4 py-3" />
             </tr>
@@ -136,6 +145,7 @@ export default async function ManutenzionePage() {
                     {optionLabel(ESITO_MANUTENZIONE_OPTIONS, r.esito)}
                   </span>
                 </td>
+                <td className="px-4 py-3 text-slate-600">{r.costo > 0 ? formatCurrency(r.costo) : "—"}</td>
                 <td className="px-4 py-3 max-w-xs truncate text-slate-500">{r.note ?? "—"}</td>
                 <td className="px-4 py-3 text-right">
                   <DeleteButton action={eliminaManutenzione.bind(null, r.id)} />
@@ -144,7 +154,7 @@ export default async function ManutenzionePage() {
             ))}
             {registrazioni.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                   Nessun controllo registrato finora.
                 </td>
               </tr>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { scortaStato, formatDate, formatCurrency } from "@/lib/compliance";
 import { StatoBadge } from "@/components/ui/badge";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { RegistraRiordinoButton } from "@/components/app/registra-riordino-button";
 import { regolaQuantita, deleteMagazzinoItem } from "@/lib/actions/magazzino";
 
 /** Riga di magazzino con le frecce +/- per la scorta attuale. Aggiorna il
@@ -78,6 +79,9 @@ export function MagazzinoRow({
           </button>
         </div>
         <p className="mt-1 text-xs text-slate-400">Minimo: {scortaMinima} {unita}</p>
+        <div className="mt-1.5">
+          <RegistraRiordinoButton itemId={id} unita={unita} />
+        </div>
       </td>
       <td className="px-4 py-3">
         <StatoBadge stato={stato} />

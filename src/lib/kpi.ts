@@ -15,6 +15,15 @@ export const MESI_LABELS = [
 
 export const MESI_LABELS_BREVI = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
 
+/** Periodo condiviso dai resoconti con selettore Annuale/Mensile/Personalizzato
+ * (Bilancio in Dashboard, resoconto Magazzino). */
+export const PERIODI_BILANCIO = [
+  { value: "annuale", label: "Annuale" },
+  { value: "mensile", label: "Mensile" },
+  { value: "personalizzato", label: "Personalizzato" },
+] as const;
+export type PeriodoBilancio = (typeof PERIODI_BILANCIO)[number]["value"];
+
 /** Data -> "AAAA-MM-GG" in UTC: usato per confrontare/raggruppare per giorno senza
  * dipendere dal fuso orario del processo (le date arrivano da <input type="date">,
  * ancorate a mezzanotte UTC). */

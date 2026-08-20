@@ -106,7 +106,8 @@ export async function cercaArticoloPerCodice(codice: string) {
 }
 
 /** Regola rapidamente la quantità attuale dall'elenco, senza aprire la scheda
- * dell'articolo (frecce +/- nella tabella). Non scende mai sotto zero. */
+ * dell'articolo (frecce +/- nella tabella). Non scende mai sotto zero. Resta
+ * senza costo/data: è la correzione veloce, non il riordino tracciato. */
 export async function regolaQuantita(id: string, delta: number) {
   const { studio } = await requireStudio();
   const item = await prisma.magazzinoItem.findFirst({ where: { id, studioId: studio.id } });
@@ -115,6 +116,47 @@ export async function regolaQuantita(id: string, delta: number) {
     where: { id },
     data: { quantitaAttuale: Math.max(0, item.quantitaAttuale + delta) },
   });
+  revalidatePath("/app/magazzino");
+  revalidatePath("/app");
+}
+
+export type RegistraRiordinoState = { error?: string; success?: string } | undefined;
+
+/** Riordino esplicito con data e costo: alimenta sia il resoconto Magazzino
+ * sia, se lo studio lo attiva, il Bilancio generale. Aumenta anche la
+ * quantità attuale, come le frecce +/-, ma qui l'aumento è tracciato. */
+export async function registraRiordino(
+  itemId: string,
+  _prev: RegistraRiordinoState,
+  formData: FormData
+): Promise<RegistraRiordinoState> {
+  const { studio } = await requireStudio();
+  const item = await prisma.magazzinoItem.findFirst({ where: { id: itemId, studioId: studio.id } });
+  if (!item) return { error: "Articolo non trovato." };
+
+  const quantita = Number(formData.get("quantita") ?? 0);
+  if (!quantita || quantita <= 0) {
+    return { error: "Indica una quantità maggiore di zero." };
+  }
+  const costoRaw = String(formData.get("costo") ?? "").trim();
+  const costo = costoRaw ? Math.max(0, Number(costoRaw) || 0) : 0;
+  const dataRaw = String(formData.get("data") ?? "").trim();
+  const data = dataRaw ? new Date(dataRaw) : new Date();
+
+  await prisma.$transaction([
+    prisma.movimentoMagazzino.create({ data: { studioId: studio.id, magazzinoItemId: itemId, quantita, costo, data } }),
+    prisma.magazzinoItem.update({ where: { id: itemId }, data: { quantitaAttuale: item.quantitaAttuale + quantita } }),
+  ]);
+
+  revalidatePath("/app/magazzino");
+  revalidatePath("/app/magazzino/resoconto");
+  revalidatePath("/app");
+  return { success: "Riordino registrato." };
+}
+
+export async function setMagazzinoInBilancio(attivo: boolean) {
+  const { studio } = await requireStudio();
+  await prisma.studio.update({ where: { id: studio.id }, data: { magazzinoInBilancio: attivo } });
   revalidatePath("/app/magazzino");
   revalidatePath("/app");
 }

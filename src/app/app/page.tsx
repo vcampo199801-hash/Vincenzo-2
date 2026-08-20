@@ -23,6 +23,8 @@ import {
   inizioAnno,
   fineAnno,
   mesiTraDate,
+  PERIODI_BILANCIO,
+  type PeriodoBilancio,
 } from "@/lib/kpi";
 import {
   CATEGORIA_SPESA_OPTIONS,
@@ -46,13 +48,6 @@ import { STATUS_HEX, BRAND_SEQUENTIAL } from "@/components/charts/colors";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-const PERIODI_BILANCIO = [
-  { value: "annuale", label: "Annuale" },
-  { value: "mensile", label: "Mensile" },
-  { value: "personalizzato", label: "Personalizzato" },
-] as const;
-type PeriodoBilancio = (typeof PERIODI_BILANCIO)[number]["value"];
-
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -61,7 +56,7 @@ export default async function DashboardPage({
   const { studio } = await requireActiveSubscription("dashboard");
   const params = await searchParams;
 
-  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni, tipiManutenzione] =
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni, tipiManutenzione, movimentiMagazzino] =
     await Promise.all([
       prisma.adempimento.findMany({ where: { studioId: studio.id } }),
       prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
@@ -76,6 +71,7 @@ export default async function DashboardPage({
       prisma.spesaStudio.findMany({ where: { studioId: studio.id } }),
       prisma.manutenzioneLog.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } }),
       prisma.tipoManutenzione.findMany({ where: { studioId: studio.id } }),
+      prisma.movimentoMagazzino.findMany({ where: { studioId: studio.id } }),
     ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -257,13 +253,24 @@ export default async function DashboardPage({
   const costoLaboratoriPeriodo = lavorazioniLab
     .filter((l) => l.dataInvio.getTime() >= dataInizioBilancio.getTime() && l.dataInvio.getTime() <= dataFineBilancio.getTime())
     .reduce((s, l) => s + (l.costo ?? 0), 0);
-  const costoPeriodoTotale = costoSpesePeriodo + costoPersonalePeriodo + costoControlliPeriodo + costoLaboratoriPeriodo;
+  const costoManutenzionePeriodo = manutenzioni
+    .filter((m) => m.data.getTime() >= dataInizioBilancio.getTime() && m.data.getTime() <= dataFineBilancio.getTime())
+    .reduce((s, m) => s + m.costo, 0);
+  const costoMagazzinoPeriodo = studio.magazzinoInBilancio
+    ? movimentiMagazzino
+        .filter((m) => m.data.getTime() >= dataInizioBilancio.getTime() && m.data.getTime() <= dataFineBilancio.getTime())
+        .reduce((s, m) => s + m.costo, 0)
+    : 0;
+  const costoPeriodoTotale =
+    costoSpesePeriodo + costoPersonalePeriodo + costoControlliPeriodo + costoLaboratoriPeriodo + costoManutenzionePeriodo + costoMagazzinoPeriodo;
   const bilancioPeriodo = ricaviPeriodo - costoPeriodoTotale;
   const ripartizioneCosti = [
     { label: "Spese", value: costoSpesePeriodo },
     { label: "Personale", value: costoPersonalePeriodo },
     { label: "Registro controlli", value: costoControlliPeriodo },
     { label: "Laboratori", value: costoLaboratoriPeriodo },
+    { label: "Manutenzione", value: costoManutenzionePeriodo },
+    { label: "Magazzino", value: costoMagazzinoPeriodo },
   ]
     .filter((c) => c.value > 0)
     .sort((a, b) => b.value - a.value);
@@ -291,7 +298,15 @@ export default async function DashboardPage({
             <h2 className="text-lg font-semibold text-slate-900">Bilancio dell&apos;attività — {titoloBilancio}</h2>
             <p className="mt-1 text-xs text-slate-500">
               Ricavi da KPI Studio meno la stima di tutti i costi del periodo (spese, personale, registro
-              controlli, laboratori). È una stima indicativa, non sostituisce la contabilità.
+              controlli, laboratori, manutenzione{studio.magazzinoInBilancio ? ", magazzino" : ""}). È una stima
+              indicativa, non sostituisce la contabilità.
+              {!studio.magazzinoInBilancio && (
+                <>
+                  {" "}
+                  Il Magazzino non è incluso — puoi attivarlo dalla{" "}
+                  <Link href="/app/magazzino" className="underline hover:text-slate-700">pagina Magazzino</Link>.
+                </>
+              )}
             </p>
           </div>
           <span className={`shrink-0 text-2xl font-bold ${bilancioPeriodo >= 0 ? "text-emerald-600" : "text-red-600"}`}>
