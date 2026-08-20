@@ -39,7 +39,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="border-t border-slate-200 p-4">
           <p className="truncate text-sm font-medium text-slate-800">{studio.name}</p>
           <p className="truncate text-xs text-slate-500">{studio.email ?? "—"}</p>
-          <form action={logoutAction} className="mt-3">
+          <Link href="/app/guida" className="mt-3 block text-sm font-medium text-slate-500 hover:text-slate-800">
+            Guida e supporto
+          </Link>
+          <form action={logoutAction} className="mt-2">
             <button type="submit" className="text-sm font-medium text-slate-500 hover:text-slate-800">
               Esci
             </button>
@@ -71,6 +74,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <span className="hidden md:inline-flex">
               <InstallAppButton />
             </span>
+            <Link
+              href="/app/guida"
+              title="Guida e supporto"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:px-3"
+            >
+              <span aria-hidden>❓</span>
+              <span className="hidden sm:inline">Guida</span>
+            </Link>
             <Link
               href="/app/impostazioni"
               title="Impostazioni"

@@ -1,16 +1,14 @@
-import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { PIANI, normalizzaPiano } from "@/lib/plans";
 import { formatDate, formatCurrency } from "@/lib/compliance";
 
 // Pagina interna, non collegata a nessun menu: riservata al titolare della
-// piattaforma per avere sotto mano, una volta al mese, l'elenco di chi paga
-// davvero e i dati per fatturare — non un registro storico dei pagamenti.
+// piattaforma (guardia in src/app/admin/layout.tsx) per avere sotto mano,
+// una volta al mese, l'elenco di chi paga davvero e i dati per fatturare —
+// non un registro storico dei pagamenti.
 export const dynamic = "force-dynamic";
 
 export default async function FatturazionePage() {
-  await requireAdmin();
-
   const studi = await prisma.studio.findMany({
     where: { subscription: { status: "ACTIVE" } },
     include: { subscription: true },

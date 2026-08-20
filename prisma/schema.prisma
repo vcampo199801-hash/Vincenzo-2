@@ -82,6 +82,22 @@ model Studio {
   forumPost            ForumPost[]
   forumCommenti        ForumCommento[]
   forumSegnalazioni    ForumSegnalazione[]
+  richiesteSupporto    RichiestaSupporto[]
+}
+
+// Messaggio libero mandato dallo studio al titolare della piattaforma
+// (sezione Guida in-app). Niente stati intermedi o categorie: solo
+// aperta/risolta, per restare semplice da gestire con pochi clienti.
+model RichiestaSupporto {
+  id        String   @id @default(cuid())
+  studioId  String
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  daEmail   String
+  messaggio String
+  risolta   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([studioId])
 }
 
 // Team members with access to a studio (the practice owner plus invited
