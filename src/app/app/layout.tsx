@@ -71,9 +71,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 Pagamento non riuscito
               </span>
             )}
-            <span className="hidden md:inline-flex">
-              <InstallAppButton />
-            </span>
+            <InstallAppButton />
             <Link
               href="/app/guida"
               title="Guida e supporto"

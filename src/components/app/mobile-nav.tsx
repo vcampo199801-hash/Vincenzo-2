@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavLinks } from "./nav-links";
-import { InstallAppButton } from "./install-app-button";
 import { logoutAction } from "@/lib/actions/auth";
 import type { ModuleKey } from "@/lib/modules";
 
@@ -53,10 +52,7 @@ export function MobileNav({ allowedKeys }: { allowedKeys: ModuleKey[] | null }) 
             <nav className="space-y-1">
               <NavLinks allowedKeys={allowedKeys} />
             </nav>
-            <div className="mt-4 border-t border-slate-100 pt-4">
-              <InstallAppButton />
-            </div>
-            <form action={logoutAction} className="mt-3">
+            <form action={logoutAction} className="mt-4 border-t border-slate-100 pt-4">
               <button type="submit" className="text-sm font-medium text-slate-500 hover:text-slate-800">
                 Esci
               </button>
