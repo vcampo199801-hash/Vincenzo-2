@@ -56,7 +56,7 @@ export default function Home() {
             Scadenze in Regola
           </h1>
           <p className="mt-4 text-lg text-slate-600">
-            La app <span className="text-slate-900 font-medium">di Sorrisi in Regola</span> che tiene sotto controllo
+            L&apos;app <span className="text-slate-900 font-medium">di Sorrisi in Regola</span> che tiene sotto controllo
             scadenze, controlli, magazzino, farmaci e documenti del tuo studio odontoiatrico — così non ci pensi più tu.
           </p>
 

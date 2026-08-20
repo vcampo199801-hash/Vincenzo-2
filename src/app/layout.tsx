@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Scadenze in Regola — by Sorrisi in Regola",
   description:
-    "La app di compliance per studi odontoiatrici: scadenze, controlli, magazzino, farmaci e documenti sempre sotto controllo.",
+    "L'app di compliance per studi odontoiatrici: scadenze, controlli, magazzino, farmaci e documenti sempre sotto controllo.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

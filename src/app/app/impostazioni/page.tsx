@@ -188,7 +188,7 @@ export default async function ImpostazioniPage() {
         {isOwner && (
           <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="mb-3 text-sm font-medium text-slate-700">Invita un collaboratore</p>
-            <InviteMemberForm atCap={atCap} />
+            <InviteMemberForm atCap={atCap} maxCollaboratori={maxCollaboratori} />
           </div>
         )}
       </div>
