@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { put, del } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
-import { requireStudio } from "@/lib/auth-guards";
+import { requireActiveSubscription } from "@/lib/auth-guards";
 import { serializeTipologie, isLaboratoriStorageConfigured, CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
 
 function parseDate(value: FormDataEntryValue | null) {
@@ -40,14 +40,14 @@ function laboratorioPayload(formData: FormData) {
 }
 
 export async function createLaboratorio(formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   const laboratorio = await prisma.laboratorio.create({ data: { studioId: studio.id, ...laboratorioPayload(formData) } });
   revalidatePath("/app/laboratori");
   redirect(`/app/laboratori/${laboratorio.id}`);
 }
 
 export async function updateLaboratorio(id: string, formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   await prisma.laboratorio.updateMany({ where: { id, studioId: studio.id }, data: laboratorioPayload(formData) });
   revalidatePath("/app/laboratori");
   revalidatePath(`/app/laboratori/${id}`);
@@ -55,7 +55,7 @@ export async function updateLaboratorio(id: string, formData: FormData) {
 }
 
 export async function deleteLaboratorio(id: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   const allegati = await prisma.allegatoLaboratorio.findMany({ where: { laboratorioId: id, studioId: studio.id } });
   await Promise.all(allegati.map((a) => del(a.fileUrl).catch(() => {})));
   await prisma.laboratorio.deleteMany({ where: { id, studioId: studio.id } });
@@ -65,7 +65,7 @@ export async function deleteLaboratorio(id: string) {
 export type UploadState = { error?: string } | undefined;
 
 export async function uploadDocumentoLaboratorio(laboratorioId: string, _prev: UploadState, formData: FormData): Promise<UploadState> {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   if (!isLaboratoriStorageConfigured()) {
     return { error: "L'archiviazione dei documenti non è ancora configurata su questa istanza." };
   }
@@ -89,7 +89,7 @@ export async function uploadDocumentoLaboratorio(laboratorioId: string, _prev: U
 }
 
 export async function deleteDocumentoLaboratorio(id: string, laboratorioId: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   const record = await prisma.allegatoLaboratorio.findFirst({ where: { id, studioId: studio.id } });
   if (record) {
     await del(record.fileUrl).catch(() => {});
@@ -115,7 +115,7 @@ function lavorazionePayload(formData: FormData) {
 }
 
 export async function createLavorazione(formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   const { laboratorioId, ...rest } = lavorazionePayload(formData);
   const lavorazione = await prisma.lavorazione.create({ data: { studioId: studio.id, laboratorioId, ...rest } });
   revalidatePath("/app/laboratori/lavorazioni");
@@ -124,7 +124,7 @@ export async function createLavorazione(formData: FormData) {
 }
 
 export async function updateLavorazione(id: string, formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   await prisma.lavorazione.updateMany({ where: { id, studioId: studio.id }, data: lavorazionePayload(formData) });
   revalidatePath("/app/laboratori/lavorazioni");
   revalidatePath(`/app/laboratori/lavorazioni/${id}`);
@@ -133,7 +133,7 @@ export async function updateLavorazione(id: string, formData: FormData) {
 }
 
 export async function deleteLavorazione(id: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   const allegati = await prisma.allegatoLaboratorio.findMany({ where: { lavorazioneId: id, studioId: studio.id } });
   await Promise.all(allegati.map((a) => del(a.fileUrl).catch(() => {})));
   await prisma.lavorazione.deleteMany({ where: { id, studioId: studio.id } });
@@ -145,7 +145,7 @@ export async function deleteLavorazione(id: string) {
 const CAMPI_INLINE = new Set(["stato", "dataConsegnaPrevista", "dataConsegnaEffettiva", "costo", "dataConsegnaCopiaPaziente"]);
 
 export async function updateCampoLavorazione(id: string, campo: string, valore: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   if (!CAMPI_INLINE.has(campo)) throw new Error("Campo non modificabile da qui.");
 
   const data: Record<string, unknown> =
@@ -162,7 +162,7 @@ export async function updateCampoLavorazione(id: string, campo: string, valore: 
 }
 
 export async function uploadDichiarazioneConformita(lavorazioneId: string, _prev: UploadState, formData: FormData): Promise<UploadState> {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   if (!isLaboratoriStorageConfigured()) {
     return { error: "L'archiviazione dei documenti non è ancora configurata su questa istanza." };
   }
@@ -202,7 +202,7 @@ export async function uploadDichiarazioneConformita(lavorazioneId: string, _prev
 }
 
 export async function uploadAllegatoLavorazione(lavorazioneId: string, _prev: UploadState, formData: FormData): Promise<UploadState> {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   if (!isLaboratoriStorageConfigured()) {
     return { error: "L'archiviazione dei documenti non è ancora configurata su questa istanza." };
   }
@@ -226,7 +226,7 @@ export async function uploadAllegatoLavorazione(lavorazioneId: string, _prev: Up
 }
 
 export async function deleteAllegatoLavorazione(id: string, lavorazioneId: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("laboratori");
   const record = await prisma.allegatoLaboratorio.findFirst({ where: { id, studioId: studio.id } });
   if (record) {
     await del(record.fileUrl).catch(() => {});

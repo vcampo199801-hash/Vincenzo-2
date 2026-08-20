@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireStudio } from "@/lib/auth-guards";
+import { requireActiveSubscription } from "@/lib/auth-guards";
 
 function payload(formData: FormData) {
   const dataRaw = String(formData.get("data") ?? "");
@@ -22,7 +22,7 @@ function payload(formData: FormData) {
 }
 
 export async function creaSpesa(formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("spese");
   await prisma.spesaStudio.create({ data: { studioId: studio.id, ...payload(formData) } });
   revalidatePath("/app/spese");
   revalidatePath("/app");
@@ -30,7 +30,7 @@ export async function creaSpesa(formData: FormData) {
 }
 
 export async function aggiornaSpesa(id: string, formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("spese");
   await prisma.spesaStudio.updateMany({ where: { id, studioId: studio.id }, data: payload(formData) });
   revalidatePath("/app/spese");
   revalidatePath("/app");
@@ -38,7 +38,7 @@ export async function aggiornaSpesa(id: string, formData: FormData) {
 }
 
 export async function eliminaSpesa(id: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("spese");
   await prisma.spesaStudio.deleteMany({ where: { id, studioId: studio.id } });
   revalidatePath("/app/spese");
   revalidatePath("/app");

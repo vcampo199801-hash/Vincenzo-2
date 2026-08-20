@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { put, del } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
-import { requireStudio } from "@/lib/auth-guards";
+import { requireActiveSubscription } from "@/lib/auth-guards";
 import { isComunicazioneStorageConfigured } from "@/lib/comunicazione";
 
 export type ComunicazioneFormState = { error?: string } | undefined;
@@ -22,7 +22,7 @@ async function caricaImmagine(studioId: string, file: FormDataEntryValue | null)
 }
 
 export async function creaMateriale(_prev: ComunicazioneFormState, formData: FormData): Promise<ComunicazioneFormState> {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("comunicazione");
 
   const titolo = String(formData.get("titolo") ?? "").trim();
   if (!titolo) return { error: "Il titolo è obbligatorio." };
@@ -50,7 +50,7 @@ export async function creaMateriale(_prev: ComunicazioneFormState, formData: For
 }
 
 export async function aggiornaMateriale(id: string, _prev: ComunicazioneFormState, formData: FormData): Promise<ComunicazioneFormState> {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("comunicazione");
 
   const titolo = String(formData.get("titolo") ?? "").trim();
   if (!titolo) return { error: "Il titolo è obbligatorio." };
@@ -85,7 +85,7 @@ export async function aggiornaMateriale(id: string, _prev: ComunicazioneFormStat
 }
 
 export async function eliminaMateriale(id: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("comunicazione");
   const record = await prisma.materialeInformativo.findFirst({ where: { id, studioId: studio.id } });
   if (record?.immagineUrl) {
     await del(record.immagineUrl).catch(() => {});

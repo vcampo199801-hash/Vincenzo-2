@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { put, del } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
-import { requireStudio } from "@/lib/auth-guards";
+import { requireActiveSubscription } from "@/lib/auth-guards";
 import { isCedolinoStorageConfigured } from "@/lib/personale";
 
 function parseDate(value: FormDataEntryValue | null) {
@@ -37,7 +37,7 @@ function dipendentePayload(formData: FormData) {
 }
 
 export async function createDipendente(formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("personale");
   const dipendente = await prisma.dipendente.create({ data: { studioId: studio.id, ...dipendentePayload(formData) } });
   revalidatePath("/app/personale");
   revalidatePath("/app");
@@ -45,7 +45,7 @@ export async function createDipendente(formData: FormData) {
 }
 
 export async function updateDipendente(id: string, formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("personale");
   await prisma.dipendente.updateMany({ where: { id, studioId: studio.id }, data: dipendentePayload(formData) });
   revalidatePath("/app/personale");
   revalidatePath(`/app/personale/${id}`);
@@ -54,7 +54,7 @@ export async function updateDipendente(id: string, formData: FormData) {
 }
 
 export async function deleteDipendente(id: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("personale");
   await prisma.dipendente.deleteMany({ where: { id, studioId: studio.id } });
   revalidatePath("/app/personale");
   revalidatePath("/app");
@@ -63,7 +63,7 @@ export async function deleteDipendente(id: string) {
 export type UploadCedolinoState = { error?: string } | undefined;
 
 export async function uploadCedolino(dipendenteId: string, _prev: UploadCedolinoState, formData: FormData): Promise<UploadCedolinoState> {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("personale");
 
   if (!isCedolinoStorageConfigured()) {
     return { error: "L'archiviazione dei cedolini non è ancora configurata su questa istanza." };
@@ -96,7 +96,7 @@ export async function uploadCedolino(dipendenteId: string, _prev: UploadCedolino
 }
 
 export async function deleteCedolino(id: string, dipendenteId: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("personale");
   const record = await prisma.cedolino.findFirst({ where: { id, studioId: studio.id } });
   if (record) {
     await del(record.fileUrl).catch(() => {});

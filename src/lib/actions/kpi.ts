@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireStudio } from "@/lib/auth-guards";
+import { requireActiveSubscription } from "@/lib/auth-guards";
 
 function payload(formData: FormData) {
   const dataRaw = String(formData.get("data") ?? "");
@@ -20,7 +20,7 @@ function payload(formData: FormData) {
 
 /** Un solo giorno per studio (vincolo @@unique): salvare la stessa data aggiorna la riga esistente. */
 export async function salvaKpiGiorno(formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("kpi");
   const data = payload(formData);
 
   await prisma.kpiGiornaliero.upsert({
@@ -35,7 +35,7 @@ export async function salvaKpiGiorno(formData: FormData) {
 }
 
 export async function deleteKpiGiorno(id: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("kpi");
   await prisma.kpiGiornaliero.deleteMany({ where: { id, studioId: studio.id } });
   revalidatePath("/app/kpi");
   revalidatePath("/app");

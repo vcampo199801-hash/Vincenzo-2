@@ -3,14 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireStudio } from "@/lib/auth-guards";
+import { requireActiveSubscription } from "@/lib/auth-guards";
 import { TIPI_MANUTENZIONE_DEFAULT, slugifyTipo, AUTOCLAVE_PREFIX } from "@/lib/manutenzione";
 
 /** Crea i tipi di controllo predefiniti per lo studio al primo utilizzo del
  * modulo (idempotente: non duplica se già presenti). Lo studio può poi
  * modificarne la cadenza o aggiungerne di personalizzati dalla voce "Altro". */
 export async function ensureTipiManutenzione() {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("manutenzione");
   const esistenti = await prisma.tipoManutenzione.findMany({ where: { studioId: studio.id } });
   const chiaviEsistenti = new Set(esistenti.map((t) => t.chiave));
   const mancanti = TIPI_MANUTENZIONE_DEFAULT.filter((t) => !chiaviEsistenti.has(t.chiave));
@@ -59,7 +59,7 @@ function payload(tipo: string, formData: FormData) {
 }
 
 export async function creaManutenzione(formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("manutenzione");
   const tipo = await risolviTipo(studio.id, formData);
   const data = payload(tipo, formData);
   if (!data.operatore) throw new Error("L'operatore è obbligatorio: chi ha eseguito il controllo deve firmarlo.");
@@ -70,7 +70,7 @@ export async function creaManutenzione(formData: FormData) {
 }
 
 export async function eliminaManutenzione(id: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("manutenzione");
   await prisma.manutenzioneLog.deleteMany({ where: { id, studioId: studio.id } });
   revalidatePath("/app/manutenzione");
   revalidatePath("/app");
@@ -82,7 +82,7 @@ export async function eliminaManutenzione(id: string) {
  * possono eliminare da qui — ensureTipiManutenzione li ricrea a ogni
  * apertura della pagina, quindi ricomparirebbero subito. */
 export async function eliminaTipoManutenzione(id: string) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("manutenzione");
   const tipo = await prisma.tipoManutenzione.findFirst({ where: { id, studioId: studio.id } });
   if (!tipo) return;
   const isPredefinito = TIPI_MANUTENZIONE_DEFAULT.some((t) => t.chiave === tipo.chiave);
@@ -94,7 +94,7 @@ export async function eliminaTipoManutenzione(id: string) {
 /** Aggiorna la cadenza attesa (in giorni) di un tipo di controllo. Vuoto/0 =
  * nessuna cadenza impostata: quel tipo non genera mai l'avviso "in ritardo". */
 export async function aggiornaCadenzaTipo(id: string, formData: FormData) {
-  const { studio } = await requireStudio();
+  const { studio } = await requireActiveSubscription("manutenzione");
   const raw = String(formData.get("cadenzaGiorni") ?? "").trim();
   const cadenzaGiorni = raw ? Math.max(1, Number(raw) || 0) || null : null;
   const notificaSilenziata = formData.get("notificaSilenziata") === "on";
