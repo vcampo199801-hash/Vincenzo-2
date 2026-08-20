@@ -58,6 +58,10 @@ export async function startCheckout(formData: FormData) {
     // li salva sulla scheda dello studio non appena l'acquisto va a buon fine.
     tax_id_collection: { enabled: true },
     billing_address_collection: "required",
+    // Obbligatorio quando si passa un customer Stripe già esistente insieme a
+    // tax_id_collection: senza questo, Checkout rifiuta la sessione perché non
+    // ha il permesso di aggiornare nome/indirizzo del cliente durante il pagamento.
+    customer_update: { name: "auto", address: "auto" },
   });
 
   if (!checkoutSession.url) {
