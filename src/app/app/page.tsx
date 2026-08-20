@@ -297,7 +297,12 @@ export default async function DashboardPage({
       <section className="min-w-0 rounded-xl border-2 border-brand-200 bg-white p-5 shadow-md">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Bilancio dell&apos;attività — {titoloBilancio}</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-semibold text-slate-900">Bilancio dell&apos;attività — {titoloBilancio}</h2>
+              <Link href="/app/bilancio" className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                Vedi il bilancio completo →
+              </Link>
+            </div>
             <p className="mt-1 text-xs text-slate-500">
               Ricavi da KPI Studio meno la stima di tutti i costi del periodo (spese, personale, registro
               controlli, laboratori, manutenzione{studio.magazzinoInBilancio ? ", magazzino" : ""}). È una stima

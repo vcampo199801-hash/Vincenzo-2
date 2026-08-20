@@ -5,6 +5,7 @@
 
 export const APP_MODULES = [
   { key: "dashboard", label: "Dashboard", href: "/app" },
+  { key: "bilancio", label: "Bilancio", href: "/app/bilancio" },
   { key: "scadenzario", label: "Scadenzario", href: "/app/scadenzario" },
   { key: "controlli", label: "Registro controlli", href: "/app/controlli" },
   { key: "ecm", label: "Formazione ECM", href: "/app/ecm" },

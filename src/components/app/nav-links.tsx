@@ -7,6 +7,7 @@ import { PIANI, type PianoKey } from "@/lib/plans";
 
 const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey | null; external?: boolean }[] = [
   { href: "/app", label: "Dashboard", icon: "📊", moduleKey: "dashboard" },
+  { href: "/app/bilancio", label: "Bilancio", icon: "⚖️", moduleKey: "bilancio" },
   { href: "/app/scadenzario", label: "Scadenzario", icon: "🗓️", moduleKey: "scadenzario" },
   { href: "/app/controlli", label: "Registro controlli", icon: "🛠️", moduleKey: "controlli" },
   { href: "/app/ecm", label: "Formazione ECM", icon: "🎓", moduleKey: "ecm" },
@@ -37,7 +38,15 @@ const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey |
  * una voce non inclusa nel piano resta visibile ma bloccata, con l'etichetta
  * del piano minimo che serve — è la leva principale per far notare cosa si
  * guadagna passando a un piano superiore, invece di nasconderla e basta. */
-export function NavLinks({ allowedKeys, piano }: { allowedKeys: ModuleKey[] | null; piano: PianoKey }) {
+export function NavLinks({
+  allowedKeys,
+  piano,
+  isAdmin,
+}: {
+  allowedKeys: ModuleKey[] | null;
+  piano: PianoKey;
+  isAdmin?: boolean;
+}) {
   const pathname = usePathname();
 
   const links = LINKS.filter((link) => {
@@ -46,6 +55,19 @@ export function NavLinks({ allowedKeys, piano }: { allowedKeys: ModuleKey[] | nu
 
   return (
     <>
+      {isAdmin && (
+        <Link
+          href="/admin"
+          className={`mb-2 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 ${
+            pathname.startsWith("/admin") ? "ring-2 ring-amber-400" : ""
+          }`}
+        >
+          <span aria-hidden className="inline-flex w-5 shrink-0 justify-center">
+            🛡️
+          </span>
+          <span className="truncate">Admin</span>
+        </Link>
+      )}
       {links.map((link) => {
         if (link.external) {
           return (

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireStudio } from "@/lib/auth-guards";
-import { TIPI_MANUTENZIONE_DEFAULT, slugifyTipo } from "@/lib/manutenzione";
+import { TIPI_MANUTENZIONE_DEFAULT, slugifyTipo, AUTOCLAVE_PREFIX } from "@/lib/manutenzione";
 
 /** Crea i tipi di controllo predefiniti per lo studio al primo utilizzo del
  * modulo (idempotente: non duplica se già presenti). Lo studio può poi
@@ -30,11 +30,17 @@ async function risolviTipo(studioId: string, formData: FormData): Promise<string
 
   const nomeNuovo = String(formData.get("tipoNuovo") ?? "").trim();
   if (!nomeNuovo) throw new Error("Indica il nome del nuovo tipo di controllo.");
-  const chiave = slugifyTipo(nomeNuovo);
+  // Un nuovo test aggiunto da dentro il gruppo "Controllo autoclave" resta
+  // raggruppato lì: la chiave prende il prefisso AUTOCLAVE_ e il nome viene
+  // preceduto da "Autoclave —", coerente con i test predefiniti.
+  const prefissoGruppo = String(formData.get("prefissoGruppo") ?? "").trim();
+  const chiaveBase = slugifyTipo(nomeNuovo);
+  const chiave = prefissoGruppo && !chiaveBase.startsWith(prefissoGruppo) ? `${prefissoGruppo}${chiaveBase}` : chiaveBase;
+  const nome = prefissoGruppo === AUTOCLAVE_PREFIX ? `Autoclave — ${nomeNuovo}` : nomeNuovo;
   await prisma.tipoManutenzione.upsert({
     where: { studioId_chiave: { studioId, chiave } },
     update: {},
-    create: { studioId, chiave, nome: nomeNuovo, cadenzaGiorni: null },
+    create: { studioId, chiave, nome, cadenzaGiorni: null },
   });
   return chiave;
 }

@@ -6,6 +6,7 @@ export type PianoKey = "BASE" | "PLUS" | "COMPLETO";
 // studio con un abbonamento attivo ha diritto.
 const MODULI_BASE: ModuleKey[] = [
   "dashboard",
+  "bilancio",
   "scadenzario",
   "controlli",
   "ecm",

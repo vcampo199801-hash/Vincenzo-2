@@ -53,15 +53,22 @@ export async function requireActiveSubscription(moduleKey?: ModuleKey) {
   return { session, studio, subscription: sub! };
 }
 
+/** true se l'email è nella lista di fiducia ADMIN_EMAILS (env var, separata da
+ * virgole) — usata sia per proteggere le pagine /admin sia per decidere se
+ * mostrare la voce "Admin" nel menu di chi ha effettuato l'accesso. */
+export function isAdminEmail(email: string): boolean {
+  const allowed = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return allowed.includes(email.toLowerCase());
+}
+
 /** Pagine di gestione della piattaforma (es. monitoraggio fatturazione), riservate
  * al titolare — non a un ruolo dentro uno studio, ma a una lista di email fidate
  * impostata via env var. Nessuno studio, incluso il proprio, vede queste pagine. */
 export async function requireAdmin() {
   const session = await requireSession();
-  const allowed = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  if (!allowed.includes(session.email.toLowerCase())) redirect("/app");
+  if (!isAdminEmail(session.email)) redirect("/app");
   return { session };
 }

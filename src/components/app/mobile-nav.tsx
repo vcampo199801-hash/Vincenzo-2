@@ -9,7 +9,15 @@ import type { PianoKey } from "@/lib/plans";
 
 /** Hamburger + slide-in drawer — the sidebar in AppLayout is hidden below md,
  * so this is the only way to reach the module list (Scadenzario, Magazzino, …) and to log out on phones. */
-export function MobileNav({ allowedKeys, piano }: { allowedKeys: ModuleKey[] | null; piano: PianoKey }) {
+export function MobileNav({
+  allowedKeys,
+  piano,
+  isAdmin,
+}: {
+  allowedKeys: ModuleKey[] | null;
+  piano: PianoKey;
+  isAdmin?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -51,7 +59,7 @@ export function MobileNav({ allowedKeys, piano }: { allowedKeys: ModuleKey[] | n
               </button>
             </div>
             <nav className="space-y-1">
-              <NavLinks allowedKeys={allowedKeys} piano={piano} />
+              <NavLinks allowedKeys={allowedKeys} piano={piano} isAdmin={isAdmin} />
             </nav>
             <form action={logoutAction} className="mt-4 border-t border-slate-100 pt-4">
               <button type="submit" className="text-sm font-medium text-slate-500 hover:text-slate-800">

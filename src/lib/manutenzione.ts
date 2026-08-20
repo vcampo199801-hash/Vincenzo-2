@@ -10,8 +10,19 @@ import { daysUntil } from "@/lib/compliance";
 // Tipi predefiniti creati automaticamente al primo utilizzo del modulo (vedi
 // ensureTipiManutenzione in lib/actions/manutenzione.ts) — lo studio può poi
 // cambiarne la cadenza o aggiungerne altri liberamente dalla voce "Altro".
+//
+// L'autoclave è l'unico controllo con più test distinti (ognuno con la
+// propria cadenza e il proprio promemoria): la chiave con prefisso
+// "AUTOCLAVE_" li raggruppa sotto un unico menu "Controllo autoclave" nel
+// form di registrazione (vedi TipoManutenzioneField) — lubrificazione
+// manipoli e pulizia aspiratori restano invece singole.
+export const AUTOCLAVE_PREFIX = "AUTOCLAVE_";
+
 export const TIPI_MANUTENZIONE_DEFAULT = [
-  { chiave: "AUTOCLAVE", nome: "Controllo autoclave", cadenzaGiorni: 7 },
+  { chiave: "AUTOCLAVE_VACUUM_TEST", nome: "Autoclave — Vacuum test (tenuta del vuoto)", cadenzaGiorni: 1 },
+  { chiave: "AUTOCLAVE_HELIX_TEST", nome: "Autoclave — Helix test (Bowie-Dick)", cadenzaGiorni: 1 },
+  { chiave: "AUTOCLAVE_INDICATORE_CHIMICO", nome: "Autoclave — Indicatore chimico (ogni ciclo)", cadenzaGiorni: 1 },
+  { chiave: "AUTOCLAVE_INDICATORE_BIOLOGICO", nome: "Autoclave — Indicatore biologico (spore test)", cadenzaGiorni: 7 },
   { chiave: "LUBRIFICAZIONE_MANIPOLI", nome: "Lubrificazione manipoli", cadenzaGiorni: 7 },
   { chiave: "PULIZIA_ASPIRATORI", nome: "Pulizia aspiratori", cadenzaGiorni: 30 },
 ];

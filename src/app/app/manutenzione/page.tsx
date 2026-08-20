@@ -14,6 +14,7 @@ import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { TipoManutenzioneField } from "@/components/app/tipo-manutenzione-field";
+import { AUTOCLAVE_PREFIX } from "@/lib/manutenzione";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -53,10 +54,12 @@ export default async function ManutenzionePage() {
         <StatCard label="Tipi di controllo in ritardo" value={perTipo.filter((t) => t.inRitardo).length} tone={perTipo.some((t) => t.inRitardo) ? "warn" : "good"} />
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {perTipo.map((t) => (
+      {(() => {
+        const perTipoAutoclave = perTipo.filter((t) => t.tipo.startsWith(AUTOCLAVE_PREFIX));
+        const perTipoSingoli = perTipo.filter((t) => !t.tipo.startsWith(AUTOCLAVE_PREFIX));
+        const renderCard = (t: (typeof perTipo)[number], etichetta?: string) => (
           <div key={t.tipo} className={`rounded-xl border p-4 ${t.inRitardo ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-white"} shadow-sm`}>
-            <p className="text-sm font-semibold text-slate-900">{t.label}</p>
+            <p className="text-sm font-semibold text-slate-900">{etichetta ?? t.label}</p>
             {t.ultima ? (
               <p className="mt-1 text-xs text-slate-500">
                 Ultimo il {formatDate(t.ultima.data)} — {t.ultima.esito === "OK" ? "OK" : optionLabel(ESITO_MANUTENZIONE_OPTIONS, t.ultima.esito)}
@@ -94,8 +97,28 @@ export default async function ManutenzionePage() {
               </label>
             </form>
           </div>
-        ))}
-      </div>
+        );
+        return (
+          <div className="mb-6 space-y-4">
+            {perTipoAutoclave.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Controllo autoclave — un test alla volta</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {perTipoAutoclave.map((t) => renderCard(t, t.label.replace(/^Autoclave — /, "")))}
+                </div>
+              </div>
+            )}
+            {perTipoSingoli.length > 0 && (
+              <div>
+                {perTipoAutoclave.length > 0 && (
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Altri controlli</p>
+                )}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{perTipoSingoli.map((t) => renderCard(t))}</div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-sm font-semibold text-slate-900">Registra un controllo</h2>

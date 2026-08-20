@@ -16,7 +16,7 @@ const MODULES = [
   { icon: "🦷", title: "Laboratori", desc: "Registro lavorazioni e dichiarazioni di conformità dei dispositivi su misura, come richiesto dal Reg. UE 2017/745.", piano: "Completo" },
   { icon: "💶", title: "Spese", desc: "Le voci di spesa dello studio (affitto, utenze, collaboratori) con proiezione del costo annuo e riepilogo per categoria.", piano: "Plus" },
   { icon: "⚖️", title: "Bilancio aziendale", desc: "Sai subito se lo studio è in utile o in perdita: il fatturato si confronta da solo con tutti i costi — spese, personale, laboratori, manutenzioni — vista per anno, mese o un periodo a tua scelta. Niente più fogli Excel o attese per il commercialista. Completo dal piano Plus." },
-  { icon: "🧰", title: "Manutenzione", desc: "Controlli di routine dello staff — autoclave, lubrificazione manipoli e altro — con cadenza personalizzabile e avviso quando sono in ritardo.", piano: "Plus" },
+  { icon: "🧰", title: "Manutenzione", desc: "Controlli di routine dello staff — vacuum test, helix test e indicatori dell'autoclave, lubrificazione manipoli, pulizia aspiratori — ognuno con la propria cadenza, l'avviso quando è in ritardo e la firma di chi lo ha eseguito: sai sempre chi ha fatto cosa e quando.", piano: "Plus" },
   { icon: "📈", title: "KPI Studio", desc: "Fatturato, prime visite, appuntamenti e preventivi giorno per giorno, con grafici e resoconti settimanali, mensili e annuali." },
   { icon: "🎬", title: "Comunicazione Pazienti", desc: "Materiali informativi pronti da mostrare in studio o condividere con un link prima dell'appuntamento.", piano: "Plus" },
   { icon: "📋", title: "Report ispezione", desc: "Report stampabile con lo stato di tutte le scadenze, pronto da mostrare in caso di ispezione ASL." },
@@ -190,13 +190,6 @@ export default function Home() {
           <p className="mt-8 text-sm text-slate-500">
             Ogni piano include 7 giorni di prova gratuita, promemoria scadenze automatici e report stampabile per le
             ispezioni ASL.
-          </p>
-
-          <p className="mt-6 text-sm text-slate-500">
-            Hai acquistato su Shopify?{" "}
-            <Link href="/codice" className="font-medium text-brand-700">
-              Attiva il tuo codice
-            </Link>
           </p>
         </div>
       </section>
