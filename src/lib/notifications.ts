@@ -30,15 +30,20 @@ export type Digest = {
   lottiUrgenti: DigestItem[];
   scorteBasseUrgenti: DigestItem[];
   manutenzioniUrgenti: DigestItem[];
+  forumUrgenti: DigestItem[];
 };
 
 export async function buildDigestForStudio(studioId: string): Promise<Digest | null> {
-  const [adempimenti, farmaci, magazzino, manutenzioneLog, tipiManutenzione] = await Promise.all([
+  const [adempimenti, farmaci, magazzino, manutenzioneLog, tipiManutenzione, postConRisposteNonLette] = await Promise.all([
     prisma.adempimento.findMany({ where: { studioId } }),
     prisma.farmaco.findMany({ where: { studioId } }),
     prisma.magazzinoItem.findMany({ where: { studioId } }),
     prisma.manutenzioneLog.findMany({ where: { studioId } }),
     prisma.tipoManutenzione.findMany({ where: { studioId } }),
+    prisma.forumPost.findMany({
+      where: { studioId, notificaSilenziata: false, commenti: { some: { studioId: { not: studioId }, lettoDaAutore: false } } },
+      include: { _count: { select: { commenti: { where: { studioId: { not: studioId }, lettoDaAutore: false } } } } },
+    }),
   ]);
 
   const scadenzeUrgenti: DigestItem[] = adempimenti
@@ -81,16 +86,27 @@ export async function buildDigestForStudio(studioId: string): Promise<Digest | n
     .filter((t) => !t.tipoRow.notificaSilenziata)
     .map((t) => ({ id: t.tipoRow.id, studioId, tipo: "manutenzione", nome: t.tipoRow.nome, giorni: t.giorni, scaduto: true }));
 
+  const forumUrgenti: DigestItem[] = postConRisposteNonLette.map((p) => ({
+    id: p.id,
+    studioId,
+    tipo: "forum",
+    nome: p.titolo,
+    giorni: 0,
+    scaduto: true,
+    dettaglioCustom: `${p._count.commenti} nuova${p._count.commenti === 1 ? "" : "e"} risposta${p._count.commenti === 1 ? "" : "e"}`,
+  }));
+
   if (
     scadenzeUrgenti.length === 0 &&
     farmaciUrgenti.length === 0 &&
     lottiUrgenti.length === 0 &&
     scorteBasseUrgenti.length === 0 &&
-    manutenzioniUrgenti.length === 0
+    manutenzioniUrgenti.length === 0 &&
+    forumUrgenti.length === 0
   ) {
     return null;
   }
-  return { scadenzeUrgenti, farmaciUrgenti, lottiUrgenti, scorteBasseUrgenti, manutenzioniUrgenti };
+  return { scadenzeUrgenti, farmaciUrgenti, lottiUrgenti, scorteBasseUrgenti, manutenzioniUrgenti, forumUrgenti };
 }
 
 function escapeHtml(text: string) {
@@ -121,6 +137,7 @@ export async function renderDigestHtml(studioName: string, digest: Digest) {
     { title: "Lotti di magazzino", items: digest.lottiUrgenti },
     { title: "Scorte sotto la soglia minima", items: digest.scorteBasseUrgenti },
     { title: "Manutenzione staff", items: digest.manutenzioniUrgenti },
+    { title: "Forum — nuove risposte", items: digest.forumUrgenti },
   ].filter((s) => s.items.length > 0);
 
   const sectionsHtml = (
@@ -161,7 +178,8 @@ export async function sendDigestForStudio(studio: {
     digest.farmaciUrgenti.length +
     digest.lottiUrgenti.length +
     digest.scorteBasseUrgenti.length +
-    digest.manutenzioniUrgenti.length;
+    digest.manutenzioniUrgenti.length +
+    digest.forumUrgenti.length;
   await sendEmail({
     to: studio.email,
     subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,

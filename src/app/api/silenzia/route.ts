@@ -47,6 +47,11 @@ async function aggiornaFlag(tipo: TipoVoce, id: string, studioId: string, silenz
     if (r.count === 0) return null;
     return (await prisma.magazzinoItem.findUnique({ where: { id } }))?.prodotto ?? null;
   }
+  if (tipo === "forum") {
+    const r = await prisma.forumPost.updateMany({ where: { id, studioId }, data: { notificaSilenziata: silenzia } });
+    if (r.count === 0) return null;
+    return (await prisma.forumPost.findUnique({ where: { id } }))?.titolo ?? null;
+  }
   const r = await prisma.tipoManutenzione.updateMany({ where: { id, studioId }, data: { notificaSilenziata: silenzia } });
   if (r.count === 0) return null;
   return (await prisma.tipoManutenzione.findUnique({ where: { id } }))?.nome ?? null;

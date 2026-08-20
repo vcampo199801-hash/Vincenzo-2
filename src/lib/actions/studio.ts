@@ -52,7 +52,8 @@ export async function sendTestDigest(): Promise<TestDigestState> {
       digest.farmaciUrgenti.length +
       digest.lottiUrgenti.length +
       digest.scorteBasseUrgenti.length +
-      digest.manutenzioniUrgenti.length;
+      digest.manutenzioniUrgenti.length +
+      digest.forumUrgenti.length;
     await sendEmail({
       to: studio.email,
       subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,

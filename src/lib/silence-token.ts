@@ -12,7 +12,7 @@ function getSecret() {
   return new TextEncoder().encode(secret);
 }
 
-export type TipoVoce = "adempimento" | "farmaco" | "magazzino" | "manutenzione";
+export type TipoVoce = "adempimento" | "farmaco" | "magazzino" | "manutenzione" | "forum";
 
 export type SilenziaPayload = { studioId: string; tipo: TipoVoce; id: string; silenzia: boolean };
 

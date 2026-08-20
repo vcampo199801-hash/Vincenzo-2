@@ -42,10 +42,12 @@ export function NavLinks({
   allowedKeys,
   piano,
   isAdmin,
+  badges,
 }: {
   allowedKeys: ModuleKey[] | null;
   piano: PianoKey;
   isAdmin?: boolean;
+  badges?: Partial<Record<ModuleKey, number>>;
 }) {
   const pathname = usePathname();
 
@@ -105,10 +107,19 @@ export function NavLinks({
               {link.icon}
             </span>
             <span className="truncate">{link.label}</span>
-            {locked && (
-              <span aria-hidden className="ml-auto shrink-0 text-xs text-slate-400">
-                🔒
+            {!locked && link.moduleKey && badges?.[link.moduleKey] ? (
+              <span
+                aria-label={`${badges[link.moduleKey]} notifiche non lette`}
+                className="ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-semibold text-white"
+              >
+                {badges[link.moduleKey]! > 9 ? "9+" : badges[link.moduleKey]}
               </span>
+            ) : (
+              locked && (
+                <span aria-hidden className="ml-auto shrink-0 text-xs text-slate-400">
+                  🔒
+                </span>
+              )
             )}
           </Link>
         );

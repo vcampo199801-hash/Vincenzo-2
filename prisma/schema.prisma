@@ -701,15 +701,16 @@ model TipoManutenzione {
 // studio autore (nome/città), mai anonima.
 
 model ForumPost {
-  id        String   @id @default(cuid())
-  studioId  String
-  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  categoria String
-  titolo    String
-  corpo     String
-  nascosto  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  studioId           String
+  studio             Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  categoria          String
+  titolo             String
+  corpo              String
+  nascosto           Boolean  @default(false)
+  notificaSilenziata Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   commenti     ForumCommento[]
   segnalazioni ForumSegnalazione[]
@@ -720,14 +721,17 @@ model ForumPost {
 }
 
 model ForumCommento {
-  id        String    @id @default(cuid())
-  postId    String
-  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  studioId  String
-  studio    Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  corpo     String
-  nascosto  Boolean   @default(false)
-  createdAt DateTime  @default(now())
+  id            String    @id @default(cuid())
+  postId        String
+  post          ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  studioId      String
+  studio        Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  corpo         String
+  nascosto      Boolean   @default(false)
+  // true se l'autore del post (non di QUESTO commento) l'ha già vista: pilota
+  // sia il pallino rosso nel menu sia il promemoria email — vedi lib/notifications.ts.
+  lettoDaAutore Boolean   @default(false)
+  createdAt     DateTime  @default(now())
 
   segnalazioni ForumSegnalazione[]
 

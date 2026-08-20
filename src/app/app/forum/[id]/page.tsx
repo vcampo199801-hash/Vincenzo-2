@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { categoriaLabel, nomeAutore, formatDataOra } from "@/lib/forum";
-import { creaCommento, eliminaPost, eliminaCommento, segnalaPost, segnalaCommento } from "@/lib/actions/forum";
+import { creaCommento, eliminaPost, eliminaCommento, segnalaPost, segnalaCommento, toggleNotificaPost } from "@/lib/actions/forum";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TextAreaField, SubmitButton } from "@/components/ui/form";
@@ -26,9 +26,22 @@ export default async function PostForumPage({ params }: { params: Promise<{ id: 
   const isProprio = post.studioId === studio.id;
   if (post.nascosto && !isProprio) notFound();
 
+  // Aprire il proprio post segna tutte le risposte come lette: fa sparire il
+  // pallino di notifica nel menu senza bisogno di un'azione separata.
+  if (isProprio) {
+    const nonLette = post.commenti.filter((c) => c.studioId !== studio.id && !c.lettoDaAutore);
+    if (nonLette.length > 0) {
+      await prisma.forumCommento.updateMany({
+        where: { postId: post.id, studioId: { not: studio.id }, lettoDaAutore: false },
+        data: { lettoDaAutore: true },
+      });
+    }
+  }
+
   const creaCommentoConId = creaCommento.bind(null, post.id);
   const eliminaPostConId = eliminaPost.bind(null, post.id);
   const segnalaPostConId = segnalaPost.bind(null, post.id);
+  const toggleNotificaConId = toggleNotificaPost.bind(null, post.id);
 
   return (
     <div className="max-w-2xl">
@@ -51,9 +64,16 @@ export default async function PostForumPage({ params }: { params: Promise<{ id: 
         <p className="mt-4 text-xs text-slate-400">
           {nomeAutore(post.studio)} · {formatDataOra(post.createdAt)}
         </p>
-        <div className="mt-4 flex items-center gap-4 border-t border-slate-100 pt-3">
+        <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-3">
           {isProprio ? (
-            <DeleteButton action={eliminaPostConId} label="Elimina post" confirmMessage="Eliminare definitivamente questo post e tutte le risposte?" />
+            <>
+              <DeleteButton action={eliminaPostConId} label="Elimina post" confirmMessage="Eliminare definitivamente questo post e tutte le risposte?" />
+              <form action={toggleNotificaConId}>
+                <button type="submit" className="text-sm font-medium text-slate-500 hover:text-slate-800">
+                  {post.notificaSilenziata ? "🔔 Riattiva notifiche email per questo post" : "🔕 Silenzia notifiche email per questo post"}
+                </button>
+              </form>
+            </>
           ) : (
             <DeleteButton
               action={segnalaPostConId}

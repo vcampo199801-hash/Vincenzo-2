@@ -19,15 +19,23 @@ export default async function ForumPage({ searchParams }: { searchParams: Promis
   const { categoria } = await searchParams;
   const categoriaFiltro = CATEGORIA_FORUM_OPTIONS.some((c) => c.value === categoria) ? categoria : undefined;
 
-  const posts = await prisma.forumPost.findMany({
-    where: {
-      ...(categoriaFiltro ? { categoria: categoriaFiltro } : {}),
-      OR: [{ nascosto: false }, { studioId: studio.id }],
-    },
-    include: { studio: true, _count: { select: { commenti: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  const [posts, postIdsConRisposteNonLette] = await Promise.all([
+    prisma.forumPost.findMany({
+      where: {
+        ...(categoriaFiltro ? { categoria: categoriaFiltro } : {}),
+        OR: [{ nascosto: false }, { studioId: studio.id }],
+      },
+      include: { studio: true, _count: { select: { commenti: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.forumCommento.findMany({
+      where: { post: { studioId: studio.id }, studioId: { not: studio.id }, lettoDaAutore: false },
+      select: { postId: true },
+      distinct: ["postId"],
+    }),
+  ]);
+  const postIdsNonLetti = new Set(postIdsConRisposteNonLette.map((c) => c.postId));
 
   return (
     <div>
@@ -88,6 +96,11 @@ export default async function ForumPage({ searchParams }: { searchParams: Promis
                 <span className="inline-flex items-center rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 font-medium text-brand-700">
                   {categoriaLabel(post.categoria)}
                 </span>
+                {postIdsNonLetti.has(post.id) && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 font-semibold text-white">
+                    🔴 Nuova risposta
+                  </span>
+                )}
                 {post.nascosto && isProprio && (
                   <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2.5 py-0.5 font-medium text-amber-800">
                     In revisione (segnalato)

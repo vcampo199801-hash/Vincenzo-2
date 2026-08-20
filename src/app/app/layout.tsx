@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { requireStudio, isAdminEmail } from "@/lib/auth-guards";
+import { prisma } from "@/lib/prisma";
 import { logoutAction } from "@/lib/actions/auth";
 import { NavLinks } from "@/components/app/nav-links";
 import { InstallAppButton } from "@/components/app/install-app-button";
@@ -24,6 +25,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const allowedKeys = membership.role === "OWNER" ? null : parsePermessi(membership.permessi);
   const piano = normalizzaPiano(sub?.plan);
   const isAdmin = isAdminEmail(session.email);
+  const forumNonLette = await prisma.forumCommento.count({
+    where: { post: { studioId: studio.id }, studioId: { not: studio.id }, lettoDaAutore: false },
+  });
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -38,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          <NavLinks allowedKeys={allowedKeys} piano={piano} isAdmin={isAdmin} />
+          <NavLinks allowedKeys={allowedKeys} piano={piano} isAdmin={isAdmin} badges={{ forum: forumNonLette }} />
         </nav>
         <div className="border-t border-slate-200 p-4">
           <p className="truncate text-sm font-medium text-slate-800">{studio.name}</p>
@@ -59,7 +63,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="flex min-w-0 items-center gap-2">
             <BackButton />
             <div className="flex min-w-0 items-center gap-2 md:hidden">
-              <MobileNav allowedKeys={allowedKeys} piano={piano} isAdmin={isAdmin} />
+              <MobileNav allowedKeys={allowedKeys} piano={piano} isAdmin={isAdmin} badges={{ forum: forumNonLette }} />
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50">
                 <Image src="/brand/monogram.png" alt="" width={20} height={20} className="h-5 w-5" />
               </span>

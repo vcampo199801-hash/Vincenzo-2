@@ -49,7 +49,24 @@ export async function creaCommento(postId: string, formData: FormData) {
   const corpo = String(formData.get("corpo") ?? "").trim();
   if (!corpo) return;
 
-  await prisma.forumCommento.create({ data: { postId, studioId: studio.id, corpo } });
+  const post = await prisma.forumPost.findUnique({ where: { id: postId }, select: { studioId: true } });
+  // Se rispondo al mio stesso post non c'è nulla da notificarmi: parte già "letto".
+  const lettoDaAutore = !post || post.studioId === studio.id;
+
+  await prisma.forumCommento.create({ data: { postId, studioId: studio.id, corpo, lettoDaAutore } });
+  revalidatePath(`/app/forum/${postId}`);
+  // Il pallino di notifica vive nel layout (menu), non nella pagina del post:
+  // va invalidato esplicitamente perché torni corretto per l'autore del post.
+  revalidatePath("/app", "layout");
+}
+
+/** Silenzia/riattiva i promemoria email per le nuove risposte a QUESTO post
+ * — non tocca il pallino di notifica in-app, solo l'email di riepilogo. */
+export async function toggleNotificaPost(postId: string) {
+  const { studio } = await requireActiveSubscription("forum");
+  const post = await prisma.forumPost.findFirst({ where: { id: postId, studioId: studio.id } });
+  if (!post) return;
+  await prisma.forumPost.update({ where: { id: postId }, data: { notificaSilenziata: !post.notificaSilenziata } });
   revalidatePath(`/app/forum/${postId}`);
 }
 
