@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { requireStudio, isAdminEmail } from "@/lib/auth-guards";
+import { SignupLeadTracker } from "@/components/signup-lead-tracker";
 import { prisma } from "@/lib/prisma";
 import { logoutAction } from "@/lib/actions/auth";
 import { NavLinks } from "@/components/app/nav-links";
@@ -31,6 +33,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-slate-50">
+      <Suspense fallback={null}>
+        <SignupLeadTracker />
+      </Suspense>
       <aside className="no-print hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
         <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50">

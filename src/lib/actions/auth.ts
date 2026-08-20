@@ -63,7 +63,7 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
 
   await provisionStudioDefaults(studio.id);
   await createSession({ userId: user.id, email: user.email, studioId: studio.id });
-  redirect("/app");
+  redirect("/app?signup=1");
 }
 
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
