@@ -146,7 +146,11 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <p className="mx-auto mt-6 max-w-2xl text-xs text-slate-500">
+          <p className="mx-auto mt-6 max-w-2xl text-sm text-slate-600">
+            Basta invitare i collaboratori dalle Impostazioni: ognuno annota i propri controlli direttamente dal
+            telefono o dal computer, anche mentre è in studio senza di te.
+          </p>
+          <p className="mx-auto mt-2 max-w-2xl text-xs text-slate-500">
             Un controllo in più su chi lavora in studio, senza dover chiedere ogni volta.
           </p>
         </div>
