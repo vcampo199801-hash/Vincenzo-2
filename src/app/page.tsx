@@ -27,7 +27,7 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Image src="/brand/monogram.png" alt="" width={32} height={32} className="h-8 w-8" />
             <div className="leading-tight">
@@ -35,13 +35,13 @@ export default function Home() {
               <span className="block text-[11px] font-medium text-slate-400">by Sorrisi in Regola</span>
             </div>
           </div>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center justify-between gap-4 sm:justify-end">
             <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">
               Accedi
             </Link>
             <Link
               href="/signup"
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
+              className="whitespace-nowrap rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700 sm:py-2"
             >
               Prova gratis 7 giorni
             </Link>
