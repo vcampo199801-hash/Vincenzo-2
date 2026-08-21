@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { createSession, destroySession } from "@/lib/session";
 import { provisionStudioDefaults } from "@/lib/seed-data";
+import { notificaTitolare } from "@/lib/owner-alerts";
 
 export type FormState = { error?: string } | undefined;
 
@@ -63,6 +64,14 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
 
   await provisionStudioDefaults(studio.id);
   await createSession({ userId: user.id, email: user.email, studioId: studio.id });
+
+  await notificaTitolare(
+    "🆕 Nuova prova gratuita — Scadenze in Regola",
+    `<p>Nuovo studio registrato: <strong>${nomeStudio}</strong></p>
+     <p>Email: ${email}</p>
+     <p>Prova gratuita fino al ${trialEndsAt.toLocaleDateString("it-IT")}.</p>`,
+  );
+
   redirect("/app?signup=1");
 }
 

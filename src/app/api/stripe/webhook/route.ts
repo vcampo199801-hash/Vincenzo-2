@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { normalizzaPiano } from "@/lib/plans";
+import { normalizzaPiano, PIANI } from "@/lib/plans";
+import { notificaTitolare } from "@/lib/owner-alerts";
 
 export async function POST(req: NextRequest) {
   const stripe = getStripe();
@@ -105,6 +106,12 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
     ? new Date(item.current_period_end * 1000)
     : null;
   const plan = normalizzaPiano(stripeSub.metadata?.piano);
+  const nuovoStatus = mapStatus(stripeSub.status);
+
+  const precedente = await prisma.subscription.findUnique({
+    where: { studioId },
+    include: { studio: true },
+  });
 
   await prisma.subscription.upsert({
     where: { studioId },
@@ -112,7 +119,7 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
       stripeCustomerId: customerId,
       stripeSubscriptionId: stripeSub.id,
       plan,
-      status: mapStatus(stripeSub.status),
+      status: nuovoStatus,
       currentPeriodEnd,
       cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
     },
@@ -121,9 +128,33 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
       stripeCustomerId: customerId,
       stripeSubscriptionId: stripeSub.id,
       plan,
-      status: mapStatus(stripeSub.status),
+      status: nuovoStatus,
       currentPeriodEnd,
       cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
     },
   });
+
+  if (precedente && precedente.status !== nuovoStatus) {
+    await notificaCambioStato(precedente.studio.name, precedente.status, nuovoStatus, plan);
+  }
+}
+
+async function notificaCambioStato(nomeStudio: string, statoPrecedente: string, nuovoStatus: string, plan: ReturnType<typeof normalizzaPiano>) {
+  if (nuovoStatus === "ACTIVE") {
+    await notificaTitolare(
+      "🎉 Nuovo pagamento — Scadenze in Regola",
+      `<p><strong>${nomeStudio}</strong> ha attivato l'abbonamento <strong>${PIANI[plan].label}</strong> (${PIANI[plan].prezzoEuro}€/mese).</p>
+       <p>Stato precedente: ${statoPrecedente}.</p>`,
+    );
+  } else if (nuovoStatus === "CANCELED") {
+    await notificaTitolare(
+      "❌ Abbonamento annullato — Scadenze in Regola",
+      `<p><strong>${nomeStudio}</strong> ha annullato l'abbonamento (piano ${PIANI[plan].label}).</p>`,
+    );
+  } else if (nuovoStatus === "PAST_DUE") {
+    await notificaTitolare(
+      "⚠️ Pagamento non riuscito — Scadenze in Regola",
+      `<p>Il pagamento di <strong>${nomeStudio}</strong> (piano ${PIANI[plan].label}) non è andato a buon fine. Stripe riproverà automaticamente.</p>`,
+    );
+  }
 }
