@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PIANI, PIANI_ORDINE } from "@/lib/plans";
 import { CookieSettingsLink } from "@/components/cookie-settings-link";
+import { InstallAppButton } from "@/components/app/install-app-button";
 
 const MODULES = [
   { icon: "🗓️", title: "Scadenzario", desc: "24 adempimenti normativi standard già pronti: estintori, autoclave, messa a terra, sorveglianza sanitaria e altro. Stato calcolato in automatico." },
@@ -59,6 +60,10 @@ export default function Home() {
             L&apos;app <span className="text-slate-900 font-medium">di Sorrisi in Regola</span> che tiene sotto controllo
             scadenze, controlli, magazzino, farmaci e documenti del tuo studio odontoiatrico — così non ci pensi più tu.
           </p>
+
+          <div className="mt-5 flex justify-center">
+            <InstallAppButton variant="badge" />
+          </div>
 
           <div className="mx-auto mt-6 flex max-w-2xl flex-wrap justify-center gap-2">
             {[
