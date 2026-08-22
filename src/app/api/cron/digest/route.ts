@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isEmailConfigured } from "@/lib/email";
 import { sendDigestForStudio } from "@/lib/notifications";
+import { sendTrialAlertForStudio } from "@/lib/trial-alerts";
 
 export const dynamic = "force-dynamic";
 
@@ -39,5 +40,25 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ checked: studios.length, sent, failed });
+  // Promemoria/scadenza prova gratuita: indipendente da notificheAttive
+  // (riguarda l'abbonamento, non gli avvisi di scadenza normativa), quindi
+  // una query separata su tutti gli studi in prova.
+  const studiInProva = await prisma.studio.findMany({
+    where: { email: { not: null }, subscription: { status: "TRIALING" } },
+    include: { subscription: true },
+  });
+
+  let trialSent = 0;
+  let trialFailed = 0;
+  for (const studio of studiInProva) {
+    try {
+      const esito = await sendTrialAlertForStudio(studio);
+      if (esito) trialSent++;
+    } catch (err) {
+      trialFailed++;
+      console.error(`Trial alert email failed for studio ${studio.id}:`, err);
+    }
+  }
+
+  return NextResponse.json({ checked: studios.length, sent, failed, trialChecked: studiInProva.length, trialSent, trialFailed });
 }
