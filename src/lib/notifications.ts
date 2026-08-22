@@ -158,7 +158,7 @@ export async function renderDigestHtml(studioName: string, digest: Digest) {
       <p>Ciao, ecco cosa richiede attenzione per <strong>${escapeHtml(studioName)}</strong>:</p>
       ${sectionsHtml}
       <p style="margin-top:24px;">
-        <a href="${APP_URL()}/app" style="background:#4e888f;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:14px;">
+        <a href="${APP_URL()}/app/da-controllare" style="background:#4e888f;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:14px;">
           Apri Scadenze in Regola
         </a>
       </p>
@@ -168,6 +168,19 @@ export async function renderDigestHtml(studioName: string, digest: Digest) {
       </p>
     </div>
   `;
+}
+
+/** Totale voci di un digest, riusato sia per l'oggetto dell'email sia per il
+ * badge "Da controllare oggi" in Dashboard — stessa fonte, stesso numero. */
+export function digestTotalCount(digest: Digest): number {
+  return (
+    digest.scadenzeUrgenti.length +
+    digest.farmaciUrgenti.length +
+    digest.lottiUrgenti.length +
+    digest.scorteBasseUrgenti.length +
+    digest.manutenzioniUrgenti.length +
+    digest.forumUrgenti.length
+  );
 }
 
 export async function sendDigestForStudio(studio: {
@@ -181,13 +194,7 @@ export async function sendDigestForStudio(studio: {
 
   if (!studio.notificheAttive || !studio.email || !isEmailConfigured()) return false;
 
-  const totalCount =
-    digest.scadenzeUrgenti.length +
-    digest.farmaciUrgenti.length +
-    digest.lottiUrgenti.length +
-    digest.scorteBasseUrgenti.length +
-    digest.manutenzioniUrgenti.length +
-    digest.forumUrgenti.length;
+  const totalCount = digestTotalCount(digest);
   await sendEmail({
     to: studio.email,
     subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,

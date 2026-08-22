@@ -36,6 +36,7 @@ import {
   costoAnnuoProiettato,
 } from "@/lib/spese";
 import { ultimoControlloPerTipo, contaAnomalie } from "@/lib/manutenzione";
+import { buildDigestForStudio, digestTotalCount } from "@/lib/notifications";
 import { normalizzaPiano, pianoConsenteModulo } from "@/lib/plans";
 import type { ModuleKey } from "@/lib/modules";
 import { DraggableSections } from "@/components/app/draggable-sections";
@@ -59,6 +60,8 @@ export default async function DashboardPage({
   const { studio } = await requireActiveSubscription("dashboard");
   const params = await searchParams;
   const pianoStudio = normalizzaPiano(studio.subscription?.plan);
+  const digest = await buildDigestForStudio(studio.id);
+  const digestCount = digest ? digestTotalCount(digest) : 0;
 
   const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni, tipiManutenzione, movimentiMagazzino] =
     await Promise.all([
@@ -287,6 +290,19 @@ export default async function DashboardPage({
           Situazione aggiornata al {formatDate(new Date())} — il cruscotto si aggiorna da solo a ogni apertura.
         </p>
       </div>
+
+      {digestCount > 0 && (
+        <Link
+          href="/app/da-controllare"
+          className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-sm hover:border-amber-300"
+        >
+          <span className="flex items-center gap-2 font-medium text-amber-800">
+            <span aria-hidden>🔔</span>
+            {digestCount} {digestCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione oggi
+          </span>
+          <span className="shrink-0 text-sm font-semibold text-amber-700">Vedi tutto →</span>
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <StatCard label="In regola" value={okCount} tone="good" />
