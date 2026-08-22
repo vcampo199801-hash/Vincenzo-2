@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -72,7 +73,14 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
      <p>Prova gratuita fino al ${trialEndsAt.toLocaleDateString("it-IT")}.</p>`,
   );
 
-  redirect("/app?signup=1");
+  // Un ID univoco per evento, generato qui lato server: il tracker client lo
+  // usa per il Pixel (fbq eventID), e in futuro la Conversions API lato
+  // server userà lo stesso ID per lo stesso evento, cosi Meta deduplica
+  // automaticamente le due segnalazioni dello stesso evento invece di
+  // contarlo due volte.
+  const registrationEventId = randomUUID();
+  const trialEventId = randomUUID();
+  redirect(`/app?signup=1&reg_eid=${registrationEventId}&trial_eid=${trialEventId}`);
 }
 
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
