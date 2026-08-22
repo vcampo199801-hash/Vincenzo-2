@@ -6,17 +6,24 @@ import { FormError } from "@/components/ui/form";
 
 /** Bottone "+ Riordino" per riga di Magazzino: apre un piccolo popover con
  * quantità e costo (facoltativo), separato dalle frecce +/- rapide così
- * quelle restano immediate per le correzioni al volo. */
+ * quelle restano immediate per le correzioni al volo. Il costo si precalcola
+ * da prezzoUnitario × quantità e si aggiorna da solo finché l'utente non lo
+ * tocca a mano — da quel momento resta quello che ha scritto lui. */
 export function RegistraRiordinoButton({
   itemId,
   unita,
+  prezzoUnitario,
   autoOpen = false,
 }: {
   itemId: string;
   unita: string;
+  prezzoUnitario: number;
   autoOpen?: boolean;
 }) {
   const [open, setOpen] = useState(autoOpen);
+  const [quantita, setQuantita] = useState(1);
+  const [costo, setCosto] = useState(() => (prezzoUnitario * 1).toFixed(2));
+  const [costoPersonalizzato, setCostoPersonalizzato] = useState(false);
   const [state, formAction] = useActionState(registraRiordino.bind(null, itemId), undefined);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -24,8 +31,18 @@ export function RegistraRiordinoButton({
     if (state?.success) {
       formRef.current?.reset();
       setOpen(false);
+      setQuantita(1);
+      setCosto((prezzoUnitario * 1).toFixed(2));
+      setCostoPersonalizzato(false);
     }
-  }, [state]);
+  }, [state, prezzoUnitario]);
+
+  function aggiornaQuantita(value: string) {
+    setQuantita(Number(value) || 0);
+    if (!costoPersonalizzato) {
+      setCosto((prezzoUnitario * (Number(value) || 0)).toFixed(2));
+    }
+  }
 
   return (
     <div className="relative">
@@ -47,7 +64,8 @@ export function RegistraRiordinoButton({
                 step="0.01"
                 min="0.01"
                 required
-                defaultValue={1}
+                value={quantita}
+                onChange={(e) => aggiornaQuantita(e.target.value)}
                 className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
               />
             </label>
@@ -59,8 +77,19 @@ export function RegistraRiordinoButton({
                 step="0.01"
                 min="0"
                 placeholder="0"
+                value={costo}
+                onChange={(e) => {
+                  setCosto(e.target.value);
+                  setCostoPersonalizzato(true);
+                }}
                 className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
               />
+              {prezzoUnitario > 0 && (
+                <span className="mt-1 block text-[11px] text-slate-400">
+                  Calcolato in automatico dal prezzo unitario dell&apos;articolo (€{prezzoUnitario.toFixed(2)}) — cancellalo e
+                  scrivi un valore diverso se serve.
+                </span>
+              )}
             </label>
             <label className="block text-xs">
               <span className="mb-1 block font-medium text-slate-700">Data</span>

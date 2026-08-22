@@ -88,7 +88,7 @@ export function MagazzinoRow({
         </div>
         <p className="mt-1 text-xs text-slate-400">Minimo: {scortaMinima} {unita}</p>
         <div className="mt-1.5">
-          <RegistraRiordinoButton itemId={id} unita={unita} autoOpen={autoApriRiordino} />
+          <RegistraRiordinoButton itemId={id} unita={unita} prezzoUnitario={prezzoUnitario} autoOpen={autoApriRiordino} />
         </div>
       </td>
       <td className="px-4 py-3">
