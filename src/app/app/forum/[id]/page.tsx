@@ -6,6 +6,7 @@ import { creaCommento, eliminaPost, eliminaCommento, segnalaPost, segnalaComment
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TextAreaField, SubmitButton } from "@/components/ui/form";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -128,10 +129,12 @@ export default async function PostForumPage({ params }: { params: Promise<{ id: 
         </div>
 
         {studio.forumAttivo && (
+          <UnsavedChangesGuard>
           <form action={creaCommentoConId} className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <TextAreaField label="Rispondi" name="corpo" placeholder="Scrivi una risposta…" />
             <SubmitButton>Invia risposta</SubmitButton>
           </form>
+          </UnsavedChangesGuard>
         )}
       </div>
     </div>

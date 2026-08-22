@@ -20,6 +20,7 @@ import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { TipoManutenzioneField } from "@/components/app/tipo-manutenzione-field";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 import { AUTOCLAVE_PREFIX, TIPI_MANUTENZIONE_DEFAULT } from "@/lib/manutenzione";
 
 // Session-dependent, must never be prerendered or cached.
@@ -140,6 +141,7 @@ export default async function ManutenzionePage() {
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-sm font-semibold text-slate-900">Registra un controllo</h2>
+        <UnsavedChangesGuard>
         <form action={creaManutenzione} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TipoManutenzioneField tipi={tipi.map((t) => ({ chiave: t.chiave, nome: t.nome }))} />
@@ -160,6 +162,7 @@ export default async function ManutenzionePage() {
           <TextAreaField label="Note" name="note" placeholder="Es. numero ciclo, lotto indicatore biologico, dettagli anomalia..." />
           <SubmitButton>Registra controllo</SubmitButton>
         </form>
+        </UnsavedChangesGuard>
       </div>
 
       <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">

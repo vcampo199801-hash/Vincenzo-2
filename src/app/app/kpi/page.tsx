@@ -23,6 +23,7 @@ import { Field, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { TrendBars } from "@/components/charts/trend-bars";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -113,6 +114,7 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
         <h2 className="mb-4 text-sm font-semibold text-slate-900">
           {isModifica ? `Modifica i dati del ${formatDate(dataSelezionata)}` : "Inserisci i dati di oggi"}
         </h2>
+        <UnsavedChangesGuard>
         <form action={salvaKpiGiorno} className="space-y-4">
           <Field label="Data" name="data" type="date" required defaultValue={toIsoDate(dataSelezionata)} />
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -140,6 +142,7 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
           <TextAreaField label="Note" name="note" defaultValue={righeGiornoSelezionato?.note} />
           <SubmitButton>{isModifica ? "Salva modifiche" : "Salva i dati di oggi"}</SubmitButton>
         </form>
+        </UnsavedChangesGuard>
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">

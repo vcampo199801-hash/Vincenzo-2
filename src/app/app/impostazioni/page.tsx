@@ -13,6 +13,7 @@ import { formatDate } from "@/lib/compliance";
 import { isEmailConfigured } from "@/lib/email";
 import { parsePermessi, APP_MODULES } from "@/lib/modules";
 import { PIANI, normalizzaPiano } from "@/lib/plans";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -36,6 +37,7 @@ export default async function ImpostazioniPage() {
     <div className="max-w-2xl space-y-8">
       <div>
         <PageHeader title="Impostazioni studio" description="Dati anagrafici che compaiono nel cruscotto e nei documenti." />
+        <UnsavedChangesGuard>
         <form action={updateStudioInfo} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <Field label="Nome dello studio" name="name" required defaultValue={studio.name} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -86,6 +88,7 @@ export default async function ImpostazioniPage() {
           />
           <SubmitButton>Salva impostazioni</SubmitButton>
         </form>
+        </UnsavedChangesGuard>
       </div>
 
       <div>
