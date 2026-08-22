@@ -5,6 +5,7 @@ import { createLavorazione } from "@/lib/actions/laboratori";
 import { TIPOLOGIA_LAVORAZIONE_OPTIONS, STATO_LAVORAZIONE_OPTIONS } from "@/lib/laboratori";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -35,6 +36,7 @@ export default async function NewLavorazionePage({ searchParams }: { searchParam
   return (
     <div className="max-w-2xl">
       <PageHeader title="Nuova lavorazione" />
+      <UnsavedChangesGuard>
       <form action={createLavorazione} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <SelectField
           label="Laboratorio"
@@ -63,6 +65,7 @@ export default async function NewLavorazionePage({ searchParams }: { searchParam
         </p>
         <SubmitButton>Salva lavorazione</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

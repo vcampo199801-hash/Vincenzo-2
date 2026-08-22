@@ -6,6 +6,7 @@ import { CATEGORIA_SPESA_OPTIONS } from "@/lib/spese";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { RicorrenzaField } from "@/components/app/ricorrenza-field";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function ModificaSpesaPage({ params }: { params: Promise<{ 
   return (
     <div className="max-w-xl">
       <PageHeader title="Modifica spesa" />
+      <UnsavedChangesGuard>
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Data" name="data" type="date" required defaultValue={toIsoDate(spesa.data)} />
         <SelectField label="Categoria" name="categoria" options={CATEGORIA_SPESA_OPTIONS} defaultValue={spesa.categoria} required />
@@ -36,6 +38,7 @@ export default async function ModificaSpesaPage({ params }: { params: Promise<{ 
         />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

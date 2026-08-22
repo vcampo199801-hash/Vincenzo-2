@@ -5,6 +5,7 @@ import { updateAdempimento } from "@/lib/actions/scadenzario";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { PeriodicitaFields } from "@/components/app/periodicita-fields";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -21,6 +22,7 @@ export default async function EditAdempimentoPage({ params }: { params: Promise<
   return (
     <div className="max-w-2xl">
       <PageHeader title="Modifica adempimento" />
+      <UnsavedChangesGuard>
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Adempimento" name="nome" required defaultValue={item.nome} />
         <Field label="Riferimento normativo / note" name="riferimento" defaultValue={item.riferimento} />
@@ -39,6 +41,7 @@ export default async function EditAdempimentoPage({ params }: { params: Promise<
         />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

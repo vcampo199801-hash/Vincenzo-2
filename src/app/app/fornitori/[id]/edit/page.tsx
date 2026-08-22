@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { updateFornitore } from "@/lib/actions/fornitori";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export default async function EditFornitorePage({ params }: { params: Promise<{ 
   return (
     <div className="max-w-2xl">
       <PageHeader title="Modifica fornitore" />
+      <UnsavedChangesGuard>
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <SelectField
           label="Tipo"
@@ -40,6 +42,7 @@ export default async function EditFornitorePage({ params }: { params: Promise<{ 
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

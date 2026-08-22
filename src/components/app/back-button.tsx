@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
+import { useUnsavedChanges, MESSAGGIO_MODIFICHE_NON_SALVATE } from "./unsaved-changes-context";
 
 /** Torna alla pagina precedente nella cronologia del browser — visibile in
  * alto in ogni pagina TRANNE la Dashboard: appena dopo il login si atterra
@@ -10,13 +11,20 @@ import { useRouter, usePathname } from "next/navigation";
 export function BackButton() {
   const router = useRouter();
   const pathname = usePathname();
+  const { isDirty, setDirty } = useUnsavedChanges();
 
   if (pathname === "/app") return null;
+
+  function handleClick() {
+    if (isDirty() && !window.confirm(MESSAGGIO_MODIFICHE_NON_SALVATE)) return;
+    setDirty(false);
+    router.back();
+  }
 
   return (
     <button
       type="button"
-      onClick={() => router.back()}
+      onClick={handleClick}
       aria-label="Torna indietro"
       title="Torna indietro"
       className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"

@@ -76,6 +76,9 @@ export async function deleteMagazzinoItem(id: string) {
   await prisma.magazzinoItem.deleteMany({ where: { id, studioId: studio.id } });
   revalidatePath("/app/magazzino");
   revalidatePath("/app");
+  // Sempre alla lista, non solo dalla riga: chiamata anche dalla scheda di
+  // modifica, che altrimenti resterebbe aperta su un articolo cancellato.
+  redirect("/app/magazzino");
 }
 
 /** Cerca nella memoria dei codici già scansionati in passato, per

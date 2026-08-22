@@ -4,6 +4,7 @@ import { CATEGORIA_SPESA_OPTIONS } from "@/lib/spese";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { RicorrenzaField } from "@/components/app/ricorrenza-field";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ export default async function NuovaSpesaPage() {
   return (
     <div className="max-w-xl">
       <PageHeader title="Aggiungi spesa" />
+      <UnsavedChangesGuard>
       <form action={creaSpesa} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Data" name="data" type="date" required defaultValue={toIsoDate(new Date())} />
         <SelectField label="Categoria" name="categoria" options={CATEGORIA_SPESA_OPTIONS} defaultValue="ALTRO" required />
@@ -26,6 +28,7 @@ export default async function NuovaSpesaPage() {
         <RicorrenzaField />
         <SubmitButton>Salva spesa</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

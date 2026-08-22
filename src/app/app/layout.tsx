@@ -9,6 +9,7 @@ import { NavLinks } from "@/components/app/nav-links";
 import { InstallAppButton } from "@/components/app/install-app-button";
 import { BackButton } from "@/components/app/back-button";
 import { MobileNav } from "@/components/app/mobile-nav";
+import { UnsavedChangesProvider } from "@/components/app/unsaved-changes-context";
 import { daysUntil } from "@/lib/compliance";
 import { parsePermessi } from "@/lib/modules";
 import { normalizzaPiano } from "@/lib/plans";
@@ -32,6 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   });
 
   return (
+    <UnsavedChangesProvider>
     <div className="flex min-h-screen bg-slate-50">
       <Suspense fallback={null}>
         <SignupLeadTracker />
@@ -109,5 +111,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 md:px-8">{children}</main>
       </div>
     </div>
+    </UnsavedChangesProvider>
   );
 }

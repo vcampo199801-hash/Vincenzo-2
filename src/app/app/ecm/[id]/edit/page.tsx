@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { updateEcm } from "@/lib/actions/ecm";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SubmitButton } from "@/components/ui/form";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export default async function EditEcmPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-2xl">
       <PageHeader title="Modifica crediti ECM" />
+      <UnsavedChangesGuard>
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Professionista" name="professionista" required defaultValue={item.professionista} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -29,6 +31,7 @@ export default async function EditEcmPage({ params }: { params: Promise<{ id: st
         <Field label="Target crediti triennio" name="target" type="number" defaultValue={item.target} />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

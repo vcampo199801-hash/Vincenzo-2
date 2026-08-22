@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Field, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { FornitoreField } from "@/components/ui/fornitore-field";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function EditFarmacoPage({ params }: { params: Promise<{ id
   return (
     <div className="max-w-2xl">
       <PageHeader title="Modifica farmaco / presidio" />
+      <UnsavedChangesGuard>
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <BarcodeScanner targets={{ codice: "codice", lotto: "lotto", scadenza: "scadenza" }} />
         <Field label="Farmaco / Presidio" name="nome" required defaultValue={item.nome} />
@@ -47,6 +49,7 @@ export default async function EditFarmacoPage({ params }: { params: Promise<{ id
         />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

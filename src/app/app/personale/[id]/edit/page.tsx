@@ -5,6 +5,7 @@ import { updateDipendente } from "@/lib/actions/personale";
 import { MANSIONE_OPTIONS, TIPO_CONTRATTO_OPTIONS, STATO_DIPENDENTE_OPTIONS } from "@/lib/personale";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ export default async function EditDipendentePage({ params }: { params: Promise<{
   return (
     <div className="max-w-2xl">
       <PageHeader title="Modifica dipendente" />
+      <UnsavedChangesGuard>
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nome" name="nome" required defaultValue={item.nome} />
@@ -78,6 +80,7 @@ export default async function EditDipendentePage({ params }: { params: Promise<{
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

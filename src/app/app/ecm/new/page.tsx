@@ -2,6 +2,7 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { createEcm } from "@/lib/actions/ecm";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SubmitButton } from "@/components/ui/form";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ export default async function NewEcmPage() {
   return (
     <div className="max-w-2xl">
       <PageHeader title="Aggiungi professionista" description="Traccia i crediti ECM per il triennio in corso." />
+      <UnsavedChangesGuard>
       <form action={createEcm} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Professionista" name="professionista" required placeholder="Dott. Mario Rossi" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -22,6 +24,7 @@ export default async function NewEcmPage() {
         <Field label="Target crediti triennio" name="target" type="number" defaultValue={150} />
         <SubmitButton>Salva</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { createDipendente } from "@/lib/actions/personale";
 import { MANSIONE_OPTIONS, TIPO_CONTRATTO_OPTIONS, STATO_DIPENDENTE_OPTIONS } from "@/lib/personale";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export default async function NewDipendentePage() {
   return (
     <div className="max-w-2xl">
       <PageHeader title="Nuovo dipendente" description="Dati anagrafici e contrattuali." />
+      <UnsavedChangesGuard>
       <form action={createDipendente} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nome" name="nome" required />
@@ -67,6 +69,7 @@ export default async function NewDipendentePage() {
         <TextAreaField label="Note" name="note" />
         <SubmitButton>Salva dipendente</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

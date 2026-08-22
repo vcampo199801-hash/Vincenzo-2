@@ -6,6 +6,7 @@ import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui
 import { FornitoreField } from "@/components/ui/fornitore-field";
 import { MAGAZZINO_CATEGORIE } from "@/lib/compliance";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ export default async function NewMagazzinoPage() {
   return (
     <div className="max-w-2xl">
       <PageHeader title="Aggiungi articolo di magazzino" />
+      <UnsavedChangesGuard>
       <form action={createMagazzinoItem} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <BarcodeScanner targets={{ codice: "codice", scadenza: "scadenzaLotto" }} cerca={cercaArticoloPerCodice} />
         <Field label="Prodotto" name="prodotto" required placeholder="Es. Guanti nitrile taglia M" />
@@ -42,6 +44,7 @@ export default async function NewMagazzinoPage() {
         <TextAreaField label="Note" name="note" />
         <SubmitButton>Salva articolo</SubmitButton>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }

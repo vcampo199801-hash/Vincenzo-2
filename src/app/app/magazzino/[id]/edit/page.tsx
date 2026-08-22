@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { updateMagazzinoItem } from "@/lib/actions/magazzino";
+import { updateMagazzinoItem, deleteMagazzinoItem } from "@/lib/actions/magazzino";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { FornitoreField } from "@/components/ui/fornitore-field";
+import { DeleteButton } from "@/components/ui/delete-button";
 import { MAGAZZINO_CATEGORIE } from "@/lib/compliance";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
+import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -26,6 +28,7 @@ export default async function EditMagazzinoPage({ params }: { params: Promise<{ 
   return (
     <div className="max-w-2xl">
       <PageHeader title="Modifica articolo" />
+      <UnsavedChangesGuard>
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <BarcodeScanner targets={{ codice: "codice", scadenza: "scadenzaLotto" }} />
         <Field label="Prodotto" name="prodotto" required defaultValue={item.prodotto} />
@@ -49,8 +52,15 @@ export default async function EditMagazzinoPage({ params }: { params: Promise<{ 
           name="notificaSilenziata"
           defaultChecked={item.notificaSilenziata}
         />
-        <SubmitButton>Salva modifiche</SubmitButton>
+        <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+          <SubmitButton>Salva modifiche</SubmitButton>
+          <DeleteButton
+            action={deleteMagazzinoItem.bind(null, item.id)}
+            confirmMessage="Confermi l'eliminazione di questo articolo dal magazzino? L'operazione non è reversibile."
+          />
+        </div>
       </form>
+      </UnsavedChangesGuard>
     </div>
   );
 }
