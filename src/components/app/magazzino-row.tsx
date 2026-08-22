@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { scortaStato, formatDate, formatCurrency } from "@/lib/compliance";
 import { StatoBadge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ export function MagazzinoRow({
   prezzoUnitario,
   scadenzaLotto,
   lotto,
+  autoApriRiordino = false,
 }: {
   id: string;
   prodotto: string;
@@ -35,13 +36,23 @@ export function MagazzinoRow({
   prezzoUnitario: number;
   scadenzaLotto: Date | null;
   lotto: string | null;
+  autoApriRiordino?: boolean;
 }) {
   const [quantita, setQuantita] = useState(quantitaAttuale);
   const [isPending, startTransition] = useTransition();
+  const rowRef = useRef<HTMLTableRowElement>(null);
 
   useEffect(() => {
     setQuantita(quantitaAttuale);
   }, [quantitaAttuale]);
+
+  // Arrivo da un link "Riordina questo articolo" (email o pagina "Da
+  // controllare oggi"): porta la riga in vista, il popover si apre da solo.
+  useEffect(() => {
+    if (autoApriRiordino) {
+      rowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [autoApriRiordino]);
 
   function diminuisci() {
     setQuantita((q) => Math.max(0, q - 1));
@@ -54,7 +65,7 @@ export function MagazzinoRow({
   const valore = quantita * prezzoUnitario;
 
   return (
-    <tr className="hover:bg-slate-50">
+    <tr ref={rowRef} className={`hover:bg-slate-50 ${autoApriRiordino ? "bg-amber-50" : ""}`}>
       <td className="px-4 py-3">
         <p className="font-medium text-slate-900">{prodotto}</p>
         {fornitore && <p className="text-xs text-slate-500">{fornitore}</p>}
@@ -77,7 +88,7 @@ export function MagazzinoRow({
         </div>
         <p className="mt-1 text-xs text-slate-400">Minimo: {scortaMinima} {unita}</p>
         <div className="mt-1.5">
-          <RegistraRiordinoButton itemId={id} unita={unita} />
+          <RegistraRiordinoButton itemId={id} unita={unita} autoOpen={autoApriRiordino} />
         </div>
       </td>
       <td className="px-4 py-3">

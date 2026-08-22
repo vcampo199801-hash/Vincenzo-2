@@ -7,8 +7,16 @@ import { FormError } from "@/components/ui/form";
 /** Bottone "+ Riordino" per riga di Magazzino: apre un piccolo popover con
  * quantità e costo (facoltativo), separato dalle frecce +/- rapide così
  * quelle restano immediate per le correzioni al volo. */
-export function RegistraRiordinoButton({ itemId, unita }: { itemId: string; unita: string }) {
-  const [open, setOpen] = useState(false);
+export function RegistraRiordinoButton({
+  itemId,
+  unita,
+  autoOpen = false,
+}: {
+  itemId: string;
+  unita: string;
+  autoOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(autoOpen);
   const [state, formAction] = useActionState(registraRiordino.bind(null, itemId), undefined);
   const formRef = useRef<HTMLFormElement>(null);
 

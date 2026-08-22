@@ -71,7 +71,7 @@ export async function buildDigestForStudio(studioId: string): Promise<Digest | n
     .map((x) => ({
       id: x.m.id,
       studioId,
-      tipo: "magazzino" as const,
+      tipo: "magazzino-scorta" as const,
       nome: x.m.prodotto,
       giorni: 0,
       scaduto: x.stato === "DA_RIORDINARE",

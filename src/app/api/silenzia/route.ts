@@ -42,7 +42,7 @@ async function aggiornaFlag(tipo: TipoVoce, id: string, studioId: string, silenz
     if (r.count === 0) return null;
     return (await prisma.farmaco.findUnique({ where: { id } }))?.nome ?? null;
   }
-  if (tipo === "magazzino") {
+  if (tipo === "magazzino" || tipo === "magazzino-scorta") {
     const r = await prisma.magazzinoItem.updateMany({ where: { id, studioId }, data: { notificaSilenziata: silenzia } });
     if (r.count === 0) return null;
     return (await prisma.magazzinoItem.findUnique({ where: { id } }))?.prodotto ?? null;

@@ -12,8 +12,13 @@ import { TableScroll } from "@/components/ui/table-scroll";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-export default async function MagazzinoPage() {
+export default async function MagazzinoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ riordino?: string }>;
+}) {
   const { studio, subscription } = await requireActiveSubscription("magazzino");
+  const params = await searchParams;
   const haBilancio = pianoConsenteModulo(subscription.plan, "bilancio");
   const items = await prisma.magazzinoItem.findMany({ where: { studioId: studio.id }, orderBy: { prodotto: "asc" } });
 
@@ -83,6 +88,7 @@ export default async function MagazzinoPage() {
                 prezzoUnitario={i.prezzoUnitario}
                 scadenzaLotto={i.scadenzaLotto}
                 lotto={lotto}
+                autoApriRiordino={i.id === params.riordino}
               />
             ))}
             {rows.length === 0 && (
