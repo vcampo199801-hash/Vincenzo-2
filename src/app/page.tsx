@@ -37,7 +37,10 @@ export default function Home() {
             </div>
           </div>
           <nav className="flex items-center justify-between gap-4 sm:justify-end">
-            <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+            <Link
+              href="/login"
+              className="whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:py-2"
+            >
               Accedi
             </Link>
             <Link
