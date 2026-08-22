@@ -63,16 +63,22 @@ export async function buildDigestForStudio(studioId: string): Promise<Digest | n
 
   // Stessa notificaSilenziata dell'articolo usata per il lotto in scadenza:
   // un solo flag per articolo copre entrambi i promemoria (scadenza + scorta).
+  // Include sia "da riordinare" (rosso, urgente) sia "scorta bassa" (ambra,
+  // preavviso) — così l'email è completa quanto la Dashboard.
   const scorteBasseUrgenti: DigestItem[] = magazzino
-    .filter((m) => scortaStato(m.scortaMinima, m.quantitaAttuale) === "DA_RIORDINARE" && !m.notificaSilenziata)
-    .map((m) => ({
-      id: m.id,
+    .map((m) => ({ m, stato: scortaStato(m.scortaMinima, m.quantitaAttuale) }))
+    .filter((x) => (x.stato === "DA_RIORDINARE" || x.stato === "SCORTA_BASSA") && !x.m.notificaSilenziata)
+    .map((x) => ({
+      id: x.m.id,
       studioId,
-      tipo: "magazzino",
-      nome: m.prodotto,
+      tipo: "magazzino" as const,
+      nome: x.m.prodotto,
       giorni: 0,
-      scaduto: true,
-      dettaglioCustom: `sotto scorta minima (${m.quantitaAttuale} ${m.unita} su ${m.scortaMinima} ${m.unita} minimi)`,
+      scaduto: x.stato === "DA_RIORDINARE",
+      dettaglioCustom:
+        x.stato === "DA_RIORDINARE"
+          ? `sotto scorta minima (${x.m.quantitaAttuale} ${x.m.unita} su ${x.m.scortaMinima} ${x.m.unita} minimi)`
+          : `scorta bassa (${x.m.quantitaAttuale} ${x.m.unita}, minimo ${x.m.scortaMinima} ${x.m.unita})`,
     }));
 
   const manutenzioniUrgenti: DigestItem[] = ultimoControlloPerTipo(manutenzioneLog, tipiManutenzione)
@@ -120,11 +126,12 @@ async function renderList(items: DigestItem[]) {
       const token = await creaTokenSilenzia({ studioId: i.studioId, tipo: i.tipo, id: i.id, silenzia: true });
       const silenziaUrl = `${APP_URL()}/api/silenzia?token=${encodeURIComponent(token)}`;
       const sezioneUrl = `${APP_URL()}${sezioneApp(i.tipo, i.id)}`;
+      const colore = i.scaduto ? "#dc2626" : "#b45309";
       const dettaglio = i.dettaglioCustom
-        ? `<span style="color:#dc2626;">${escapeHtml(i.dettaglioCustom)}</span>`
+        ? `<span style="color:${colore};">${escapeHtml(i.dettaglioCustom)}</span>`
         : i.scaduto
-          ? `<span style="color:#dc2626;">scaduto da ${Math.abs(i.giorni)} giorni</span>`
-          : `<span style="color:#b45309;">scade tra ${i.giorni} giorni</span>`;
+          ? `<span style="color:${colore};">scaduto da ${Math.abs(i.giorni)} giorni</span>`
+          : `<span style="color:${colore};">scade tra ${i.giorni} giorni</span>`;
       return `<li style="margin-bottom:6px;"><a href="${sezioneUrl}" style="color:#0f172a;font-weight:bold;text-decoration:none;">${escapeHtml(i.nome)}</a> — ${dettaglio} &nbsp;<a href="${silenziaUrl}" style="font-size:12px;color:#94a3b8;text-decoration:underline;">Silenzia questa voce</a></li>`;
     })
   );
@@ -136,7 +143,7 @@ export async function renderDigestHtml(studioName: string, digest: Digest) {
     { title: "Scadenze normative", items: digest.scadenzeUrgenti },
     { title: "Farmaci di emergenza", items: digest.farmaciUrgenti },
     { title: "Lotti di magazzino", items: digest.lottiUrgenti },
-    { title: "Scorte sotto la soglia minima", items: digest.scorteBasseUrgenti },
+    { title: "Scorte di magazzino da controllare", items: digest.scorteBasseUrgenti },
     { title: "Manutenzione staff", items: digest.manutenzioniUrgenti },
     { title: "Forum — nuove risposte", items: digest.forumUrgenti },
   ].filter((s) => s.items.length > 0);
