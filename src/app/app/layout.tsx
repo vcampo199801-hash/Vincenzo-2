@@ -38,7 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Suspense fallback={null}>
         <SignupConversionTracker />
       </Suspense>
-      <aside className="no-print hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
+      <aside className="no-print hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
         <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50">
             <Image src="/brand/monogram.png" alt="" width={24} height={24} className="h-6 w-6" />
@@ -66,10 +66,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="no-print flex h-16 items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 md:px-8">
+        <header className="no-print flex h-16 items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 lg:px-8">
           <div className="flex min-w-0 items-center gap-2">
             <BackButton />
-            <div className="flex min-w-0 items-center gap-2 md:hidden">
+            <div className="flex min-w-0 items-center gap-2 lg:hidden">
               <MobileNav allowedKeys={allowedKeys} piano={piano} isAdmin={isAdmin} badges={{ forum: forumNonLette }} />
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50">
                 <Image src="/brand/monogram.png" alt="" width={20} height={20} className="h-5 w-5" />
@@ -108,7 +108,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </Link>
           </div>
         </header>
-        <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 md:px-8">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 lg:px-8">{children}</main>
       </div>
     </div>
     </UnsavedChangesProvider>

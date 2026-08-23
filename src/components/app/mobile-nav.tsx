@@ -7,8 +7,8 @@ import { logoutAction } from "@/lib/actions/auth";
 import type { ModuleKey } from "@/lib/modules";
 import type { PianoKey } from "@/lib/plans";
 
-/** Hamburger + slide-in drawer — the sidebar in AppLayout is hidden below md,
- * so this is the only way to reach the module list (Scadenzario, Magazzino, …) and to log out on phones. */
+/** Hamburger + slide-in drawer — the sidebar in AppLayout is hidden below lg,
+ * so this is the only way to reach the module list (Scadenzario, Magazzino, …) and to log out on phones and tablets. */
 export function MobileNav({
   allowedKeys,
   piano,
@@ -33,7 +33,7 @@ export function MobileNav({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Apri il menu"
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 md:hidden"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 lg:hidden"
       >
         <span aria-hidden className="text-lg leading-none">
           ☰
@@ -41,7 +41,7 @@ export function MobileNav({
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-40 md:hidden">
+        <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
             aria-label="Chiudi il menu"
