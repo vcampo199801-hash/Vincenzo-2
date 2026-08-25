@@ -97,6 +97,16 @@ export default function Home() {
             </a>
           </div>
           <p className="mt-3 text-xs text-slate-400">7 giorni gratis, nessuna carta richiesta.</p>
+
+          <div className="mx-auto mt-6 flex max-w-xl items-center justify-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3.5 text-left shadow-sm">
+            <span className="text-2xl shrink-0" aria-hidden>🧾</span>
+            <p className="text-sm text-emerald-900">
+              <strong className="font-semibold">Costo fatturato allo studio</strong> — è una spesa professionale,
+              deducibile come le altre spese di gestione (verifica con il tuo commercialista in base al tuo regime
+              fiscale).
+            </p>
+          </div>
+
           <p className="mt-6 text-sm text-slate-500">
             Un progetto di <span className="font-medium text-slate-700">Sorrisi in Regola</span> — lo store che ha già
             venduto i suoi prodotti a oltre <span className="font-medium text-slate-700">4.000 dentisti</span> in Italia.
@@ -239,7 +249,7 @@ export default function Home() {
                     €{piano.prezzoEuro}
                     <span className="text-base font-medium text-slate-500">/mese</span>
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">IVA inclusa · fatturazione mensile</p>
+                  <p className="mt-1 text-xs text-slate-400">IVA inclusa · fatturazione mensile · costo deducibile</p>
                   <p className="mt-4 text-sm text-slate-600">{piano.descrizione}</p>
                   <ul className="mt-4 flex-1 space-y-1.5 text-sm text-slate-600">
                     {piano.puntiChiave.map((punto) => (
