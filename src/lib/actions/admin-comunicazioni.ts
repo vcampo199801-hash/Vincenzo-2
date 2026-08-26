@@ -79,13 +79,19 @@ export async function inviaComunicazione(_prev: ComunicazioneState, formData: Fo
   const html = renderComunicazioneHtml(oggetto, messaggio);
   let sent = 0;
   let failed = 0;
+  const righeInviate: { studioId: string; email: string; resendId: string }[] = [];
+
   for (let i = 0; i < destinatariValidi.length; i += DIMENSIONE_LOTTO) {
     const lotto = destinatariValidi.slice(i, i + DIMENSIONE_LOTTO);
     try {
-      const { error } = await resend.batch.send(
+      const { data, error } = await resend.batch.send(
         lotto.map((s) => ({ from, to: s.email, subject: oggetto, html })),
       );
-      if (error) throw new Error(error.message);
+      if (error || !data) throw new Error(error?.message ?? "Resend non ha risposto con i dati attesi.");
+      lotto.forEach((s, idx) => {
+        const resendId = data.data[idx]?.id;
+        if (resendId) righeInviate.push({ studioId: s.id, email: s.email, resendId });
+      });
       sent += lotto.length;
     } catch (err) {
       failed += lotto.length;
@@ -93,6 +99,23 @@ export async function inviaComunicazione(_prev: ComunicazioneState, formData: Fo
     }
   }
 
+  // Storico: serve per il resoconto in pagina e, se in Resend è attivo
+  // l'open tracking con un webhook collegato a /api/webhooks/resend, anche
+  // per sapere quante di queste email sono state aperte (vedi apertaAt su
+  // ComunicazioneInvio, valorizzato dal webhook, mai da qui).
+  await prisma.comunicazione.create({
+    data: {
+      oggetto,
+      messaggio,
+      destinatari,
+      totale: destinatariValidi.length,
+      inviate: sent,
+      fallite: failed,
+      invii: { create: righeInviate },
+    },
+  });
+
+  revalidatePath("/admin/comunicazioni");
   return { success: true, sent, failed };
 }
 

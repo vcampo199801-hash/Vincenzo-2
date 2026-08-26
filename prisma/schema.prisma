@@ -88,6 +88,7 @@ model Studio {
   forumCommenti        ForumCommento[]
   forumSegnalazioni    ForumSegnalazione[]
   richiesteSupporto    RichiestaSupporto[]
+  comunicazioniRicevute ComunicazioneInvio[]
 }
 
 // Messaggio libero mandato dallo studio al titolare della piattaforma
@@ -103,6 +104,41 @@ model RichiestaSupporto {
   createdAt DateTime @default(now())
 
   @@index([studioId])
+}
+
+// Storico degli annunci una tantum mandati dall'admin (vedi
+// src/lib/actions/admin-comunicazioni.ts) — non le email automatiche di
+// scadenza/digest, solo quelle scritte a mano dall'area titolare.
+model Comunicazione {
+  id          String   @id @default(cuid())
+  oggetto     String
+  messaggio   String
+  destinatari String // "tutti" | "attivi" | "prova", solo per lo storico
+  totale      Int
+  inviate     Int
+  fallite     Int
+  createdAt   DateTime @default(now())
+
+  invii ComunicazioneInvio[]
+}
+
+// Un invio per singolo studio, per poter mostrare quanti hanno aperto
+// l'email. resendId è l'id restituito da Resend per quel singolo invio nel
+// batch: il webhook di Resend (email.opened) lo usa per trovare la riga
+// giusta e valorizzare apertaAt. Finché il webhook non è configurato in
+// Resend, apertaAt resta sempre null e lo storico mostra solo inviate/fallite.
+model ComunicazioneInvio {
+  id              String    @id @default(cuid())
+  comunicazioneId String
+  comunicazione   Comunicazione @relation(fields: [comunicazioneId], references: [id], onDelete: Cascade)
+  studioId        String
+  studio          Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  email           String
+  resendId        String?   @unique
+  apertaAt        DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([comunicazioneId])
 }
 
 // Team members with access to a studio (the practice owner plus invited
