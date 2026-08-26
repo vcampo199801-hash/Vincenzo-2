@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-guards";
-import { sendEmail, isEmailConfigured } from "@/lib/email";
+import { getResend, isEmailConfigured } from "@/lib/email";
 
 export type ComunicazioneState = { success: true; sent: number; failed: number } | { error: string } | undefined;
 
@@ -45,10 +45,15 @@ function whereDestinatari(destinatari: Destinatari) {
   return { email: { not: null } };
 }
 
+const DIMENSIONE_LOTTO = 100; // limite per richiesta dell'API batch di Resend
+
 /** Invio manuale, una tantum, a scopo di annuncio (non una scadenza o un
  * avviso di sistema): l'admin scrive oggetto e testo e lo manda a tutti gli
- * studi registrati, o a un sottoinsieme per stato abbonamento. Un piccolo
- * ritardo tra un invio e l'altro evita di sforare i rate limit di Resend. */
+ * studi registrati, o a un sottoinsieme per stato abbonamento. Usa l'invio
+ * batch di Resend (fino a 100 email per chiamata) invece di un ciclo con un
+ * invio alla volta: con più di una manciata di destinatari, un ciclo con una
+ * pausa tra un invio e l'altro rischiava di far scadere il tempo massimo
+ * concesso alla richiesta prima di arrivare in fondo alla lista. */
 export async function inviaComunicazione(_prev: ComunicazioneState, formData: FormData): Promise<ComunicazioneState> {
   await requireAdmin();
 
@@ -59,7 +64,9 @@ export async function inviaComunicazione(_prev: ComunicazioneState, formData: Fo
   if (!oggetto || !messaggio) {
     return { error: "Compila oggetto e messaggio." };
   }
-  if (!isEmailConfigured()) {
+  const resend = getResend();
+  const from = process.env.EMAIL_FROM;
+  if (!isEmailConfigured() || !resend || !from) {
     return { error: "Email non configurata: imposta RESEND_API_KEY e EMAIL_FROM." };
   }
 
@@ -67,20 +74,23 @@ export async function inviaComunicazione(_prev: ComunicazioneState, formData: Fo
     where: whereDestinatari(destinatari),
     select: { id: true, email: true },
   });
+  const destinatariValidi = studi.filter((s): s is { id: string; email: string } => Boolean(s.email));
 
   const html = renderComunicazioneHtml(oggetto, messaggio);
   let sent = 0;
   let failed = 0;
-  for (const studio of studi) {
-    if (!studio.email) continue;
+  for (let i = 0; i < destinatariValidi.length; i += DIMENSIONE_LOTTO) {
+    const lotto = destinatariValidi.slice(i, i + DIMENSIONE_LOTTO);
     try {
-      await sendEmail({ to: studio.email, subject: oggetto, html });
-      sent++;
+      const { error } = await resend.batch.send(
+        lotto.map((s) => ({ from, to: s.email, subject: oggetto, html })),
+      );
+      if (error) throw new Error(error.message);
+      sent += lotto.length;
     } catch (err) {
-      failed++;
-      console.error(`Comunicazione fallita per studio ${studio.id}:`, err);
+      failed += lotto.length;
+      console.error(`Comunicazione: lotto di ${lotto.length} email fallito:`, err);
     }
-    await new Promise((resolve) => setTimeout(resolve, 250));
   }
 
   return { success: true, sent, failed };
