@@ -47,6 +47,7 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
         studios: {
           create: {
             name: nomeStudio,
+            email,
             subscription: {
               create: {
                 status: "TRIALING",

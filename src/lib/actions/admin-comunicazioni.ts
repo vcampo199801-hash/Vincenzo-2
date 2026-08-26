@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-guards";
 import { sendEmail, isEmailConfigured } from "@/lib/email";
@@ -83,4 +84,39 @@ export async function inviaComunicazione(_prev: ComunicazioneState, formData: Fo
   }
 
   return { success: true, sent, failed };
+}
+
+/** Corregge gli studi creati prima che la registrazione salvasse in automatico
+ * l'email dello studio (vedi signupAction): finché non viene impostata a mano
+ * da Impostazioni, quello studio non riceve nessuna delle email automatiche
+ * (promemoria/scadenza prova, digest, comunicazioni) perché tutte filtrano su
+ * questo campo. Riempie il vuoto con l'email del titolare (owner), l'unica
+ * che di sicuro esiste fin dalla registrazione. Non tocca gli studi che
+ * hanno già un'email impostata, quindi si può rilanciare senza rischi. */
+export type CorreggiEmailState = { corretti: number; senzaProprietario: number } | undefined;
+
+export async function correggiEmailStudiMancanti(
+  _prev: CorreggiEmailState,
+  _formData: FormData,
+): Promise<CorreggiEmailState> {
+  await requireAdmin();
+
+  const studiSenzaEmail = await prisma.studio.findMany({
+    where: { email: null },
+    include: { owner: true },
+  });
+
+  let corretti = 0;
+  let senzaProprietario = 0;
+  for (const studio of studiSenzaEmail) {
+    if (!studio.owner.email) {
+      senzaProprietario++;
+      continue;
+    }
+    await prisma.studio.update({ where: { id: studio.id }, data: { email: studio.owner.email } });
+    corretti++;
+  }
+
+  revalidatePath("/admin/comunicazioni");
+  return { corretti, senzaProprietario };
 }
