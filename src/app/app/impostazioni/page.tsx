@@ -30,6 +30,18 @@ export default async function ImpostazioniPage() {
   });
   const isOwner = memberships.find((m) => m.userId === session.userId)?.role === "OWNER";
   const collaboratorCount = memberships.filter((m) => m.role === "MEMBER").length;
+  const membershipsConSezioni = memberships.map((m) => {
+    const allowedKeys = parsePermessi(m.permessi);
+    const sectionsLabel =
+      m.role === "OWNER"
+        ? "Tutte"
+        : allowedKeys === null
+          ? "Tutte"
+          : allowedKeys.length === 0
+            ? "Nessuna"
+            : `${allowedKeys.length}/${APP_MODULES.length}`;
+    return { ...m, sectionsLabel };
+  });
   const maxCollaboratori = PIANI[normalizzaPiano(studio.subscription?.plan)].maxCollaboratori;
   const atCap = collaboratorCount >= maxCollaboratori;
 
@@ -133,7 +145,41 @@ export default async function ImpostazioniPage() {
             </>
           )}
         </p>
-        <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        {/* Sotto sm: card impilate invece della tabella — con 6 colonne, lo
+            scroll orizzontale su un telefono stretto mostrava solo parole
+            tagliate a metà (es. "aboratore" invece di "Collaboratore") senza
+            che si capisse a colpo d'occhio a chi si riferisse ogni riga. */}
+        <div className="space-y-3 sm:hidden">
+          {membershipsConSezioni.map((m) => (
+            <div key={m.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-slate-900">{m.user.name ?? "—"}</p>
+                  <p className="truncate text-xs text-slate-500">{m.user.email}</p>
+                </div>
+                {isOwner && m.role !== "OWNER" && (
+                  <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
+                )}
+              </div>
+              <dl className="mt-3 grid grid-cols-3 gap-x-2 gap-y-1 text-xs">
+                <div>
+                  <dt className="text-slate-400">Ruolo</dt>
+                  <dd className="text-slate-700">{ROLE_LABELS[m.role] ?? m.role}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Membro dal</dt>
+                  <dd className="text-slate-700">{formatDate(m.createdAt)}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Sezioni</dt>
+                  <dd className="text-slate-700">{m.role !== "OWNER" ? m.sectionsLabel : "—"}</dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+        </div>
+
+        <TableScroll className="hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:block">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
               <tr>
@@ -146,31 +192,20 @@ export default async function ImpostazioniPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {memberships.map((m) => {
-                const allowedKeys = parsePermessi(m.permessi);
-                const sectionsLabel =
-                  m.role === "OWNER"
-                    ? "Tutte"
-                    : allowedKeys === null
-                      ? "Tutte"
-                      : allowedKeys.length === 0
-                        ? "Nessuna"
-                        : `${allowedKeys.length}/${APP_MODULES.length}`;
-                return (
-                  <tr key={m.id} className="hover:bg-slate-50">
-                    <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">{m.user.name ?? "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">{m.user.email}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">{ROLE_LABELS[m.role] ?? m.role}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">{formatDate(m.createdAt)}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">{m.role !== "OWNER" ? sectionsLabel : "—"}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right">
-                      {isOwner && m.role !== "OWNER" && (
-                        <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+              {membershipsConSezioni.map((m) => (
+                <tr key={m.id} className="hover:bg-slate-50">
+                  <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">{m.user.name ?? "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">{m.user.email}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">{ROLE_LABELS[m.role] ?? m.role}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">{formatDate(m.createdAt)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">{m.role !== "OWNER" ? m.sectionsLabel : "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                    {isOwner && m.role !== "OWNER" && (
+                      <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </TableScroll>
