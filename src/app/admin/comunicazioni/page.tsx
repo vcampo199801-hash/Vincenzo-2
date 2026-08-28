@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ComunicazioneForm } from "@/components/admin/comunicazione-form";
 import { CorreggiEmailButton } from "@/components/admin/correggi-email-button";
@@ -13,8 +14,18 @@ const DESTINATARI_LABEL: Record<string, string> = {
   prova: "Solo in prova gratuita",
 };
 
-export default async function ComunicazioniPage() {
-  const [tutti, attivi, prova, senzaEmail, storico] = await Promise.all([
+function comeDestinatari(value: string): Destinatari {
+  return value === "attivi" || value === "prova" ? value : "tutti";
+}
+
+export default async function ComunicazioniPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ rinvia?: string }>;
+}) {
+  const { rinvia: rinviaId } = await searchParams;
+
+  const [tutti, attivi, prova, senzaEmail, storico, comunicazioneDaRinviare] = await Promise.all([
     prisma.studio.count({ where: { email: { not: null } } }),
     prisma.studio.count({ where: { email: { not: null }, subscription: { status: "ACTIVE" } } }),
     prisma.studio.count({ where: { email: { not: null }, subscription: { status: "TRIALING" } } }),
@@ -24,9 +35,18 @@ export default async function ComunicazioniPage() {
       take: 20,
       include: { _count: { select: { invii: { where: { apertaAt: { not: null } } } } } },
     }),
+    rinviaId ? prisma.comunicazione.findUnique({ where: { id: rinviaId } }) : null,
   ]);
 
   const conteggi: Record<Destinatari, number> = { tutti, attivi, prova };
+  const rinvia = comunicazioneDaRinviare
+    ? {
+        id: comunicazioneDaRinviare.id,
+        oggetto: comunicazioneDaRinviare.oggetto,
+        messaggio: comunicazioneDaRinviare.messaggio,
+        destinatari: comeDestinatari(comunicazioneDaRinviare.destinatari),
+      }
+    : null;
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
@@ -38,7 +58,7 @@ export default async function ComunicazioniPage() {
       <div className="mt-6">
         <CorreggiEmailButton mancanti={senzaEmail} />
       </div>
-      <ComunicazioneForm conteggi={conteggi} />
+      <ComunicazioneForm conteggi={conteggi} rinvia={rinvia} />
 
       <div className="mt-10 border-t border-slate-200 pt-6">
         <h2 className="text-sm font-semibold text-slate-900">Storico invii</h2>
@@ -50,7 +70,12 @@ export default async function ComunicazioniPage() {
               <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-medium text-slate-900">{c.oggetto}</p>
-                  <p className="text-xs text-slate-400">{formatDate(c.createdAt)}</p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-xs text-slate-400">{formatDate(c.createdAt)}</p>
+                    <Link href={`/admin/comunicazioni?rinvia=${c.id}`} className="text-xs font-medium text-brand-700 hover:underline">
+                      Rinvia
+                    </Link>
+                  </div>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">{DESTINATARI_LABEL[c.destinatari] ?? c.destinatari}</p>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">

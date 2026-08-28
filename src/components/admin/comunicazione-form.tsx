@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { inviaComunicazione, type Destinatari } from "@/lib/actions/admin-comunicazioni";
 import { Field, TextAreaField, SubmitButton, FormError } from "@/components/ui/form";
 
@@ -10,20 +11,51 @@ const OPZIONI: { value: Destinatari; label: string }[] = [
   { value: "prova", label: "Solo in prova gratuita" },
 ];
 
-export function ComunicazioneForm({ conteggi }: { conteggi: Record<Destinatari, number> }) {
+export function ComunicazioneForm({
+  conteggi,
+  rinvia,
+}: {
+  conteggi: Record<Destinatari, number>;
+  rinvia?: { id: string; oggetto: string; messaggio: string; destinatari: Destinatari } | null;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [state, formAction] = useActionState(inviaComunicazione, undefined);
-  const [destinatari, setDestinatari] = useState<Destinatari>("tutti");
+  const [destinatari, setDestinatari] = useState<Destinatari>(rinvia?.destinatari ?? "tutti");
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const numeroDestinatari = conteggi[destinatari];
   const etichetta = OPZIONI.find((o) => o.value === destinatari)!.label;
 
   useEffect(() => {
-    if (state) setConfirmOpen(false);
-  }, [state]);
+    if (!state) return;
+    setConfirmOpen(false);
+    if ("success" in state) router.replace(pathname);
+  }, [state, router, pathname]);
+
+  // Il form non si rimonta cambiando pagina via link (stessa route, cambia
+  // solo ?rinvia=...): oggetto/messaggio si aggiornano da soli grazie al
+  // key sul <form> qui sotto, ma "destinatari" è uno stato React e va
+  // risincronizzato a mano ogni volta che cambia la comunicazione da rinviare.
+  useEffect(() => {
+    setDestinatari(rinvia?.destinatari ?? "tutti");
+  }, [rinvia?.id, rinvia?.destinatari]);
 
   return (
-    <form action={formAction} className="mt-6 space-y-4">
+    <form action={formAction} key={rinvia?.id ?? "nuova"} className="mt-6 space-y-4">
+      {rinvia && (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-xs text-brand-800">
+          <span>Stai rinviando una comunicazione già mandata — puoi cambiare i destinatari prima di confermare.</span>
+          <button
+            type="button"
+            onClick={() => router.replace(pathname)}
+            className="shrink-0 font-medium underline hover:no-underline"
+          >
+            Annulla
+          </button>
+        </div>
+      )}
+
       <label className="block min-w-0 text-sm">
         <span className="mb-1 block font-medium text-slate-700">Destinatari</span>
         <select
@@ -40,12 +72,19 @@ export function ComunicazioneForm({ conteggi }: { conteggi: Record<Destinatari, 
         </select>
       </label>
 
-      <Field label="Oggetto" name="oggetto" required placeholder="Es. Lo sapevi che puoi installare l'app sul telefono?" />
+      <Field
+        label="Oggetto"
+        name="oggetto"
+        required
+        defaultValue={rinvia?.oggetto}
+        placeholder="Es. Lo sapevi che puoi installare l'app sul telefono?"
+      />
 
       <TextAreaField
         label="Messaggio"
         name="messaggio"
         rows={8}
+        defaultValue={rinvia?.messaggio}
         placeholder="Scrivi qui il testo dell'email. Lascia una riga vuota per andare a capo con un nuovo paragrafo."
         hint="Verrà inviata con l'intestazione e il contatto WhatsApp usati per le altre email di Scadenze in Regola."
       />
