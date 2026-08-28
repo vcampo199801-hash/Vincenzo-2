@@ -38,17 +38,25 @@ function renderTrialHtml(studioName: string, tipo: "promemoria" | "scaduta") {
 }
 
 /** Controlla lo stato della prova gratuita di uno studio e invia, al
- * massimo una volta, l'email giusta: un promemoria 2 giorni prima della
- * scadenza, e l'avviso di scadenza il giorno dopo che è effettivamente
- * terminata (mai negli altri giorni, grazie al confronto esatto sui
- * giorni residui — lo stesso approccio della soglia usata nel digest).
+ * massimo una volta ciascuna, le due email: un promemoria entro gli ultimi
+ * 2 giorni di prova, e l'avviso di scadenza una volta che è effettivamente
+ * terminata. Usa promemoriaTrialInviatoAt/scadenzaTrialInviataAt (non più
+ * un confronto sul giorno esatto) apposta per essere "recuperabile": se un
+ * giorno viene saltato per qualsiasi motivo (es. l'email dello studio non
+ * era ancora impostata, un intoppo del cron), la prossima esecuzione manda
+ * comunque l'email invece di perdere quella finestra per sempre.
  * Indipendente dal flag "notificheAttive" dello studio: quello riguarda i
  * promemoria di scadenza normativa, non lo stato dell'abbonamento. */
 export async function sendTrialAlertForStudio(studio: {
   id: string;
   name: string;
   email: string | null;
-  subscription: { status: string; trialEndsAt: Date | null } | null;
+  subscription: {
+    status: string;
+    trialEndsAt: Date | null;
+    promemoriaTrialInviatoAt: Date | null;
+    scadenzaTrialInviataAt: Date | null;
+  } | null;
 }): Promise<"promemoria" | "scaduta" | null> {
   if (!isEmailConfigured() || !studio.email) return null;
   const sub = studio.subscription;
@@ -57,7 +65,7 @@ export async function sendTrialAlertForStudio(studio: {
   const giorni = daysUntil(sub.trialEndsAt);
   if (giorni === null) return null;
 
-  if (giorni === 2) {
+  if (giorni >= 0 && giorni <= 2 && !sub.promemoriaTrialInviatoAt) {
     await sendEmail({
       to: studio.email,
       subject: `⏳ La tua prova gratuita scade tra 2 giorni — ${studio.name}`,
@@ -70,7 +78,7 @@ export async function sendTrialAlertForStudio(studio: {
     return "promemoria";
   }
 
-  if (giorni === -1) {
+  if (giorni < 0 && !sub.scadenzaTrialInviataAt) {
     await sendEmail({
       to: studio.email,
       subject: `La tua prova gratuita è terminata — scegli il tuo piano`,
