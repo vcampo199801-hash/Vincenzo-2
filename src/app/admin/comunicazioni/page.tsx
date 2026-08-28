@@ -12,10 +12,11 @@ const DESTINATARI_LABEL: Record<string, string> = {
   tutti: "Tutti gli studi",
   attivi: "Solo abbonati attivi",
   prova: "Solo in prova gratuita",
+  singolo: "Un singolo studio",
 };
 
 function comeDestinatari(value: string): Destinatari {
-  return value === "attivi" || value === "prova" ? value : "tutti";
+  return value === "attivi" || value === "prova" || value === "singolo" ? value : "tutti";
 }
 
 export default async function ComunicazioniPage({
@@ -25,7 +26,7 @@ export default async function ComunicazioniPage({
 }) {
   const { rinvia: rinviaId } = await searchParams;
 
-  const [tutti, attivi, prova, senzaEmail, storico, comunicazioneDaRinviare] = await Promise.all([
+  const [tutti, attivi, prova, senzaEmail, storico, comunicazioneDaRinviare, studi] = await Promise.all([
     prisma.studio.count({ where: { email: { not: null } } }),
     prisma.studio.count({ where: { email: { not: null }, subscription: { status: "ACTIVE" } } }),
     prisma.studio.count({ where: { email: { not: null }, subscription: { status: "TRIALING" } } }),
@@ -33,18 +34,28 @@ export default async function ComunicazioniPage({
     prisma.comunicazione.findMany({
       orderBy: { createdAt: "desc" },
       take: 20,
-      include: { _count: { select: { invii: { where: { apertaAt: { not: null } } } } } },
+      include: {
+        _count: { select: { invii: { where: { apertaAt: { not: null } } } } },
+        invii: { take: 1, select: { studio: { select: { name: true } } } },
+      },
     }),
-    rinviaId ? prisma.comunicazione.findUnique({ where: { id: rinviaId } }) : null,
+    rinviaId
+      ? prisma.comunicazione.findUnique({
+          where: { id: rinviaId },
+          include: { invii: { take: 1, select: { studioId: true } } },
+        })
+      : null,
+    prisma.studio.findMany({ where: { email: { not: null } }, select: { id: true, name: true, email: true }, orderBy: { name: "asc" } }),
   ]);
 
-  const conteggi: Record<Destinatari, number> = { tutti, attivi, prova };
+  const conteggi: Record<Destinatari, number> = { tutti, attivi, prova, singolo: 1 };
   const rinvia = comunicazioneDaRinviare
     ? {
         id: comunicazioneDaRinviare.id,
         oggetto: comunicazioneDaRinviare.oggetto,
         messaggio: comunicazioneDaRinviare.messaggio,
         destinatari: comeDestinatari(comunicazioneDaRinviare.destinatari),
+        studioId: comunicazioneDaRinviare.invii[0]?.studioId,
       }
     : null;
 
@@ -53,12 +64,12 @@ export default async function ComunicazioniPage({
       <h1 className="text-xl font-semibold text-slate-900">Comunicazione agli iscritti</h1>
       <p className="mt-1 text-sm text-slate-500">
         Invia un&apos;email una tantum a chi è registrato — per annunci che non sono scadenze o avvisi
-        sull&apos;abbonamento (es. un consiglio d&apos;uso, una nuova funzionalità).
+        sull&apos;abbonamento (es. un consiglio d&apos;uso, una nuova funzionalità), o a un singolo studio.
       </p>
       <div className="mt-6">
         <CorreggiEmailButton mancanti={senzaEmail} />
       </div>
-      <ComunicazioneForm conteggi={conteggi} rinvia={rinvia} />
+      <ComunicazioneForm conteggi={conteggi} rinvia={rinvia} studi={studi as { id: string; name: string; email: string }[]} />
 
       <div className="mt-10 border-t border-slate-200 pt-6">
         <h2 className="text-sm font-semibold text-slate-900">Storico invii</h2>
@@ -77,7 +88,11 @@ export default async function ComunicazioniPage({
                     </Link>
                   </div>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">{DESTINATARI_LABEL[c.destinatari] ?? c.destinatari}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {c.destinatari === "singolo"
+                    ? `A ${c.invii[0]?.studio.name ?? "uno studio (rimosso da allora)"}`
+                    : DESTINATARI_LABEL[c.destinatari] ?? c.destinatari}
+                </p>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
                   <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700">
                     {c.inviate} inviate

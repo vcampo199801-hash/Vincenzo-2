@@ -7,7 +7,7 @@ import { getResend, isEmailConfigured } from "@/lib/email";
 
 export type ComunicazioneState = { success: true; sent: number; failed: number } | { error: string } | undefined;
 
-export type Destinatari = "tutti" | "attivi" | "prova";
+export type Destinatari = "tutti" | "attivi" | "prova" | "singolo";
 
 const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -39,7 +39,8 @@ function renderComunicazioneHtml(oggetto: string, messaggio: string) {
   `;
 }
 
-function whereDestinatari(destinatari: Destinatari) {
+function whereDestinatari(destinatari: Destinatari, studioId?: string) {
+  if (destinatari === "singolo") return { id: studioId ?? "__nessuno__", email: { not: null } };
   if (destinatari === "attivi") return { email: { not: null }, subscription: { status: "ACTIVE" } };
   if (destinatari === "prova") return { email: { not: null }, subscription: { status: "TRIALING" } };
   return { email: { not: null } };
@@ -60,9 +61,13 @@ export async function inviaComunicazione(_prev: ComunicazioneState, formData: Fo
   const oggetto = String(formData.get("oggetto") ?? "").trim();
   const messaggio = String(formData.get("messaggio") ?? "").trim();
   const destinatari = (String(formData.get("destinatari") ?? "tutti") as Destinatari) ?? "tutti";
+  const studioId = String(formData.get("studioId") ?? "").trim() || undefined;
 
   if (!oggetto || !messaggio) {
     return { error: "Compila oggetto e messaggio." };
+  }
+  if (destinatari === "singolo" && !studioId) {
+    return { error: "Seleziona lo studio a cui mandarla." };
   }
   const resend = getResend();
   const from = process.env.EMAIL_FROM;
@@ -71,7 +76,7 @@ export async function inviaComunicazione(_prev: ComunicazioneState, formData: Fo
   }
 
   const studi = await prisma.studio.findMany({
-    where: whereDestinatari(destinatari),
+    where: whereDestinatari(destinatari, studioId),
     select: { id: true, email: true },
   });
   const destinatariValidi = studi.filter((s): s is { id: string; email: string } => Boolean(s.email));

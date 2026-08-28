@@ -9,21 +9,26 @@ const OPZIONI: { value: Destinatari; label: string }[] = [
   { value: "tutti", label: "Tutti gli studi registrati" },
   { value: "attivi", label: "Solo abbonati attivi" },
   { value: "prova", label: "Solo in prova gratuita" },
+  { value: "singolo", label: "Un singolo studio" },
 ];
 
 export function ComunicazioneForm({
   conteggi,
   rinvia,
+  studi,
 }: {
   conteggi: Record<Destinatari, number>;
-  rinvia?: { id: string; oggetto: string; messaggio: string; destinatari: Destinatari } | null;
+  rinvia?: { id: string; oggetto: string; messaggio: string; destinatari: Destinatari; studioId?: string } | null;
+  studi: { id: string; name: string; email: string }[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const [state, formAction] = useActionState(inviaComunicazione, undefined);
   const [destinatari, setDestinatari] = useState<Destinatari>(rinvia?.destinatari ?? "tutti");
+  const [studioId, setStudioId] = useState(rinvia?.studioId ?? "");
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const studioSelezionato = studi.find((s) => s.id === studioId);
   const numeroDestinatari = conteggi[destinatari];
   const etichetta = OPZIONI.find((o) => o.value === destinatari)!.label;
 
@@ -35,11 +40,12 @@ export function ComunicazioneForm({
 
   // Il form non si rimonta cambiando pagina via link (stessa route, cambia
   // solo ?rinvia=...): oggetto/messaggio si aggiornano da soli grazie al
-  // key sul <form> qui sotto, ma "destinatari" è uno stato React e va
-  // risincronizzato a mano ogni volta che cambia la comunicazione da rinviare.
+  // key sul <form> qui sotto, ma "destinatari"/"studioId" sono stato React e
+  // vanno risincronizzati a mano ogni volta che cambia la comunicazione da rinviare.
   useEffect(() => {
     setDestinatari(rinvia?.destinatari ?? "tutti");
-  }, [rinvia?.id, rinvia?.destinatari]);
+    setStudioId(rinvia?.studioId ?? "");
+  }, [rinvia?.id, rinvia?.destinatari, rinvia?.studioId]);
 
   return (
     <form action={formAction} key={rinvia?.id ?? "nuova"} className="mt-6 space-y-4">
@@ -66,11 +72,33 @@ export function ComunicazioneForm({
         >
           {OPZIONI.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label} ({conteggi[o.value]})
+              {o.value === "singolo" ? o.label : `${o.label} (${conteggi[o.value]})`}
             </option>
           ))}
         </select>
       </label>
+
+      {destinatari === "singolo" && (
+        <label className="block min-w-0 text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Studio</span>
+          <select
+            name="studioId"
+            required
+            value={studioId}
+            onChange={(e) => setStudioId(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          >
+            <option value="" disabled>
+              Scegli uno studio…
+            </option>
+            {studi.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} — {s.email}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <Field
         label="Oggetto"
@@ -98,8 +126,9 @@ export function ComunicazioneForm({
 
       <button
         type="button"
+        disabled={destinatari === "singolo" && !studioId}
         onClick={() => setConfirmOpen(true)}
-        className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+        className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50"
       >
         Invia
       </button>
@@ -116,8 +145,17 @@ export function ComunicazioneForm({
             className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg"
           >
             <p className="mb-4 text-sm text-slate-700">
-              Stai per inviare questa email a <strong>{numeroDestinatari} studi</strong> ({etichetta}). L&apos;invio
-              non è annullabile una volta partito. Confermi?
+              {destinatari === "singolo" ? (
+                <>
+                  Stai per inviare questa email a <strong>{studioSelezionato?.name ?? "questo studio"}</strong> (
+                  {studioSelezionato?.email}).
+                </>
+              ) : (
+                <>
+                  Stai per inviare questa email a <strong>{numeroDestinatari} studi</strong> ({etichetta}).
+                </>
+              )}{" "}
+              L&apos;invio non è annullabile una volta partito. Confermi?
             </p>
             <div className="flex justify-end gap-2">
               <button
