@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 const TABS = [
   { href: "/admin", label: "Andamento" },
+  { href: "/admin/prove", label: "Prove gratuite" },
   { href: "/admin/fatturazione", label: "Fatturazione" },
   { href: "/admin/supporto", label: "Supporto" },
   { href: "/admin/comunicazioni", label: "Comunicazioni" },

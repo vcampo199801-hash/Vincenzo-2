@@ -171,6 +171,12 @@ model Subscription {
   plan                 String    @default("standard")
   status               String    @default("TRIALING")
   trialEndsAt          DateTime?
+  // Quando sendTrialAlertForStudio ha effettivamente mandato ciascuna email
+  // (non solo "quando doveva" - solo se l'invio e' andato a buon fine): serve
+  // per poter verificare in /admin/prove se un singolo studio l'ha ricevuta,
+  // invece di fidarsi solo del riepilogo aggregato del cron.
+  promemoriaTrialInviatoAt DateTime?
+  scadenzaTrialInviataAt   DateTime?
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean   @default(false)
   createdAt            DateTime  @default(now())

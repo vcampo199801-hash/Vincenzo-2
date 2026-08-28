@@ -1,5 +1,6 @@
 import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { daysUntil } from "@/lib/compliance";
+import { prisma } from "@/lib/prisma";
 
 const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -62,6 +63,10 @@ export async function sendTrialAlertForStudio(studio: {
       subject: `⏳ La tua prova gratuita scade tra 2 giorni — ${studio.name}`,
       html: renderTrialHtml(studio.name, "promemoria"),
     });
+    await prisma.subscription.update({
+      where: { studioId: studio.id },
+      data: { promemoriaTrialInviatoAt: new Date() },
+    });
     return "promemoria";
   }
 
@@ -70,6 +75,10 @@ export async function sendTrialAlertForStudio(studio: {
       to: studio.email,
       subject: `La tua prova gratuita è terminata — scegli il tuo piano`,
       html: renderTrialHtml(studio.name, "scaduta"),
+    });
+    await prisma.subscription.update({
+      where: { studioId: studio.id },
+      data: { scadenzaTrialInviataAt: new Date() },
     });
     return "scaduta";
   }
