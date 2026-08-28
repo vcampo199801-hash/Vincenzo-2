@@ -53,6 +53,8 @@ export default async function ProveGratuitePage() {
           </p>
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
+          <EsitoEmail label="Benvenuto" inviataAt={s.benvenutoInviatoAt} />
+          <EsitoEmail label="Consiglio (metà prova)" inviataAt={s.nurtureTrialInviataAt} />
           <EsitoEmail label="Promemoria (-2gg)" inviataAt={s.promemoriaTrialInviatoAt} />
           <EsitoEmail label="Scaduta" inviataAt={s.scadenzaTrialInviataAt} />
         </div>
@@ -87,9 +89,9 @@ export default async function ProveGratuitePage() {
       <div>
         <h1 className="text-xl font-semibold text-slate-900">Prove gratuite</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Ogni riga mostra se il promemoria a 2 giorni dalla scadenza e l&apos;avviso di scadenza sono stati
-          effettivamente inviati (non solo se dovevano esserlo) — cosi puoi verificare caso per caso invece di
-          fidarti solo del riepilogo del cron.
+          Ogni riga mostra se le quattro email del ciclo di vita della prova (benvenuto, consiglio a metà prova,
+          promemoria a 2 giorni, avviso di scadenza) sono state effettivamente inviate a quello studio, non solo se
+          dovevano esserlo — così puoi verificare caso per caso invece di fidarti solo del riepilogo del cron.
         </p>
       </div>
 

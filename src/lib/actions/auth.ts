@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { createSession, destroySession } from "@/lib/session";
 import { provisionStudioDefaults } from "@/lib/seed-data";
 import { notificaTitolare } from "@/lib/owner-alerts";
+import { sendWelcomeEmail } from "@/lib/trial-alerts";
 
 export type FormState = { error?: string } | undefined;
 
@@ -66,6 +67,12 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
 
   await provisionStudioDefaults(studio.id);
   await createSession({ userId: user.id, email: user.email, studioId: studio.id });
+
+  try {
+    await sendWelcomeEmail({ id: studio.id, name: nomeStudio, email });
+  } catch (err) {
+    console.error("Email di benvenuto fallita:", err);
+  }
 
   await notificaTitolare(
     "🆕 Nuova prova gratuita — Scadenze in Regola",
