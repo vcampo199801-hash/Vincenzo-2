@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { daysUntil, formatDate } from "@/lib/compliance";
+import { ControllaOraButton } from "@/components/admin/controlla-ora-button";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,7 @@ export default async function ProveGratuitePage() {
           <EsitoEmail label="Promemoria (-2gg)" inviataAt={s.promemoriaTrialInviatoAt} />
           <EsitoEmail label="Scaduta" inviataAt={s.scadenzaTrialInviataAt} />
         </div>
+        {s.status === "TRIALING" && <ControllaOraButton studioId={s.studioId} />}
       </div>
     );
   };
@@ -91,7 +93,9 @@ export default async function ProveGratuitePage() {
         <p className="mt-1 text-sm text-slate-500">
           Ogni riga mostra se le quattro email del ciclo di vita della prova (benvenuto, consiglio a metà prova,
           promemoria a 2 giorni, avviso di scadenza) sono state effettivamente inviate a quello studio, non solo se
-          dovevano esserlo — così puoi verificare caso per caso invece di fidarti solo del riepilogo del cron.
+          dovevano esserlo — così puoi verificare caso per caso invece di fidarti solo del riepilogo del cron. Il
+          controllo vero gira da solo ogni giorno alle 9:00; su chi è ancora in prova trovi anche &quot;Controlla e
+          invia ora&quot; per farlo scattare subito, senza aspettare la prossima esecuzione.
         </p>
       </div>
 
