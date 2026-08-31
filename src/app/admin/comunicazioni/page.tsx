@@ -12,11 +12,12 @@ const DESTINATARI_LABEL: Record<string, string> = {
   tutti: "Tutti gli studi",
   attivi: "Solo abbonati attivi",
   prova: "Solo in prova gratuita",
+  scaduti: "Prova scaduta, non convertiti",
   singolo: "Un singolo studio",
 };
 
 function comeDestinatari(value: string): Destinatari {
-  return value === "attivi" || value === "prova" || value === "singolo" ? value : "tutti";
+  return value === "attivi" || value === "prova" || value === "scaduti" || value === "singolo" ? value : "tutti";
 }
 
 export default async function ComunicazioniPage({
@@ -26,10 +27,13 @@ export default async function ComunicazioniPage({
 }) {
   const { rinvia: rinviaId } = await searchParams;
 
-  const [tutti, attivi, prova, senzaEmail, storico, comunicazioneDaRinviare, studi] = await Promise.all([
+  const [tutti, attivi, prova, scaduti, senzaEmail, storico, comunicazioneDaRinviare, studi] = await Promise.all([
     prisma.studio.count({ where: { email: { not: null } } }),
     prisma.studio.count({ where: { email: { not: null }, subscription: { status: "ACTIVE" } } }),
     prisma.studio.count({ where: { email: { not: null }, subscription: { status: "TRIALING" } } }),
+    prisma.studio.count({
+      where: { email: { not: null }, subscription: { status: "TRIALING", trialEndsAt: { lt: new Date() } } },
+    }),
     prisma.studio.count({ where: { email: null } }),
     prisma.comunicazione.findMany({
       orderBy: { createdAt: "desc" },
@@ -48,7 +52,7 @@ export default async function ComunicazioniPage({
     prisma.studio.findMany({ where: { email: { not: null } }, select: { id: true, name: true, email: true }, orderBy: { name: "asc" } }),
   ]);
 
-  const conteggi: Record<Destinatari, number> = { tutti, attivi, prova, singolo: 1 };
+  const conteggi: Record<Destinatari, number> = { tutti, attivi, prova, scaduti, singolo: 1 };
   const rinvia = comunicazioneDaRinviare
     ? {
         id: comunicazioneDaRinviare.id,

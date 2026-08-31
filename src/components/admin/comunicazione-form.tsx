@@ -9,6 +9,7 @@ const OPZIONI: { value: Destinatari; label: string }[] = [
   { value: "tutti", label: "Tutti gli studi registrati" },
   { value: "attivi", label: "Solo abbonati attivi" },
   { value: "prova", label: "Solo in prova gratuita" },
+  { value: "scaduti", label: "Prova scaduta, non convertiti" },
   { value: "singolo", label: "Un singolo studio" },
 ];
 

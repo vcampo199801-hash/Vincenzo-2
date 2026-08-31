@@ -7,7 +7,7 @@ import { getResend, isEmailConfigured } from "@/lib/email";
 
 export type ComunicazioneState = { success: true; sent: number; failed: number } | { error: string } | undefined;
 
-export type Destinatari = "tutti" | "attivi" | "prova" | "singolo";
+export type Destinatari = "tutti" | "attivi" | "prova" | "scaduti" | "singolo";
 
 const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -43,6 +43,12 @@ function whereDestinatari(destinatari: Destinatari, studioId?: string) {
   if (destinatari === "singolo") return { id: studioId ?? "__nessuno__", email: { not: null } };
   if (destinatari === "attivi") return { email: { not: null }, subscription: { status: "ACTIVE" } };
   if (destinatari === "prova") return { email: { not: null }, subscription: { status: "TRIALING" } };
+  // Stesso "Scadute, non ancora convertite" di /admin/prove: prova già finita
+  // (trialEndsAt nel passato) ma senza aver ancora scelto un piano — se si
+  // abbonano, Stripe li sposta da solo fuori da questo status.
+  if (destinatari === "scaduti") {
+    return { email: { not: null }, subscription: { status: "TRIALING", trialEndsAt: { lt: new Date() } } };
+  }
   return { email: { not: null } };
 }
 
