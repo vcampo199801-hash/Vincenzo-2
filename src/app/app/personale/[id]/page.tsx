@@ -94,9 +94,9 @@ export default async function DipendentePage({ params }: { params: Promise<{ id:
           <ul className="divide-y divide-slate-100">
             {dipendente.cedolini.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                <a href={c.fileUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:text-brand-800">
+                <Link href={`/app/personale/documento/${c.id}`} className="font-medium text-brand-600 hover:text-brand-800">
                   📄 {MESI_LABELS_BREVI[c.mese - 1]} {c.anno}
-                </a>
+                </Link>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-slate-400">Caricato il {formatDate(c.dataCaricamento)}</span>
                   <DeleteButton action={deleteCedolino.bind(null, c.id, dipendente.id)} />
