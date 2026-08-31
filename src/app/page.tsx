@@ -102,8 +102,7 @@ export default function Home() {
             <span className="text-2xl shrink-0" aria-hidden>🧾</span>
             <p className="text-sm text-emerald-900">
               <strong className="font-semibold">Costo fatturato allo studio</strong> — è una spesa professionale,
-              deducibile come le altre spese di gestione (verifica con il tuo commercialista in base al tuo regime
-              fiscale).
+              deducibile come le altre spese di gestione.
             </p>
           </div>
 
