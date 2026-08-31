@@ -144,9 +144,9 @@ export default async function LaboratorioPage({ params }: { params: Promise<{ id
           <ul className="divide-y divide-slate-100">
             {laboratorio.allegati.map((a) => (
               <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                <a href={`/api/laboratori/file/${a.id}`} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:text-brand-800">
+                <Link href={`/app/laboratori/documento/${a.id}`} className="font-medium text-brand-600 hover:text-brand-800">
                   📎 {optionLabel(CATEGORIA_DOCUMENTO_LABORATORIO_OPTIONS, a.categoria)} — {a.nomeFile}
-                </a>
+                </Link>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-slate-400">{formatDate(a.dataCaricamento)}</span>
                   <DeleteButton action={deleteDocumentoLaboratorio.bind(null, a.id, laboratorio.id)} />

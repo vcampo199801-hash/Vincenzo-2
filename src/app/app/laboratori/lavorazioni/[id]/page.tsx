@@ -100,9 +100,9 @@ export default async function LavorazionePage({ params }: { params: Promise<{ id
           </p>
           {dichiarazione ? (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
-              <a href={`/api/laboratori/file/${dichiarazione.id}`} target="_blank" rel="noopener noreferrer" className="font-medium text-emerald-800 hover:text-emerald-950">
+              <Link href={`/app/laboratori/documento/${dichiarazione.id}`} className="font-medium text-emerald-800 hover:text-emerald-950">
                 📄 {dichiarazione.nomeFile}
-              </a>
+              </Link>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-emerald-700">Caricata il {formatDate(dichiarazione.dataCaricamento)}</span>
                 <DeleteButton action={deleteAllegatoLavorazione.bind(null, dichiarazione.id, lavorazione.id)} confirmMessage={RETENTION_WARNING} />
@@ -127,9 +127,9 @@ export default async function LavorazionePage({ params }: { params: Promise<{ id
           <ul className="divide-y divide-slate-100">
             {altriAllegati.map((a) => (
               <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                <a href={`/api/laboratori/file/${a.id}`} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:text-brand-800">
+                <Link href={`/app/laboratori/documento/${a.id}`} className="font-medium text-brand-600 hover:text-brand-800">
                   📎 {optionLabel(CATEGORIA_ALLEGATO_LAVORAZIONE_OPTIONS, a.categoria)} — {a.nomeFile}
-                </a>
+                </Link>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-slate-400">{formatDate(a.dataCaricamento)}</span>
                   <DeleteButton action={deleteAllegatoLavorazione.bind(null, a.id, lavorazione.id)} />
