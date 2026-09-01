@@ -270,6 +270,14 @@ export default function Home() {
             Ogni piano include 7 giorni di prova gratuita, promemoria scadenze automatici e report stampabile per le
             ispezioni ASL.
           </p>
+
+          <p className="mt-3 text-sm text-slate-500">
+            Hai già un codice omaggio?{" "}
+            <Link href="/codice" className="font-medium text-brand-700 hover:underline">
+              Attivalo qui
+            </Link>
+            .
+          </p>
         </div>
       </section>
 
