@@ -6,6 +6,7 @@ import { APP_MODULES, type ModuleKey } from "@/lib/modules";
 import { startCheckout, changePlan, openBillingPortal } from "@/lib/actions/billing";
 import { PageHeader } from "@/components/ui/page-header";
 import { SubmitButton } from "@/components/ui/form";
+import { RedeemCodeForm } from "@/components/app/redeem-code-form";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -212,6 +213,16 @@ export default async function AbbonamentoPage({
         chiediamo Partita IVA e indirizzo di fatturazione — puoi correggerli in qualsiasi momento da{" "}
         <a href="/app/impostazioni" className="underline hover:text-slate-700">Impostazioni</a>.
       </p>
+
+      <div className="mx-auto mt-8 max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">Hai un codice di attivazione?</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Se hai ricevuto un codice (es. un mese omaggio), inseriscilo qui per attivarlo o allungare l&apos;accesso.
+        </p>
+        <div className="mt-3">
+          <RedeemCodeForm />
+        </div>
+      </div>
     </div>
   );
 }
