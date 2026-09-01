@@ -38,7 +38,8 @@ export default async function CodiciPage() {
               <div>
                 <p className="font-mono text-sm font-semibold text-slate-900">{c.code}</p>
                 <p className="text-xs text-slate-500">
-                  {c.days} giorni {c.batchNote && `· ${c.batchNote}`} · creato il {formatDate(c.createdAt)}
+                  {c.days} giorni {c.batchNote && `· ${c.batchNote}`} · creato il {formatDate(c.createdAt)} ·{" "}
+                  {c.richiedeCarta ? "richiede carta (Stripe)" : "attivazione istantanea, senza carta"}
                 </p>
               </div>
               {c.redeemedAt ? (
