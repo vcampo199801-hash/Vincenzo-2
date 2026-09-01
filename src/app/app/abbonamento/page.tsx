@@ -234,15 +234,17 @@ export default async function AbbonamentoPage({
         <a href="/app/impostazioni" className="underline hover:text-slate-700">Impostazioni</a>.
       </p>
 
-      <div className="mx-auto mt-8 max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-900">Hai un codice di attivazione?</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          Se hai ricevuto un codice (es. un mese omaggio), inseriscilo qui per attivarlo o allungare l&apos;accesso.
-        </p>
-        <div className="mt-3">
-          <RedeemCodeForm />
+      {!codiceValido && (
+        <div className="mx-auto mt-8 max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-sm font-semibold text-slate-900">Hai un codice di attivazione?</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Se hai ricevuto un codice (es. un mese omaggio), inseriscilo qui per attivarlo o allungare l&apos;accesso.
+          </p>
+          <div className="mt-3">
+            <RedeemCodeForm />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
