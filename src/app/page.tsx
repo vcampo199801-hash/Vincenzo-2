@@ -271,13 +271,18 @@ export default function Home() {
             ispezioni ASL.
           </p>
 
-          <p className="mt-3 text-sm text-slate-500">
-            Hai già un codice omaggio?{" "}
-            <Link href="/codice" className="font-medium text-brand-700 hover:underline">
-              Attivalo qui
+          <div className="mx-auto mt-8 flex max-w-md flex-col items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-6 text-center sm:flex-row sm:justify-between sm:text-left">
+            <div>
+              <p className="font-semibold text-brand-800">🎁 Hai un codice sconto?</p>
+              <p className="mt-1 text-sm text-brand-700">Inseriscilo e attiva subito la tua offerta.</p>
+            </div>
+            <Link
+              href="/codice"
+              className="shrink-0 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+            >
+              Inserisci codice
             </Link>
-            .
-          </p>
+          </div>
         </div>
       </section>
 
