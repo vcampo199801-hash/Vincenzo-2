@@ -16,12 +16,13 @@ export default async function CodiciPage() {
       <h1 className="text-xl font-semibold text-slate-900">Codici di attivazione</h1>
       <p className="mt-1 text-sm text-slate-500">
         Genera un codice omaggio (es. un mese gratis a un dottore) da dare di persona o via messaggio. Il cliente lo
-        riscatta da{" "}
+        inserisce da{" "}
         <a href="/codice" className="font-medium text-brand-700 underline" target="_blank" rel="noopener noreferrer">
           app.sorrisiinregola.com/codice
         </a>{" "}
-        se non ha ancora un account, oppure dalla sua pagina Abbonamento se è già iscritto — attiva o allunga
-        l&apos;accesso di quanti giorni scegli qui, una sola volta a codice.
+        se non ha ancora un account, oppure dalla sua pagina Abbonamento se è già iscritto — poi sceglie un piano e
+        inserisce la carta su Stripe: non gli viene addebitato nulla per i giorni scelti qui, dopodiché il rinnovo
+        parte in automatico. Un cliente già convertito, non solo un accesso gratuito.
       </p>
 
       <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">

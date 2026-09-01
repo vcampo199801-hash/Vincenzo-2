@@ -21,8 +21,13 @@ export type GeneraCodiceState = { codice: string; giorni: number } | { error: st
 /** Codice omaggio generato a mano dall'admin (es. un mese gratis a un
  * dottore) — stesso identico sistema già usato per i codici venduti in
  * blocco su Shopify (AccessCode), solo creato uno alla volta da qui invece
- * che in massa da uno script esterno. Il cliente lo riscatta da /codice se
- * non ha ancora un account, o dalla sua pagina Abbonamento se ce l'ha già. */
+ * che in massa da uno script esterno. A differenza dei codici Shopify
+ * (attivazione istantanea, senza carta, perché il cliente ha già pagato lì),
+ * questi hanno richiedeCarta=true: il cliente sceglie un piano e inserisce
+ * la carta su Stripe Checkout con un periodo di prova gratuito pari ai
+ * giorni scelti qui — un cliente già convertito, non solo un accesso
+ * gratuito a tempo. Il cliente inizia il riscatto da /codice se non ha
+ * ancora un account, o dalla sua pagina Abbonamento se ce l'ha già. */
 export async function generaCodiceOmaggio(_prev: GeneraCodiceState, formData: FormData): Promise<GeneraCodiceState> {
   await requireAdmin();
 
@@ -36,7 +41,7 @@ export async function generaCodiceOmaggio(_prev: GeneraCodiceState, formData: Fo
   for (let tentativo = 0; tentativo < 5; tentativo++) {
     const codice = generaCodice();
     try {
-      await prisma.accessCode.create({ data: { code: codice, days: giorni, batchNote } });
+      await prisma.accessCode.create({ data: { code: codice, days: giorni, batchNote, richiedeCarta: true } });
       revalidatePath("/admin/codici");
       return { codice, giorni };
     } catch {

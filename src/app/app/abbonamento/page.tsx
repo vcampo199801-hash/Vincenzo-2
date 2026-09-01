@@ -1,4 +1,5 @@
 import { requireStudio } from "@/lib/auth-guards";
+import { prisma } from "@/lib/prisma";
 import { isPianoConfigured } from "@/lib/stripe";
 import { formatDate } from "@/lib/compliance";
 import { PIANI, PIANI_ORDINE, normalizzaPiano, pianoMinimoPerModulo, type PianoKey } from "@/lib/plans";
@@ -20,11 +21,17 @@ export default async function AbbonamentoPage({
     error?: string;
     redeemed?: string;
     upgrade?: string;
+    codice?: string;
   }>;
 }) {
   const { studio } = await requireStudio();
   const params = await searchParams;
   const sub = studio.subscription;
+
+  const codiceOmaggio = params.codice
+    ? await prisma.accessCode.findUnique({ where: { code: params.codice.trim().toUpperCase() } })
+    : null;
+  const codiceValido = codiceOmaggio && !codiceOmaggio.redeemedAt && codiceOmaggio.richiedeCarta ? codiceOmaggio : null;
 
   const trialActive = sub?.status === "TRIALING" && sub.trialEndsAt && sub.trialEndsAt > new Date();
   const trialExpired = sub?.status === "TRIALING" && sub.trialEndsAt !== null && sub.trialEndsAt < new Date();
@@ -79,6 +86,18 @@ export default async function AbbonamentoPage({
       {moduloRichiesto && pianoRichiesto && (
         <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           Il modulo &laquo;{moduloRichiesto.label}&raquo; richiede il piano {PIANI[pianoRichiesto].label} o superiore.
+        </p>
+      )}
+      {params.codice && !codiceValido && (
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Il codice inserito non è valido o è già stato utilizzato.
+        </p>
+      )}
+      {codiceValido && (
+        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          🎁 Hai un codice omaggio di <strong>{codiceValido.days} giorni</strong>! Scegli il piano qui sotto: ti
+          chiediamo la carta per motivi tecnici, ma non ti verrà addebitato nulla fino alla fine del periodo
+          gratuito — dopodiché il rinnovo parte in automatico al prezzo del piano scelto.
         </p>
       )}
 
@@ -193,8 +212,9 @@ export default async function AbbonamentoPage({
                 ) : (
                   <form action={startCheckout}>
                     <input type="hidden" name="piano" value={key} />
+                    {codiceValido && <input type="hidden" name="codice" value={codiceValido.code} />}
                     <SubmitButton disabled={!configured} className="w-full">
-                      Abbonati
+                      {codiceValido ? `Abbonati (${codiceValido.days}gg gratis)` : "Abbonati"}
                     </SubmitButton>
                   </form>
                 )}

@@ -28,6 +28,21 @@ export async function startCheckout(formData: FormData) {
     redirect("/app/abbonamento?error=stripe-not-configured");
   }
 
+  // Codice omaggio "con carta" (vedi /admin/codici): aggiunge un periodo di
+  // prova gratuita a questo Checkout invece di attivare l'accesso a mano —
+  // il codice viene segnato come riscattato dal webhook Stripe, non da qui,
+  // cosi un checkout abbandonato non lo brucia inutilmente.
+  const codiceRaw = String(formData.get("codice") ?? "").trim().toUpperCase();
+  let trialPeriodDays: number | undefined;
+  let codeId: string | undefined;
+  if (codiceRaw) {
+    const accessCode = await prisma.accessCode.findUnique({ where: { code: codiceRaw } });
+    if (accessCode && !accessCode.redeemedAt && accessCode.richiedeCarta) {
+      trialPeriodDays = accessCode.days;
+      codeId = accessCode.id;
+    }
+  }
+
   const stripe = getStripe()!;
   let customerId = studio.subscription?.stripeCustomerId ?? undefined;
 
@@ -52,7 +67,10 @@ export async function startCheckout(formData: FormData) {
     success_url: `${appUrl()}/app/abbonamento?success=1`,
     cancel_url: `${appUrl()}/app/abbonamento?canceled=1`,
     client_reference_id: studio.id,
-    subscription_data: { metadata: { studioId: studio.id, piano } },
+    subscription_data: {
+      metadata: { studioId: studio.id, piano, ...(codeId ? { codeId } : {}) },
+      ...(trialPeriodDays ? { trial_period_days: trialPeriodDays } : {}),
+    },
     // Chiede Partita IVA e indirizzo di fatturazione direttamente in Checkout,
     // così lo studio non deve reinserirli a mano in Impostazioni: il webhook
     // li salva sulla scheda dello studio non appena l'acquisto va a buon fine.

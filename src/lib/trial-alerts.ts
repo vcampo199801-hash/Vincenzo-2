@@ -97,6 +97,7 @@ export async function sendTrialAlertForStudio(studio: {
   subscription: {
     status: string;
     trialEndsAt: Date | null;
+    stripeSubscriptionId: string | null;
     nurtureTrialInviataAt: Date | null;
     promemoriaTrialInviatoAt: Date | null;
     scadenzaTrialInviataAt: Date | null;
@@ -105,6 +106,11 @@ export async function sendTrialAlertForStudio(studio: {
   if (!isEmailConfigured() || !studio.email) return null;
   const sub = studio.subscription;
   if (!sub || sub.status !== "TRIALING" || !sub.trialEndsAt) return null;
+  // Prova gestita da Stripe (codice omaggio "con carta", vedi /admin/codici):
+  // ha già un piano e un metodo di pagamento, l'addebito parte da solo a
+  // fine prova. Le email di "scegli un piano"/"scaduta" sono pensate per chi
+  // deve ancora decidere, quindi non hanno senso qui e confonderebbero.
+  if (sub.stripeSubscriptionId) return null;
 
   const giorni = daysUntil(sub.trialEndsAt);
   if (giorni === null) return null;

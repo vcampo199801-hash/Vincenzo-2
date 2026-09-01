@@ -71,7 +71,7 @@ export async function redeemCodeForNewStudio(_prev: FormState, formData: FormDat
         name: name || null,
         email,
         passwordHash,
-        studios: { create: { name: nomeStudio } },
+        studios: { create: { name: nomeStudio, email } },
       },
       include: { studios: true },
     });
@@ -79,6 +79,16 @@ export async function redeemCodeForNewStudio(_prev: FormState, formData: FormDat
     await tx.membership.create({ data: { studioId: studio.id, userId: user.id, role: "OWNER" } });
     return { user, studio };
   });
+
+  // Codice omaggio "con carta": non attiva nulla da solo, porta a scegliere
+  // un piano e mettere la carta su Stripe Checkout con la prova gratuita —
+  // il riscatto vero e proprio (redeemedAt) avviene nel webhook Stripe a
+  // pagamento configurato andato a buon fine, non qui.
+  if (accessCode.richiedeCarta) {
+    await provisionStudioDefaults(studio.id);
+    await createSession({ userId: user.id, email: user.email, studioId: studio.id });
+    redirect(`/app/abbonamento?codice=${encodeURIComponent(accessCode.code)}`);
+  }
 
   try {
     await applyCodeToStudio(accessCode.id, studio.id, accessCode.days);
@@ -103,6 +113,10 @@ export async function redeemCodeForExistingStudio(_prev: FormState, formData: Fo
   const accessCode = await prisma.accessCode.findUnique({ where: { code } });
   if (!accessCode || accessCode.redeemedAt) {
     return { error: "Codice non valido o già utilizzato." };
+  }
+
+  if (accessCode.richiedeCarta) {
+    redirect(`/app/abbonamento?codice=${encodeURIComponent(accessCode.code)}`);
   }
 
   try {

@@ -34,7 +34,10 @@ export function GeneraCodiceForm() {
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
           <div>
             <p className="font-mono text-lg font-semibold text-emerald-900">{state.codice}</p>
-            <p className="text-xs text-emerald-700">Vale {state.giorni} giorni di accesso, utilizzabile una sola volta.</p>
+            <p className="text-xs text-emerald-700">
+              {state.giorni} giorni di prova gratuita su Stripe (carta richiesta, addebito automatico dopo), utilizzabile
+              una sola volta.
+            </p>
           </div>
           <button
             type="button"

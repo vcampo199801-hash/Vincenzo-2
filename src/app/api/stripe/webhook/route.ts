@@ -107,6 +107,14 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
     : null;
   const plan = normalizzaPiano(stripeSub.metadata?.piano);
   const nuovoStatus = mapStatus(stripeSub.status);
+  // Solo quando Stripe segnala davvero una prova (codice omaggio "con
+  // carta", vedi /admin/codici): tiene trialEndsAt allineato alla prova
+  // gestita da Stripe, cosi /admin/prove mostra la data giusta. Non viene
+  // mai svuotato qui: a fine prova Stripe manda un altro evento con
+  // trial_end nullo, ma a quel punto lo status non e piu TRIALING e il
+  // valore vecchio resta solo come traccia storica (stesso comportamento
+  // gia usato per la prova gratuita interna dei 7 giorni).
+  const trialEndsAt = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000) : undefined;
 
   const precedente = await prisma.subscription.findUnique({
     where: { studioId },
@@ -122,6 +130,7 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
       status: nuovoStatus,
       currentPeriodEnd,
       cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
+      ...(trialEndsAt ? { trialEndsAt } : {}),
     },
     create: {
       studioId,
@@ -131,8 +140,20 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
       status: nuovoStatus,
       currentPeriodEnd,
       cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
+      ...(trialEndsAt ? { trialEndsAt } : {}),
     },
   });
+
+  // Codice omaggio "con carta": il riscatto vero e proprio avviene qui, solo
+  // a Checkout andato a buon fine — non quando l'utente lo inserisce, cosi
+  // un checkout abbandonato non lo brucia inutilmente.
+  const codeId = stripeSub.metadata?.codeId;
+  if (codeId) {
+    await prisma.accessCode.updateMany({
+      where: { id: codeId, redeemedAt: null },
+      data: { redeemedAt: new Date(), studioId },
+    });
+  }
 
   if (precedente && precedente.status !== nuovoStatus) {
     await notificaCambioStato(precedente.studio.name, precedente.status, nuovoStatus, plan);

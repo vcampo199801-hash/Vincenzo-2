@@ -197,6 +197,14 @@ model AccessCode {
   studio     Studio?   @relation(fields: [studioId], references: [id], onDelete: SetNull)
   redeemedAt DateTime?
   createdAt  DateTime  @default(now())
+  // false (default, i codici venduti in blocco su Shopify): attiva l'accesso
+  // all'istante, senza carta - il cliente ha gia pagato tramite Shopify.
+  // true (i codici omaggio generati da /admin/codici): il codice non attiva
+  // nulla da solo, porta invece a scegliere un piano e inserire la carta in
+  // Stripe Checkout con un periodo di prova gratuito di "days" giorni -
+  // risultato: un cliente gia convertito, che passa a pagare in automatico
+  // appena finisce la prova, non un accesso gratuito e basta.
+  richiedeCarta Boolean @default(false)
 
   @@index([studioId])
 }
