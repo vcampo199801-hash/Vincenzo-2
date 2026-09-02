@@ -60,7 +60,25 @@ export async function redeemCodeForNewStudio(_prev: FormState, formData: FormDat
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
-    return { error: "Esiste già un account con questa email. Accedi e riscatta il codice dal tuo abbonamento." };
+    // Codice omaggio "con carta": chi possiede il codice può comunque
+    // riscattarlo sul proprio account già esistente (es. un'altra prova
+    // gratuita per uno studio che ha già finito la prima) — il codice lo
+    // diamo noi solo a chi vogliamo, quindi non serve bloccarlo qui; basta
+    // verificare la password per essere sicuri che sia davvero lei ad
+    // accedere all'account, non un'altra persona che ne conosce l'email.
+    if (!accessCode.richiedeCarta) {
+      return { error: "Esiste già un account con questa email. Accedi e riscatta il codice dal tuo abbonamento." };
+    }
+    const validPassword = await bcrypt.compare(password, existingUser.passwordHash);
+    if (!validPassword) {
+      return { error: "Esiste già un account con questa email: inserisci la password di quell'account per continuare." };
+    }
+    const membership = await prisma.membership.findFirst({ where: { userId: existingUser.id } });
+    if (!membership) {
+      return { error: "Esiste già un account con questa email, ma senza uno studio associato. Contattaci per assistenza." };
+    }
+    await createSession({ userId: existingUser.id, email: existingUser.email, studioId: membership.studioId });
+    redirect(`/app/abbonamento?codice=${encodeURIComponent(accessCode.code)}`);
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
