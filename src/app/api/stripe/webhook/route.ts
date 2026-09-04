@@ -4,6 +4,7 @@ import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { normalizzaPiano, PIANI } from "@/lib/plans";
 import { notificaTitolare } from "@/lib/owner-alerts";
+import { sendCheckoutAbandonedEmail } from "@/lib/trial-alerts";
 
 export async function POST(req: NextRequest) {
   const stripe = getStripe();
@@ -52,6 +53,18 @@ export async function POST(req: NextRequest) {
       if (studioId) {
         const customerId = typeof stripeSub.customer === "string" ? stripeSub.customer : stripeSub.customer?.id;
         await syncSubscription(studioId, stripeSub, customerId);
+      }
+      break;
+    }
+
+    // Chi clicca "Abbonati" ma non arriva a inserire la carta entro ~24h:
+    // Stripe scade la sessione da sola e ce lo segnala qui, cosi possiamo
+    // provare a recuperarlo con un'email invece di perderlo in silenzio.
+    case "checkout.session.expired": {
+      const checkoutSession = event.data.object as Stripe.Checkout.Session;
+      const studioId = checkoutSession.client_reference_id;
+      if (studioId) {
+        await sendCheckoutAbandonedEmail(studioId);
       }
       break;
     }

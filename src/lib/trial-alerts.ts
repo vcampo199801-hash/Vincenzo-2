@@ -30,13 +30,14 @@ function emailWrapper(titolo: string, corpo: string, ctaHref: string, ctaLabel: 
 function renderWelcomeHtml(studioName: string) {
   const corpo = `<p>Ciao, benvenuto su Scadenze in Regola! La prova gratuita di <strong>${escapeHtml(studioName)}</strong> è
     partita: hai 7 giorni per vedere se l'app fa al caso tuo, con tutte le funzionalità sbloccate.</p>
-    <p>Due cose semplici da fare subito:</p>
+    <p>Buona notizia: nello Scadenzario abbiamo già caricato per te le 24 scadenze normative standard di uno studio
+    odontoiatrico (estintori, autoclave, DVR, formazione sicurezza e le altre) — non parti da zero. Ti basta:</p>
     <ol style="padding-left:20px;">
-      <li>Installa l'app sul telefono o sul computer — basta il pulsante "Installa app" in alto, si apre come un'app vera.</li>
-      <li>Inserisci la prima scadenza (es. estintore, autoclave) nello Scadenzario: l'app calcola da sola quando scade
-        e ti avvisa in anticipo, senza doverci pensare tu.</li>
+      <li>Installare l'app sul telefono o sul computer — basta il pulsante "Installa app" in alto, si apre come un'app vera.</li>
+      <li>Per ogni scadenza già presente, inserire la data dell'ultimo controllo/rinnovo: l'app calcola da sola quando
+        scade di nuovo e ti avvisa in anticipo, senza doverci pensare tu.</li>
     </ol>`;
-  return emailWrapper("Benvenuto! La tua prova gratuita è iniziata", corpo, "/app", "Apri l'app");
+  return emailWrapper("Benvenuto! La tua prova gratuita è iniziata", corpo, "/app/scadenzario", "Vai allo Scadenzario");
 }
 
 function renderNurtureHtml(studioName: string) {
@@ -58,6 +59,31 @@ function renderTrialHtml(studioName: string, tipo: "promemoria" | "scaduta") {
          andato perso: tutto quello che hai inserito in questi giorni ti aspetta così com'è. Scegli un piano qui sotto
          per sbloccare subito l'accesso.</p>`;
   return emailWrapper(titolo, corpo, "/app/abbonamento", "Scegli il tuo piano");
+}
+
+function renderCheckoutAbbandonatoHtml(studioName: string) {
+  const corpo = `<p>Ciao, abbiamo notato che <strong>${escapeHtml(studioName)}</strong> ha iniziato ad attivare
+    l'abbonamento ma non ha completato l'inserimento della carta. Nessun problema: tutti i tuoi dati (scadenze,
+    documenti, magazzino e il resto) sono ancora lì, pronti a riprendere da dove hai lasciato.</p>
+    <p>Bastano un paio di minuti per finire: scegli il piano e inserisci la carta, il resto lo fa l'app.</p>`;
+  return emailWrapper("Hai lasciato a metà l'attivazione — ti aiutiamo?", corpo, "/app/abbonamento", "Completa l'attivazione");
+}
+
+/** Mandata quando Stripe segnala un Checkout Session scaduto senza essere
+ * completato (evento "checkout.session.expired", ~24h dopo l'inizio): prova
+ * a recuperare chi ha già mostrato intenzione d'acquisto (ha cliccato
+ * "Abbonati") ma si è fermato prima di inserire la carta. Non manda nulla se
+ * nel frattempo lo studio si è già abbonato con un altro tentativo. */
+export async function sendCheckoutAbandonedEmail(studioId: string) {
+  const studio = await prisma.studio.findUnique({ where: { id: studioId }, include: { subscription: true } });
+  if (!studio || !studio.email || !isEmailConfigured()) return;
+  if (studio.subscription?.status === "ACTIVE") return;
+
+  await sendEmail({
+    to: studio.email,
+    subject: `Hai lasciato a metà l'attivazione di Scadenze in Regola`,
+    html: renderCheckoutAbbandonatoHtml(studio.name),
+  });
 }
 
 /** Email di benvenuto, mandata una sola volta subito dopo la registrazione

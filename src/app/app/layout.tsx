@@ -79,15 +79,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="min-w-0 flex-1" />
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {sub?.status === "TRIALING" && (
-              <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700 sm:px-3">
+              <Link
+                href="/app/abbonamento"
+                className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-100 sm:px-3"
+              >
                 <span className="sm:hidden">{trialDaysLeft}gg prova</span>
                 <span className="hidden sm:inline">Prova gratuita — {trialDaysLeft} giorni rimanenti</span>
-              </span>
+              </Link>
             )}
             {sub?.status === "PAST_DUE" && (
-              <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 sm:px-3">
+              <Link
+                href="/app/abbonamento"
+                className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100 sm:px-3"
+              >
                 Pagamento non riuscito
-              </span>
+              </Link>
             )}
             <InstallAppButton />
             <Link
