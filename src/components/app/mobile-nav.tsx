@@ -27,6 +27,18 @@ export function MobileNav({
     setOpen(false);
   }, [pathname]);
 
+  // Senza questo, sul telefono scorrere dentro il menu aperto trascinava con
+  // sé anche la pagina sotto (il touch scroll "passa attraverso" l'overlay),
+  // rendendo irraggiungibili le voci in fondo come "Esci" su schermi piccoli.
+  useEffect(() => {
+    if (!open) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
+
   return (
     <>
       <button
