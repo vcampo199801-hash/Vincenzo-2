@@ -143,11 +143,11 @@ export default async function LaboratorioPage({ params }: { params: Promise<{ id
           </div>
           <ul className="divide-y divide-slate-100">
             {laboratorio.allegati.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                <Link href={`/app/laboratori/documento/${a.id}`} className="font-medium text-brand-600 hover:text-brand-800">
+              <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5 text-sm">
+                <Link href={`/app/laboratori/documento/${a.id}`} className="min-w-0 flex-1 truncate font-medium text-brand-600 hover:text-brand-800">
                   📎 {optionLabel(CATEGORIA_DOCUMENTO_LABORATORIO_OPTIONS, a.categoria)} — {a.nomeFile}
                 </Link>
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-3">
                   <span className="text-xs text-slate-400">{formatDate(a.dataCaricamento)}</span>
                   <DeleteButton action={deleteDocumentoLaboratorio.bind(null, a.id, laboratorio.id)} />
                 </div>
