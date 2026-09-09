@@ -67,6 +67,7 @@ export async function deleteLaboratorio(id: string) {
   await Promise.all(allegati.map((a) => del(a.fileUrl).catch(() => {})));
   await prisma.laboratorio.deleteMany({ where: { id, studioId: studio.id } });
   revalidatePath("/app/laboratori");
+  redirect("/app/laboratori");
 }
 
 export type UploadState = { error?: string } | undefined;
@@ -159,6 +160,7 @@ export async function deleteLavorazione(id: string) {
   await prisma.lavorazione.deleteMany({ where: { id, studioId: studio.id } });
   revalidatePath("/app/laboratori/lavorazioni");
   revalidatePath("/app");
+  redirect("/app/laboratori/lavorazioni");
 }
 
 // Campi modificabili tramite l'editing inline del Registro lavorazioni.
