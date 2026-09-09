@@ -2,8 +2,9 @@
 
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireSession, requireStudio } from "@/lib/auth-guards";
+import { requireSession, requireStudio, isAdminEmail } from "@/lib/auth-guards";
 
 export type ChangePasswordState = { error?: string; success?: string } | undefined;
 
@@ -67,4 +68,35 @@ export async function updateNotificationPreference(
 
   revalidatePath("/app/impostazioni");
   return { success: attiva ? `Riceverai il promemoria delle scadenze su ${email}.` : "Promemoria personale disattivato." };
+}
+
+/** Solo per un account admin (vedi ADMIN_EMAILS): attiva l'accesso illimitato
+ * al proprio studio, senza prova né carta né dipendenza da Stripe — pensato
+ * per l'account personale del titolare della piattaforma, non per i clienti.
+ * Agisce sempre e solo sullo studio a cui l'admin è collegato in quel
+ * momento, mai su uno studio scelto a piacere. */
+export async function attivaAccessoIllimitatoPerMe() {
+  const { session, studio } = await requireStudio();
+  if (!isAdminEmail(session.email)) redirect("/app");
+
+  const currentPeriodEnd = new Date();
+  currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 100);
+
+  await prisma.subscription.upsert({
+    where: { studioId: studio.id },
+    update: {
+      status: "ACTIVE",
+      plan: "illimitato",
+      currentPeriodEnd,
+      cancelAtPeriodEnd: false,
+      trialEndsAt: null,
+      stripeSubscriptionId: null,
+      stripeCustomerId: null,
+    },
+    create: { studioId: studio.id, status: "ACTIVE", plan: "illimitato", currentPeriodEnd },
+  });
+
+  revalidatePath("/app");
+  revalidatePath("/app/impostazioni");
+  redirect("/app/impostazioni?illimitato=1");
 }

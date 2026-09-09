@@ -1,7 +1,8 @@
-import { requireStudio } from "@/lib/auth-guards";
+import { requireStudio, isAdminEmail } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updateStudioInfo } from "@/lib/actions/studio";
 import { removeMember } from "@/lib/actions/team";
+import { attivaAccessoIllimitatoPerMe } from "@/lib/actions/account";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
@@ -22,8 +23,13 @@ export const dynamic = "force-dynamic";
 
 const ROLE_LABELS: Record<string, string> = { OWNER: "Titolare", MEMBER: "Collaboratore" };
 
-export default async function ImpostazioniPage() {
+export default async function ImpostazioniPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ illimitato?: string }>;
+}) {
   const { session, studio } = await requireStudio();
+  const params = await searchParams;
 
   const memberships = await prisma.membership.findMany({
     where: { studioId: studio.id },
@@ -134,6 +140,28 @@ export default async function ImpostazioniPage() {
             defaultChecked={ownMembership?.notificheAttive ?? false}
             defaultEmail={ownMembership?.notificheEmail ?? session.email}
           />
+          {isAdminEmail(session.email) && (
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <p className="text-sm font-medium text-slate-700">Accesso admin</p>
+              {params.illimitato && (
+                <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                  Accesso illimitato attivato per questo studio.
+                </p>
+              )}
+              {studio.subscription?.plan === "illimitato" ? (
+                <p className="mt-2 text-sm text-emerald-700">✓ Accesso illimitato già attivo su questo studio.</p>
+              ) : (
+                <>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Attiva l&apos;accesso illimitato (nessuna prova, nessuna carta) su questo studio.
+                  </p>
+                  <form action={attivaAccessoIllimitatoPerMe} className="mt-2">
+                    <SubmitButton>Attiva accesso illimitato</SubmitButton>
+                  </form>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
