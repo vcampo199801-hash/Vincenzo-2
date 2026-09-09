@@ -61,7 +61,9 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
       include: { studios: true },
     });
     const studio = user.studios[0];
-    await tx.membership.create({ data: { studioId: studio.id, userId: user.id, role: "OWNER" } });
+    await tx.membership.create({
+      data: { studioId: studio.id, userId: user.id, role: "OWNER", notificheAttive: true, notificheEmail: email },
+    });
     return { user, studio };
   });
 

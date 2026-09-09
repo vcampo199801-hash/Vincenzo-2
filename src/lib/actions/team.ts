@@ -105,7 +105,7 @@ export async function inviteMember(_prev: TeamFormState, formData: FormData): Pr
     if (already) return { error: "Questa persona fa già parte del team." };
 
     await prisma.membership.create({
-      data: { studioId: studio.id, userId: existingUser.id, role: "MEMBER", permessi },
+      data: { studioId: studio.id, userId: existingUser.id, role: "MEMBER", permessi, notificheAttive: true, notificheEmail: email },
     });
     revalidatePath("/app/impostazioni");
 
@@ -122,7 +122,9 @@ export async function inviteMember(_prev: TeamFormState, formData: FormData): Pr
 
   await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({ data: { email, name: name || null, passwordHash } });
-    await tx.membership.create({ data: { studioId: studio.id, userId: newUser.id, role: "MEMBER", permessi } });
+    await tx.membership.create({
+      data: { studioId: studio.id, userId: newUser.id, role: "MEMBER", permessi, notificheAttive: true, notificheEmail: email },
+    });
   });
 
   revalidatePath("/app/impostazioni");
