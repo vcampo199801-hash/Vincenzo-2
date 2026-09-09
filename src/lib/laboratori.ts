@@ -104,9 +104,17 @@ export function consegnaStato(
   return { giorni, stato: "OK" };
 }
 
-/** true se la registrazione ministeriale non risulta verificata da più di 12 mesi
- * (o non è mai stata verificata). */
-export function registrazioneDaVerificare(dataUltimaVerifica: Date | null | undefined): boolean {
+/** true se il laboratorio ha un numero di registrazione ministeriale ma non
+ * risulta verificato da più di 12 mesi (o non è mai stato verificato). Se non
+ * è mai stato inserito nemmeno il numero, non c'è nulla da "verificare": è il
+ * caso di chi usa questa scheda per la propria produzione interna (chairside)
+ * invece che per un vero laboratorio esterno registrato — altrimenti l'avviso
+ * comparirebbe per sempre senza che ci sia davvero qualcosa da fare. */
+export function registrazioneDaVerificare(
+  numeroRegistrazioneMinisteriale: string | null | undefined,
+  dataUltimaVerifica: Date | null | undefined
+): boolean {
+  if (!numeroRegistrazioneMinisteriale) return false;
   if (!dataUltimaVerifica) return true;
   const giorni = daysUntil(dataUltimaVerifica);
   return giorni !== null && giorni < -365;

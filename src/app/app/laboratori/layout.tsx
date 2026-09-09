@@ -39,7 +39,7 @@ export default async function LaboratoriLayout({ children }: { children: React.R
     .map((l) => ({ id: l.id, riferimentoPaziente: l.riferimentoPaziente, laboratorio: l.laboratorio.ragioneSociale }));
 
   const laboratoriDaVerificare = laboratori
-    .filter((lab) => lab.tracciaConformita && registrazioneDaVerificare(lab.dataUltimaVerificaRegistrazione))
+    .filter((lab) => lab.tracciaConformita && registrazioneDaVerificare(lab.numeroRegistrazioneMinisteriale, lab.dataUltimaVerificaRegistrazione))
     .map((lab) => ({ id: lab.id, ragioneSociale: lab.ragioneSociale }));
 
   return (

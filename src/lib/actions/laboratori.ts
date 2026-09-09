@@ -56,7 +56,14 @@ export async function updateLaboratorio(id: string, formData: FormData) {
 
 export async function deleteLaboratorio(id: string) {
   const { studio } = await requireActiveSubscription("laboratori");
-  const allegati = await prisma.allegatoLaboratorio.findMany({ where: { laboratorioId: id, studioId: studio.id } });
+  // Elimina dallo storage sia gli allegati del laboratorio (documenti come
+  // visura/certificazioni) sia quelli delle sue lavorazioni (dichiarazioni di
+  // conformità, DDT, foto): il cascade a livello di database le cancellerebbe
+  // comunque dalle tabelle, ma senza questo passaggio i file restavano orfani
+  // su Vercel Blob per sempre, mai ripuliti.
+  const allegati = await prisma.allegatoLaboratorio.findMany({
+    where: { studioId: studio.id, OR: [{ laboratorioId: id }, { lavorazione: { laboratorioId: id } }] },
+  });
   await Promise.all(allegati.map((a) => del(a.fileUrl).catch(() => {})));
   await prisma.laboratorio.deleteMany({ where: { id, studioId: studio.id } });
   revalidatePath("/app/laboratori");
@@ -114,9 +121,20 @@ function lavorazionePayload(formData: FormData) {
   };
 }
 
+/** Verifica che il laboratorio scelto nel form appartenga davvero a questo
+ * studio: senza questo controllo, un laboratorioId manomesso lato client
+ * potrebbe agganciare la lavorazione al laboratorio di un altro studio (i cui
+ * dati anagrafici comparirebbero poi, tramite l'include, sulla scheda della
+ * lavorazione). */
+async function assertLaboratorioProprio(laboratorioId: string, studioId: string) {
+  const laboratorio = await prisma.laboratorio.findFirst({ where: { id: laboratorioId, studioId } });
+  if (!laboratorio) throw new Error("Laboratorio non valido.");
+}
+
 export async function createLavorazione(formData: FormData) {
   const { studio } = await requireActiveSubscription("laboratori");
   const { laboratorioId, ...rest } = lavorazionePayload(formData);
+  await assertLaboratorioProprio(laboratorioId, studio.id);
   const lavorazione = await prisma.lavorazione.create({ data: { studioId: studio.id, laboratorioId, ...rest } });
   revalidatePath("/app/laboratori/lavorazioni");
   revalidatePath("/app");
@@ -125,7 +143,9 @@ export async function createLavorazione(formData: FormData) {
 
 export async function updateLavorazione(id: string, formData: FormData) {
   const { studio } = await requireActiveSubscription("laboratori");
-  await prisma.lavorazione.updateMany({ where: { id, studioId: studio.id }, data: lavorazionePayload(formData) });
+  const { laboratorioId, ...rest } = lavorazionePayload(formData);
+  await assertLaboratorioProprio(laboratorioId, studio.id);
+  await prisma.lavorazione.updateMany({ where: { id, studioId: studio.id }, data: { laboratorioId, ...rest } });
   revalidatePath("/app/laboratori/lavorazioni");
   revalidatePath(`/app/laboratori/lavorazioni/${id}`);
   revalidatePath("/app");
