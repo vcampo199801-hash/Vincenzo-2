@@ -22,8 +22,16 @@ export async function GET(req: NextRequest) {
   }
 
   const studios = await prisma.studio.findMany({
-    where: { notificheAttive: true, email: { not: null } },
-    include: { subscription: true },
+    where: {
+      OR: [
+        { notificheAttive: true, email: { not: null } },
+        { memberships: { some: { notificheAttive: true, notificheEmail: { not: null } } } },
+      ],
+    },
+    include: {
+      subscription: true,
+      memberships: { where: { notificheAttive: true }, select: { notificheAttive: true, notificheEmail: true } },
+    },
   });
 
   let sent = 0;
@@ -32,7 +40,7 @@ export async function GET(req: NextRequest) {
     const status = studio.subscription?.status;
     if (!status || !ENTITLED_STATUSES.has(status)) continue;
     try {
-      const didSend = await sendDigestForStudio(studio);
+      const didSend = await sendDigestForStudio({ ...studio, membri: studio.memberships });
       if (didSend) sent++;
     } catch (err) {
       failed++;

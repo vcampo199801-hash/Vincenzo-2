@@ -155,6 +155,13 @@ model Membership {
   permessi  String?
   createdAt DateTime @default(now())
 
+  // Preferenza personale di questo membro: vuole ricevere anche lui il
+  // promemoria giornaliero di scadenze/farmaci/magazzino, su questa email
+  // (non necessariamente la sua email di login) — indipendente dal flag
+  // notificheAttive dello studio, che riguarda solo l'email principale.
+  notificheAttive Boolean @default(false)
+  notificheEmail  String?
+
   @@unique([studioId, userId])
   @@index([userId])
 }

@@ -1,8 +1,9 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/auth-guards";
+import { requireSession, requireStudio } from "@/lib/auth-guards";
 
 export type ChangePasswordState = { error?: string; success?: string } | undefined;
 
@@ -37,4 +38,33 @@ export async function changePassword(_prev: ChangePasswordState, formData: FormD
   await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
 
   return { success: "Password aggiornata." };
+}
+
+export type NotificationPreferenceState = { error?: string; success?: string } | undefined;
+
+/** Preferenza personale di notifica: ogni membro del team (titolare o
+ * collaboratore) può scegliere se ricevere anche lui il promemoria
+ * giornaliero di scadenze/farmaci/magazzino, su un'email a sua scelta — non
+ * necessariamente quella con cui accede. Indipendente dall'email principale
+ * dello studio, impostata separatamente in "Notifiche" qui sopra. */
+export async function updateNotificationPreference(
+  _prev: NotificationPreferenceState,
+  formData: FormData
+): Promise<NotificationPreferenceState> {
+  const { membership } = await requireStudio();
+
+  const attiva = formData.get("notificheAttive") === "on";
+  const email = String(formData.get("notificheEmail") ?? "").trim().toLowerCase();
+
+  if (attiva && !email) {
+    return { error: "Inserisci un'email su cui ricevere il promemoria." };
+  }
+
+  await prisma.membership.update({
+    where: { id: membership.id },
+    data: { notificheAttive: attiva, notificheEmail: attiva ? email : null },
+  });
+
+  revalidatePath("/app/impostazioni");
+  return { success: attiva ? `Riceverai il promemoria delle scadenze su ${email}.` : "Promemoria personale disattivato." };
 }

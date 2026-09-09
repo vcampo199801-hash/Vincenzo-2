@@ -7,6 +7,7 @@ import { Field, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { InviteMemberForm } from "@/components/app/invite-member-form";
 import { ChangePasswordForm } from "@/components/app/change-password-form";
+import { NotificationPreferenceForm } from "@/components/app/notification-preference-form";
 import { MemberPermissionsForm } from "@/components/app/member-permissions-form";
 import { TestDigestButton } from "@/components/app/test-digest-button";
 import { TableScroll } from "@/components/ui/table-scroll";
@@ -29,7 +30,8 @@ export default async function ImpostazioniPage() {
     include: { user: true },
     orderBy: { createdAt: "asc" },
   });
-  const isOwner = memberships.find((m) => m.userId === session.userId)?.role === "OWNER";
+  const ownMembership = memberships.find((m) => m.userId === session.userId);
+  const isOwner = ownMembership?.role === "OWNER";
   const collaboratorCount = memberships.filter((m) => m.role === "MEMBER").length;
   const membershipsConSezioni = memberships.map((m) => {
     const allowedKeys = parsePermessi(m.permessi);
@@ -128,6 +130,10 @@ export default async function ImpostazioniPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm text-sm text-slate-600">
           <p>Email di accesso: <span className="font-medium text-slate-900">{session.email}</span></p>
           <ChangePasswordForm />
+          <NotificationPreferenceForm
+            defaultChecked={ownMembership?.notificheAttive ?? false}
+            defaultEmail={ownMembership?.notificheEmail ?? session.email}
+          />
         </div>
       </div>
 

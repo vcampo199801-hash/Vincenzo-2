@@ -188,17 +188,26 @@ export async function sendDigestForStudio(studio: {
   name: string;
   email: string | null;
   notificheAttive: boolean;
+  // Collaboratori che hanno attivato la propria preferenza personale (vedi
+  // Membership.notificheAttive/notificheEmail): indipendente dal flag dello
+  // studio, cosi un collaboratore puo ricevere il promemoria anche se il
+  // titolare ha disattivato la propria email principale, e viceversa.
+  membri?: { notificheAttive: boolean; notificheEmail: string | null }[];
 }) {
   const digest = await buildDigestForStudio(studio.id);
   if (!digest) return false;
+  if (!isEmailConfigured()) return false;
 
-  if (!studio.notificheAttive || !studio.email || !isEmailConfigured()) return false;
+  const destinatari = new Set<string>();
+  if (studio.notificheAttive && studio.email) destinatari.add(studio.email);
+  for (const m of studio.membri ?? []) {
+    if (m.notificheAttive && m.notificheEmail) destinatari.add(m.notificheEmail);
+  }
+  if (destinatari.size === 0) return false;
 
   const totalCount = digestTotalCount(digest);
-  await sendEmail({
-    to: studio.email,
-    subject: `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`,
-    html: await renderDigestHtml(studio.name, digest),
-  });
+  const subject = `${totalCount} ${totalCount === 1 ? "cosa richiede" : "cose richiedono"} attenzione — ${studio.name}`;
+  const html = await renderDigestHtml(studio.name, digest);
+  await Promise.all(Array.from(destinatari).map((to) => sendEmail({ to, subject, html })));
   return true;
 }
