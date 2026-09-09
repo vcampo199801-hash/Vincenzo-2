@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireStudio } from "@/lib/auth-guards";
 import { APP_MODULES } from "@/lib/modules";
 import { PIANI, normalizzaPiano } from "@/lib/plans";
+import { sendEmail, isEmailConfigured } from "@/lib/email";
 
 export type TeamFormState = { error?: string; success?: string } | undefined;
 
@@ -17,6 +18,50 @@ function generateTempPassword(length = 10) {
     out += TEMP_PASSWORD_ALPHABET[Math.floor(Math.random() * TEMP_PASSWORD_ALPHABET.length)];
   }
   return out;
+}
+
+function escapeHtml(text: string) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function appUrl() {
+  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+}
+
+function emailWrapper(titolo: string, corpo: string) {
+  return `
+    <div style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;max-width:560px;margin:0 auto;">
+      <h1 style="font-size:18px;color:#3d7076;">Scadenze in Regola</h1>
+      <p style="font-weight:bold;">${titolo}</p>
+      ${corpo}
+      <p style="margin-top:24px;">
+        <a href="${appUrl()}/login" style="background:#4e888f;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:14px;">
+          Accedi
+        </a>
+      </p>
+    </div>
+  `;
+}
+
+/** Non deve mai far fallire l'invito se l'invio fallisce (Resend non configurato,
+ * errore di rete, ecc.): l'account/il collegamento al team sono già stati creati
+ * nel database a questo punto, quindi va sempre chiamata dentro un try/catch —
+ * la password temporanea resta comunque visibile a schermo come ripiego. */
+async function sendInviteEmail(params: { email: string; studioName: string; nuovoAccount: boolean; tempPassword?: string }) {
+  if (!isEmailConfigured()) return;
+
+  const corpo = params.nuovoAccount
+    ? `<p>Sei stato invitato a collaborare con <strong>${escapeHtml(params.studioName)}</strong> su Scadenze in Regola.</p>
+       <p>Ecco le tue credenziali per accedere:</p>
+       <p>Email: <strong>${escapeHtml(params.email)}</strong><br/>Password temporanea: <strong>${escapeHtml(params.tempPassword ?? "")}</strong></p>`
+    : `<p>Sei stato aggiunto al team di <strong>${escapeHtml(params.studioName)}</strong> su Scadenze in Regola. Puoi accedere con le
+       credenziali che usi già per il tuo account.</p>`;
+
+  await sendEmail({
+    to: params.email,
+    subject: `Sei stato invitato su Scadenze in Regola — ${params.studioName}`,
+    html: emailWrapper("Ti hanno invitato a collaborare", corpo),
+  });
 }
 
 async function requireOwner() {
@@ -62,7 +107,13 @@ export async function inviteMember(_prev: TeamFormState, formData: FormData): Pr
       data: { studioId: studio.id, userId: existingUser.id, role: "MEMBER", permessi },
     });
     revalidatePath("/app/impostazioni");
-    return { success: `${email} aveva già un account: aggiunto al team dello studio.` };
+
+    try {
+      await sendInviteEmail({ email, studioName: studio.name, nuovoAccount: false });
+    } catch {
+      return { success: `${email} aveva già un account: aggiunto al team dello studio. Non siamo però riusciti a inviargli l'email di notifica: avvisalo tu direttamente.` };
+    }
+    return { success: `${email} aveva già un account: aggiunto al team dello studio. Gli abbiamo inviato una email di notifica.` };
   }
 
   const tempPassword = generateTempPassword();
@@ -74,8 +125,16 @@ export async function inviteMember(_prev: TeamFormState, formData: FormData): Pr
   });
 
   revalidatePath("/app/impostazioni");
+
+  try {
+    await sendInviteEmail({ email, studioName: studio.name, nuovoAccount: true, tempPassword });
+  } catch {
+    return {
+      success: `Account creato per ${email}, ma non siamo riusciti a inviargli l'email con le credenziali. Password temporanea: ${tempPassword} — condividila tu in modo sicuro (WhatsApp, email).`,
+    };
+  }
   return {
-    success: `Account creato per ${email}. Password temporanea: ${tempPassword} — condividila in modo sicuro (WhatsApp, email): potrà usarla per accedere.`,
+    success: `Account creato per ${email}: gli abbiamo inviato via email le credenziali per accedere. Password temporanea (nel caso non gli fosse arrivata): ${tempPassword}`,
   };
 }
 
