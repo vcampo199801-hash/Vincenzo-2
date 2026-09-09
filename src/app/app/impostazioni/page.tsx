@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Field, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { InviteMemberForm } from "@/components/app/invite-member-form";
+import { ChangePasswordForm } from "@/components/app/change-password-form";
 import { MemberPermissionsForm } from "@/components/app/member-permissions-form";
 import { TestDigestButton } from "@/components/app/test-digest-button";
 import { TableScroll } from "@/components/ui/table-scroll";
@@ -126,6 +127,7 @@ export default async function ImpostazioniPage() {
         <h2 className="mb-3 text-lg font-semibold text-slate-900">Account</h2>
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm text-sm text-slate-600">
           <p>Email di accesso: <span className="font-medium text-slate-900">{session.email}</span></p>
+          <ChangePasswordForm />
         </div>
       </div>
 

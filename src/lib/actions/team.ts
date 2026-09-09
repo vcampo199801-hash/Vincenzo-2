@@ -53,7 +53,8 @@ async function sendInviteEmail(params: { email: string; studioName: string; nuov
   const corpo = params.nuovoAccount
     ? `<p>Sei stato invitato a collaborare con <strong>${escapeHtml(params.studioName)}</strong> su Scadenze in Regola.</p>
        <p>Ecco le tue credenziali per accedere:</p>
-       <p>Email: <strong>${escapeHtml(params.email)}</strong><br/>Password temporanea: <strong>${escapeHtml(params.tempPassword ?? "")}</strong></p>`
+       <p>Email: <strong>${escapeHtml(params.email)}</strong><br/>Password temporanea: <strong>${escapeHtml(params.tempPassword ?? "")}</strong></p>
+       <p>Al primo accesso ti consigliamo di impostarne una tua: vai su Impostazioni → Account → "Cambia password".</p>`
     : `<p>Sei stato aggiunto al team di <strong>${escapeHtml(params.studioName)}</strong> su Scadenze in Regola. Puoi accedere con le
        credenziali che usi già per il tuo account.</p>`;
 
