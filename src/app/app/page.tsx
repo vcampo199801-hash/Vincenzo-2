@@ -16,6 +16,7 @@ import { consegnaStato, contaStatiLavorazione, CATEGORIA_DICHIARAZIONE_CONFORMIT
 import {
   sommaKpi,
   tassoConversionePreventivi,
+  preventivoScadenzaStato,
   fatturatoUltimiGiorni,
   toIsoDate,
   inizioMese,
@@ -79,7 +80,10 @@ export default async function DashboardPage({
       prisma.manutenzioneLog.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } }),
       prisma.tipoManutenzione.findMany({ where: { studioId: studio.id } }),
       prisma.movimentoMagazzino.findMany({ where: { studioId: studio.id } }),
-      prisma.preventivo.findMany({ where: { studioId: studio.id }, select: { data: true, totaleProposto: true, totaleAccettato: true } }),
+      prisma.preventivo.findMany({
+        where: { studioId: studio.id },
+        select: { data: true, totaleProposto: true, totaleAccettato: true, scadenza: true, stato: true },
+      }),
     ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -206,6 +210,7 @@ export default async function DashboardPage({
       ? preventiviMeseCorrente.reduce((s, p) => s + (p.totaleAccettato ?? 0), 0)
       : kpiMeseCorrente.valorePreventiviAccettati;
   const conversioneMeseKpi = tassoConversionePreventivi(presentatiMeseCorrente, accettatiMeseCorrente);
+  const preventiviInScadenzaCount = preventiviKpi.filter((p) => preventivoScadenzaStato(p.scadenza, p.stato) !== "OK").length;
   const ultimi7Giorni = fatturatoUltimiGiorni(kpiGiornalieri, 7, now);
 
   // Spese: totale del mese/anno corrente e ripartizione per categoria del mese.
@@ -572,6 +577,9 @@ export default async function DashboardPage({
                     <DashRow label="Fatturato di oggi" value={formatCurrency(kpiOggi?.fatturato ?? 0)} />
                     <DashRow label="Fatturato questo mese" value={formatCurrency(kpiMeseCorrente.fatturato)} />
                     <DashRow label="Prime visite questo mese" value={kpiMeseCorrente.numeroPrimeVisite} />
+                    <DashRow label="Preventivi in scadenza" value={preventiviInScadenzaCount} />
+                    <DashRow label="Preventivi presentati questo mese" value={formatCurrency(presentatiMeseCorrente)} />
+                    <DashRow label="Preventivi accettati questo mese" value={formatCurrency(accettatiMeseCorrente)} />
                     <DashRow label="Conversione preventivi" value={conversioneMeseKpi === null ? "—" : `${conversioneMeseKpi}%`} />
                   </div>
                   <div className="border-t border-slate-100 pt-4">

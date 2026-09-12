@@ -83,30 +83,26 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
       <KpiTabs />
 
       <div className="mb-6 flex flex-wrap gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        {dottori.length > 0 && (
-          <div>
-            <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Dottore</p>
-            <PreventiviFiltroPersona
-              paramName="dottore"
-              valoreAttuale={params.dottore ?? ""}
-              opzioni={dottori}
-              placeholder="Tutti i dottori"
-              currentParams={params}
-            />
-          </div>
-        )}
-        {commerciali.length > 0 && (
-          <div>
-            <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Commerciale</p>
-            <PreventiviFiltroPersona
-              paramName="commerciale"
-              valoreAttuale={params.commerciale ?? ""}
-              opzioni={commerciali}
-              placeholder="Tutti i commerciali"
-              currentParams={params}
-            />
-          </div>
-        )}
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Dottore</p>
+          <PreventiviFiltroPersona
+            paramName="dottore"
+            valoreAttuale={params.dottore ?? ""}
+            opzioni={dottori}
+            placeholder="Tutti i dottori"
+            currentParams={params}
+          />
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Commerciale</p>
+          <PreventiviFiltroPersona
+            paramName="commerciale"
+            valoreAttuale={params.commerciale ?? ""}
+            opzioni={commerciali}
+            placeholder="Tutti i commerciali"
+            currentParams={params}
+          />
+        </div>
         <div>
           <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Stato</p>
           <div className="flex flex-wrap gap-1.5">
