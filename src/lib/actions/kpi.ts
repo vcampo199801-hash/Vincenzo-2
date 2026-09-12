@@ -55,7 +55,7 @@ function payloadPreventivo(formData: FormData) {
     totaleProposto: Number(formData.get("totaleProposto") ?? 0) || 0,
     totaleAccettato: totaleAccettatoRaw ? Number(totaleAccettatoRaw) : null,
     scadenza: scadenzaRaw ? new Date(scadenzaRaw) : null,
-    assicurazione: formData.get("assicurazione") === "on",
+    assicurazione: String(formData.get("assicurazione") ?? "").trim() || null,
     modalitaPagamento: String(formData.get("modalitaPagamento") ?? "").trim() || null,
     stato: String(formData.get("stato") ?? "PRESENTATO"),
     note: String(formData.get("note") ?? "").trim() || null,

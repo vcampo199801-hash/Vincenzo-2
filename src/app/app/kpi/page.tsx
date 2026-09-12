@@ -6,6 +6,8 @@ import {
   serieUltimiGiorni,
   serieGiornalieraIntervallo,
   tassoConversionePreventivi,
+  preventiviAggregatiPerGiorno,
+  unisciRigheKpi,
   KPI_METRICHE,
   toIsoDate,
   inizioMese,
@@ -91,10 +93,14 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
   const periodo: Periodo = PERIODI.some((p) => p.value === params.periodo) ? (params.periodo as Periodo) : PERIODO_DEFAULT;
   const anno = oggi.getUTCFullYear();
 
-  const [righe, righeGiornoSelezionato] = await Promise.all([
+  const [righeGiornaliere, righeGiornoSelezionato, preventivi] = await Promise.all([
     prisma.kpiGiornaliero.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } }),
     prisma.kpiGiornaliero.findFirst({ where: { studioId: studio.id, data: dataSelezionata } }),
+    prisma.preventivo.findMany({ where: { studioId: studio.id }, select: { data: true, totaleProposto: true, totaleAccettato: true } }),
   ]);
+  // I preventivi (sezione a parte) hanno sempre la precedenza sul vecchio
+  // valore aggregato inserito a mano, per le date in cui esistono.
+  const righe = unisciRigheKpi(righeGiornaliere, preventiviAggregatiPerGiorno(preventivi));
 
   const serieVisibili = KPI_METRICHE.map((m) => ({
     ...m,
@@ -108,39 +114,29 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
     <div>
       <PageHeader
         title="KPI Studio"
-        description="Inserisci ogni giorno pochi numeri chiave: fatturato, prime visite, appuntamenti e preventivi. L'app costruisce da sola i riepiloghi mensili e annuali."
+        description="Andamento nel tempo di fatturato, visite e preventivi. I preventivi si registrano uno per uno nella scheda “Preventivi”: qui vedi solo il riepilogo, calcolato in automatico."
       />
 
       <KpiTabs />
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-sm font-semibold text-slate-900">
+        <h2 className="mb-1 text-sm font-semibold text-slate-900">
           {isModifica ? `Modifica i dati del ${formatDate(dataSelezionata)}` : "Inserisci i dati di oggi"}
         </h2>
+        <p className="mb-4 text-xs text-slate-500">
+          Solo fatturato, prime visite e appuntamenti — per i preventivi vai su{" "}
+          <Link href="/app/kpi/preventivi" className="font-medium text-brand-600 hover:underline">
+            Preventivi
+          </Link>
+          .
+        </p>
         <UnsavedChangesGuard>
         <form action={salvaKpiGiorno} className="space-y-4">
           <Field label="Data" name="data" type="date" required defaultValue={toIsoDate(dataSelezionata)} />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <Field label="N. prime visite" name="numeroPrimeVisite" type="number" defaultValue={righeGiornoSelezionato?.numeroPrimeVisite ?? 0} />
             <Field label="N. appuntamenti" name="numeroAppuntamenti" type="number" defaultValue={righeGiornoSelezionato?.numeroAppuntamenti ?? 0} />
             <Field label="Fatturato (€)" name="fatturato" type="number" step="0.01" defaultValue={righeGiornoSelezionato?.fatturato ?? 0} />
-            <Field
-              label="Preventivi presentati (€)"
-              name="valorePreventiviPresentati"
-              type="number"
-              step="0.01"
-              defaultValue={righeGiornoSelezionato?.valorePreventiviPresentati ?? 0}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Field
-              label="Preventivi accettati (€)"
-              name="valorePreventiviAccettati"
-              type="number"
-              step="0.01"
-              defaultValue={righeGiornoSelezionato?.valorePreventiviAccettati ?? 0}
-              hint="Del totale presentato, quanto è stato firmato."
-            />
           </div>
           <TextAreaField label="Note" name="note" defaultValue={righeGiornoSelezionato?.note} />
           <SubmitButton>{isModifica ? "Salva modifiche" : "Salva i dati di oggi"}</SubmitButton>
@@ -197,20 +193,16 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
               <th className="px-4 py-3">Prime visite</th>
               <th className="px-4 py-3">Appuntamenti</th>
               <th className="px-4 py-3">Fatturato</th>
-              <th className="px-4 py-3">Preventivi presentati</th>
-              <th className="px-4 py-3">Preventivi accettati</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {righe.map((r) => (
+            {righeGiornaliere.map((r) => (
               <tr key={r.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3 font-medium text-slate-900">{formatDate(r.data)}</td>
                 <td className="px-4 py-3 text-slate-600">{r.numeroPrimeVisite}</td>
                 <td className="px-4 py-3 text-slate-600">{r.numeroAppuntamenti}</td>
                 <td className="px-4 py-3 text-slate-600">{formatCurrency(r.fatturato)}</td>
-                <td className="px-4 py-3 text-slate-600">{formatCurrency(r.valorePreventiviPresentati)}</td>
-                <td className="px-4 py-3 text-slate-600">{formatCurrency(r.valorePreventiviAccettati)}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-3">
                     <a href={`/app/kpi?data=${toIsoDate(r.data)}`} className="text-sm font-medium text-brand-600 hover:text-brand-800">
@@ -221,9 +213,9 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
                 </td>
               </tr>
             ))}
-            {righe.length === 0 && (
+            {righeGiornaliere.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
                   Nessun dato inserito finora.
                 </td>
               </tr>

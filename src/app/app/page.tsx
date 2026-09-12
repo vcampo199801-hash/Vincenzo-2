@@ -63,7 +63,7 @@ export default async function DashboardPage({
   const digest = await buildDigestForStudio(studio.id);
   const digestCount = digest ? digestTotalCount(digest) : 0;
 
-  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni, tipiManutenzione, movimentiMagazzino] =
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni, tipiManutenzione, movimentiMagazzino, preventiviKpi] =
     await Promise.all([
       prisma.adempimento.findMany({ where: { studioId: studio.id } }),
       prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
@@ -79,6 +79,7 @@ export default async function DashboardPage({
       prisma.manutenzioneLog.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } }),
       prisma.tipoManutenzione.findMany({ where: { studioId: studio.id } }),
       prisma.movimentoMagazzino.findMany({ where: { studioId: studio.id } }),
+      prisma.preventivo.findMany({ where: { studioId: studio.id }, select: { data: true, totaleProposto: true, totaleAccettato: true } }),
     ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -189,7 +190,22 @@ export default async function DashboardPage({
   const oggiIso = toIsoDate(now);
   const kpiOggi = kpiGiornalieri.find((k) => toIsoDate(k.data) === oggiIso);
   const kpiMeseCorrente = sommaKpi(kpiGiornalieri.filter((k) => k.data.getUTCFullYear() === now.getUTCFullYear() && k.data.getUTCMonth() === now.getUTCMonth()));
-  const conversioneMeseKpi = tassoConversionePreventivi(kpiMeseCorrente.valorePreventiviPresentati, kpiMeseCorrente.valorePreventiviAccettati);
+  // La conversione preventivi viene dai preventivi singoli (sezione KPI
+  // Studio → Preventivi) quando ce ne sono per il mese corrente; altrimenti
+  // resta il vecchio totale aggregato inserito a mano, per chi non ha ancora
+  // iniziato a usare la nuova sezione — non deve sparire di colpo un dato già inserito.
+  const preventiviMeseCorrente = preventiviKpi.filter(
+    (p) => p.data.getUTCFullYear() === now.getUTCFullYear() && p.data.getUTCMonth() === now.getUTCMonth()
+  );
+  const presentatiMeseCorrente =
+    preventiviMeseCorrente.length > 0
+      ? preventiviMeseCorrente.reduce((s, p) => s + p.totaleProposto, 0)
+      : kpiMeseCorrente.valorePreventiviPresentati;
+  const accettatiMeseCorrente =
+    preventiviMeseCorrente.length > 0
+      ? preventiviMeseCorrente.reduce((s, p) => s + (p.totaleAccettato ?? 0), 0)
+      : kpiMeseCorrente.valorePreventiviAccettati;
+  const conversioneMeseKpi = tassoConversionePreventivi(presentatiMeseCorrente, accettatiMeseCorrente);
   const ultimi7Giorni = fatturatoUltimiGiorni(kpiGiornalieri, 7, now);
 
   // Spese: totale del mese/anno corrente e ripartizione per categoria del mese.

@@ -12,6 +12,7 @@ import {
 } from "@/lib/kpi";
 import { deletePreventivo } from "@/lib/actions/kpi";
 import { KpiTabs } from "@/components/app/kpi-tabs";
+import { PreventiviFiltroPersona } from "@/components/app/preventivi-filtro-persona";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
@@ -85,25 +86,25 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
         {dottori.length > 0 && (
           <div>
             <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Dottore</p>
-            <div className="flex flex-wrap gap-1.5">
-              {dottori.map((d) => (
-                <Chip key={d} href={chipHref(params, "dottore", d)} active={params.dottore === d}>
-                  {d}
-                </Chip>
-              ))}
-            </div>
+            <PreventiviFiltroPersona
+              paramName="dottore"
+              valoreAttuale={params.dottore ?? ""}
+              opzioni={dottori}
+              placeholder="Tutti i dottori"
+              currentParams={params}
+            />
           </div>
         )}
         {commerciali.length > 0 && (
           <div>
             <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Commerciale</p>
-            <div className="flex flex-wrap gap-1.5">
-              {commerciali.map((c) => (
-                <Chip key={c} href={chipHref(params, "commerciale", c)} active={params.commerciale === c}>
-                  {c}
-                </Chip>
-              ))}
-            </div>
+            <PreventiviFiltroPersona
+              paramName="commerciale"
+              valoreAttuale={params.commerciale ?? ""}
+              opzioni={commerciali}
+              placeholder="Tutti i commerciali"
+              currentParams={params}
+            />
           </div>
         )}
         <div>
@@ -208,7 +209,7 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
                     {p.scadenza ? formatDate(p.scadenza) : "—"}
                     {scadenzaStato !== "OK" && <span className="ml-1.5"><StatoBadge stato={scadenzaStato} /></span>}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{p.assicurazione ? "Sì" : "No"}</td>
+                  <td className="px-4 py-3 text-slate-600">{p.assicurazione ?? "Nessuna"}</td>
                   <td className="px-4 py-3 text-slate-600">{optionLabelKpi(MODALITA_PAGAMENTO_OPTIONS, p.modalitaPagamento)}</td>
                   <td className="px-4 py-3">
                     <StatoBadge stato={p.stato} />

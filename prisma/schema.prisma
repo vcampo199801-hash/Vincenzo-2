@@ -612,7 +612,9 @@ model Preventivo {
   totaleProposto    Float
   totaleAccettato   Float?
   scadenza          DateTime?
-  assicurazione     Boolean   @default(false)
+  // Nome dell'assicurazione (es. "Previmedical"), non solo sì/no: ce ne sono
+  // di diverse. Null/vuoto = nessuna assicurazione coinvolta.
+  assicurazione     String?
   modalitaPagamento String?
   // StatoPreventivo: PRESENTATO | ACCETTATO | RIFIUTATO
   stato             String    @default("PRESENTATO")

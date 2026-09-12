@@ -42,6 +42,56 @@ export type KpiRiga = {
   valorePreventiviAccettati: number;
 };
 
+/** Somma per giorno i preventivi singoli (presentato/accettato), per far
+ * confluire i dati della sezione Preventivi nei grafici di Andamento — non
+ * si inserisce più questo totale a mano in due posti diversi. */
+export function preventiviAggregatiPerGiorno(
+  preventivi: { data: Date; totaleProposto: number; totaleAccettato: number | null }[]
+) {
+  const perGiorno = new Map<string, { data: Date; valorePreventiviPresentati: number; valorePreventiviAccettati: number }>();
+  for (const p of preventivi) {
+    const iso = toIsoDate(p.data);
+    const riga = perGiorno.get(iso) ?? { data: p.data, valorePreventiviPresentati: 0, valorePreventiviAccettati: 0 };
+    riga.valorePreventiviPresentati += p.totaleProposto;
+    riga.valorePreventiviAccettati += p.totaleAccettato ?? 0;
+    perGiorno.set(iso, riga);
+  }
+  return Array.from(perGiorno.values());
+}
+
+/** Unisce le righe di KpiGiornaliero (fatturato, prime visite, appuntamenti —
+ * ancora inseriti a mano un giorno alla volta) con i totali dei preventivi
+ * singoli aggregati per giorno, che ora sostituiscono l'inserimento manuale
+ * di quei due valori. Per le date in cui esistono preventivi singoli, questi
+ * ultimi hanno sempre la precedenza sul vecchio valore inserito a mano. */
+export function unisciRigheKpi(
+  kpiGiornaliero: KpiRiga[],
+  preventiviGiorno: { data: Date; valorePreventiviPresentati: number; valorePreventiviAccettati: number }[]
+): KpiRiga[] {
+  const perGiorno = new Map<string, KpiRiga>();
+  for (const r of kpiGiornaliero) {
+    perGiorno.set(toIsoDate(r.data), { ...r });
+  }
+  for (const p of preventiviGiorno) {
+    const iso = toIsoDate(p.data);
+    const esistente = perGiorno.get(iso);
+    if (esistente) {
+      esistente.valorePreventiviPresentati = p.valorePreventiviPresentati;
+      esistente.valorePreventiviAccettati = p.valorePreventiviAccettati;
+    } else {
+      perGiorno.set(iso, {
+        data: p.data,
+        numeroPrimeVisite: 0,
+        numeroAppuntamenti: 0,
+        fatturato: 0,
+        valorePreventiviPresentati: p.valorePreventiviPresentati,
+        valorePreventiviAccettati: p.valorePreventiviAccettati,
+      });
+    }
+  }
+  return Array.from(perGiorno.values());
+}
+
 export function tassoConversionePreventivi(presentati: number, accettati: number): number | null {
   if (presentati <= 0) return null;
   return Math.round((accettati / presentati) * 100);
