@@ -18,6 +18,7 @@ import {
   type KpiRiga,
 } from "@/lib/kpi";
 import { salvaKpiGiorno, deleteKpiGiorno } from "@/lib/actions/kpi";
+import { KpiTabs } from "@/components/app/kpi-tabs";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
@@ -109,6 +110,8 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
         title="KPI Studio"
         description="Inserisci ogni giorno pochi numeri chiave: fatturato, prime visite, appuntamenti e preventivi. L'app costruisce da sola i riepiloghi mensili e annuali."
       />
+
+      <KpiTabs />
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-sm font-semibold text-slate-900">

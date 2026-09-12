@@ -77,6 +77,7 @@ model Studio {
   lavorazioni          Lavorazione[]
   allegatiLaboratorio  AllegatoLaboratorio[]
   kpiGiornalieri       KpiGiornaliero[]
+  preventivi           Preventivo[]
   pazienti             Paziente[]
   moduliCompilati      ModuloCompilato[]
   materialiInformativi MaterialeInformativo[]
@@ -595,6 +596,30 @@ model KpiGiornaliero {
   updatedAt                  DateTime @updatedAt
 
   @@unique([studioId, data])
+  @@index([studioId])
+}
+
+// Un preventivo singolo (a differenza di KpiGiornaliero, che è solo il totale
+// aggregato del giorno): serve per poter estrarre report per dottore e per
+// commerciale, cosa impossibile con solo un numero aggregato giornaliero.
+model Preventivo {
+  id                String    @id @default(cuid())
+  studioId          String
+  studio            Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  data              DateTime
+  dottore           String
+  commerciale       String?
+  totaleProposto    Float
+  totaleAccettato   Float?
+  scadenza          DateTime?
+  assicurazione     Boolean   @default(false)
+  modalitaPagamento String?
+  // StatoPreventivo: PRESENTATO | ACCETTATO | RIFIUTATO
+  stato             String    @default("PRESENTATO")
+  note              String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
   @@index([studioId])
 }
 

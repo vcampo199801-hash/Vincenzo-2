@@ -73,6 +73,9 @@ export const STATO_LABELS: Record<string, string> = {
   PRESENTE: "Presente",
   DA_AGGIORNARE: "Da aggiornare",
   MANCANTE: "Mancante",
+  PRESENTATO: "Presentato",
+  ACCETTATO: "Accettato",
+  RIFIUTATO: "Rifiutato",
 };
 
 // Bold, high-contrast colors on purpose: these badges need to jump out at a
@@ -87,6 +90,9 @@ export const STATO_COLORS: Record<string, string> = {
   PRESENTE: "bg-emerald-500 text-white border-emerald-500",
   DA_AGGIORNARE: "bg-amber-400 text-slate-900 border-amber-400",
   MANCANTE: "bg-red-600 text-white border-red-600",
+  PRESENTATO: "bg-brand-100 text-brand-700 border-brand-200",
+  ACCETTATO: "bg-emerald-500 text-white border-emerald-500",
+  RIFIUTATO: "bg-slate-400 text-white border-slate-400",
 };
 
 export function formatDate(date: Date | null | undefined) {

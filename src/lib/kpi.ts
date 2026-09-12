@@ -1,3 +1,5 @@
+import { daysUntil } from "@/lib/compliance";
+
 export const MESI_LABELS = [
   "Gennaio",
   "Febbraio",
@@ -178,6 +180,80 @@ export function inizioAnno(anno: number) {
 }
 export function fineAnno(anno: number) {
   return new Date(Date.UTC(anno, 11, 31));
+}
+
+// ---------- Preventivi (singoli, a differenza del totale aggregato giornaliero) ----------
+
+export const STATO_PREVENTIVO_OPTIONS = [
+  { value: "PRESENTATO", label: "Presentato" },
+  { value: "ACCETTATO", label: "Accettato" },
+  { value: "RIFIUTATO", label: "Rifiutato" },
+];
+
+export const MODALITA_PAGAMENTO_OPTIONS = [
+  { value: "CONTANTI", label: "Contanti" },
+  { value: "CARTA", label: "Carta" },
+  { value: "BONIFICO", label: "Bonifico" },
+  { value: "FINANZIAMENTO", label: "Finanziamento" },
+  { value: "ASSEGNO", label: "Assegno" },
+  { value: "ALTRO", label: "Altro" },
+];
+
+export function optionLabelKpi(options: { value: string; label: string }[], value: string | null | undefined) {
+  return options.find((o) => o.value === value)?.label ?? value ?? "—";
+}
+
+export type PreventivoScadenzaStato = "OK" | "IN_SCADENZA" | "SCADUTO";
+
+/** Stato della scadenza, rilevante solo per un preventivo ancora "Presentato":
+ * una volta accettato o rifiutato la scadenza non ha più senso segnalarla. */
+export function preventivoScadenzaStato(scadenza: Date | null | undefined, stato: string): PreventivoScadenzaStato {
+  if (stato !== "PRESENTATO" || !scadenza) return "OK";
+  const giorni = daysUntil(scadenza);
+  if (giorni === null) return "OK";
+  if (giorni < 0) return "SCADUTO";
+  if (giorni <= 7) return "IN_SCADENZA";
+  return "OK";
+}
+
+export type PreventivoRiga = {
+  dottore: string;
+  commerciale: string | null;
+  totaleProposto: number;
+  totaleAccettato: number | null;
+};
+
+export type ReportPersona = {
+  nome: string;
+  numeroPreventivi: number;
+  totaleProposto: number;
+  totaleAccettato: number;
+  tassoConversione: number | null;
+};
+
+/** Raggruppa i preventivi per dottore o per commerciale con i relativi
+ * totali e tasso di conversione: è il "report per ognuno" richiesto,
+ * impossibile da ottenere con un numero aggregato per giorno come prima. */
+export function reportPerPersona(preventivi: PreventivoRiga[], campo: "dottore" | "commerciale"): ReportPersona[] {
+  const gruppi = new Map<string, PreventivoRiga[]>();
+  for (const p of preventivi) {
+    const nome = (campo === "dottore" ? p.dottore : p.commerciale) || "—";
+    if (!gruppi.has(nome)) gruppi.set(nome, []);
+    gruppi.get(nome)!.push(p);
+  }
+  return Array.from(gruppi.entries())
+    .map(([nome, righe]) => {
+      const totaleProposto = righe.reduce((s, r) => s + r.totaleProposto, 0);
+      const totaleAccettato = righe.reduce((s, r) => s + (r.totaleAccettato ?? 0), 0);
+      return {
+        nome,
+        numeroPreventivi: righe.length,
+        totaleProposto,
+        totaleAccettato,
+        tassoConversione: tassoConversionePreventivi(totaleProposto, totaleAccettato),
+      };
+    })
+    .sort((a, b) => b.totaleProposto - a.totaleProposto);
 }
 
 /** Elenco {anno, mese} di ogni mese compreso tra dataInizio e dataFine
