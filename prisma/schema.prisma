@@ -573,6 +573,14 @@ model Fornitore {
   email             String?
   contrattoAttivo   Boolean   @default(false)
   scadenzaContratto DateTime?
+  // TipoRinnovo: TACITO | NON_TACITO — se il contratto si rinnova da solo
+  // alla scadenza o va rinegoziato/disdetto attivamente.
+  tipoRinnovo       String?
+  // Importo della fornitura SENZA IVA: l'importo con IVA si calcola sempre
+  // da questo + percentualeIva, non va salvato separatamente per evitare
+  // che i due valori vadano fuori sincrono.
+  importo           Float?
+  percentualeIva    Float?
   note              String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt

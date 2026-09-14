@@ -11,6 +11,8 @@ function parseDate(value: FormDataEntryValue | null) {
 }
 
 function payload(formData: FormData) {
+  const importoRaw = String(formData.get("importo") ?? "").trim();
+  const percentualeIvaRaw = String(formData.get("percentualeIva") ?? "").trim();
   return {
     tipo: String(formData.get("tipo") ?? "COMPLIANCE"),
     ruolo: String(formData.get("ruolo") ?? "").trim(),
@@ -19,6 +21,9 @@ function payload(formData: FormData) {
     email: String(formData.get("email") ?? "").trim() || null,
     contrattoAttivo: formData.get("contrattoAttivo") === "on",
     scadenzaContratto: parseDate(formData.get("scadenzaContratto")),
+    tipoRinnovo: String(formData.get("tipoRinnovo") ?? "").trim() || null,
+    importo: importoRaw ? Number(importoRaw) : null,
+    percentualeIva: percentualeIvaRaw ? Number(percentualeIvaRaw) : null,
     note: String(formData.get("note") ?? "").trim() || null,
   };
 }

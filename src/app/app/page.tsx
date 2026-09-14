@@ -12,6 +12,7 @@ import {
   MESI_LABELS,
 } from "@/lib/compliance";
 import { contrattoStato, optionLabel, MANSIONE_OPTIONS } from "@/lib/personale";
+import { contrattoFornitoreStato } from "@/lib/fornitori";
 import { consegnaStato, contaStatiLavorazione, CATEGORIA_DICHIARAZIONE_CONFORMITA } from "@/lib/laboratori";
 import {
   sommaKpi,
@@ -64,7 +65,7 @@ export default async function DashboardPage({
   const digest = await buildDigestForStudio(studio.id);
   const digestCount = digest ? digestTotalCount(digest) : 0;
 
-  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni, tipiManutenzione, movimentiMagazzino, preventiviKpi] =
+  const [adempimenti, magazzino, farmaci, documenti, ecmCrediti, controlli, dipendenti, lavorazioniLab, kpiGiornalieri, materialiCount, spese, manutenzioni, tipiManutenzione, movimentiMagazzino, preventiviKpi, fornitori] =
     await Promise.all([
       prisma.adempimento.findMany({ where: { studioId: studio.id } }),
       prisma.magazzinoItem.findMany({ where: { studioId: studio.id } }),
@@ -84,6 +85,7 @@ export default async function DashboardPage({
         where: { studioId: studio.id },
         select: { data: true, totaleProposto: true, totaleAccettato: true, scadenza: true, stato: true },
       }),
+      prisma.fornitore.findMany({ where: { studioId: studio.id } }),
     ]);
 
   const scadenze = adempimenti.map((a) => ({ a, ...scadenzaStato(a.dataUltimoControllo, a.mesi) }));
@@ -94,9 +96,39 @@ export default async function DashboardPage({
   const compilati = scadenze.length - daCompilareCount;
   const compliancePct = compilati > 0 ? Math.round(((okCount) / compilati) * 100) : 0;
 
-  const prossime5 = scadenze
-    .filter((s) => s.giorni !== null)
-    .sort((x, y) => (x.giorni ?? 0) - (y.giorni ?? 0))
+  // Riepilogo unico: adempimenti dello Scadenzario, contratti fornitori e
+  // contratti del personale insieme, così in Dashboard si vede davvero tutto
+  // ciò che sta per scadere, non solo la compliance normativa.
+  type ScadenzaDash = { id: string; titolo: string; giorni: number; prossimaScadenza: Date; stato: "OK" | "IN_SCADENZA" | "SCADUTO" | "DA_COMPILARE" };
+
+  const scadenzeAdempimenti: ScadenzaDash[] = scadenze
+    .filter((s): s is typeof s & { prossimaScadenza: Date; giorni: number } => s.giorni !== null && s.prossimaScadenza !== null)
+    .map((s) => ({ id: s.a.id, titolo: s.a.nome, giorni: s.giorni, prossimaScadenza: s.prossimaScadenza, stato: s.stato }));
+
+  const scadenzeFornitori: ScadenzaDash[] = fornitori
+    .map((f) => ({ f, ...contrattoFornitoreStato(f.contrattoAttivo, f.scadenzaContratto) }))
+    .filter((x): x is typeof x & { giorni: number } => x.giorni !== null)
+    .map((x) => ({
+      id: x.f.id,
+      titolo: `Contratto fornitore: ${x.f.ruolo}${x.f.nome ? ` · ${x.f.nome}` : ""}`,
+      giorni: x.giorni,
+      prossimaScadenza: x.f.scadenzaContratto!,
+      stato: x.stato,
+    }));
+
+  const scadenzePersonale: ScadenzaDash[] = dipendenti
+    .map((d) => ({ d, ...contrattoStato(d.dataScadenzaContratto) }))
+    .filter((x): x is typeof x & { giorni: number } => x.giorni !== null)
+    .map((x) => ({
+      id: x.d.id,
+      titolo: `Contratto personale: ${x.d.nome} ${x.d.cognome}`,
+      giorni: x.giorni,
+      prossimaScadenza: x.d.dataScadenzaContratto!,
+      stato: x.stato,
+    }));
+
+  const prossime5 = [...scadenzeAdempimenti, ...scadenzeFornitori, ...scadenzePersonale]
+    .sort((x, y) => x.giorni - y.giorni)
     .slice(0, 5);
 
   const magazzinoRows = magazzino.map((m) => ({
@@ -432,10 +464,10 @@ export default async function DashboardPage({
             </Link>
           </div>
           <ul className="divide-y divide-slate-100">
-            {prossime5.map(({ a, prossimaScadenza, giorni, stato }) => (
-              <li key={a.id} className="flex items-center justify-between gap-3 py-3">
+            {prossime5.map(({ id, titolo, prossimaScadenza, giorni, stato }) => (
+              <li key={id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-800">{a.nome}</p>
+                  <p className="truncate text-sm font-medium text-slate-800">{titolo}</p>
                   <p className="text-xs text-slate-500">
                     {formatDate(prossimaScadenza)} · {giorni} giorni
                   </p>

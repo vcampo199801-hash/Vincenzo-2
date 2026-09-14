@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updateFornitore } from "@/lib/actions/fornitori";
+import { TIPO_RINNOVO_OPTIONS, importoConIva } from "@/lib/fornitori";
+import { formatCurrency } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
@@ -37,8 +39,31 @@ export default async function EditFornitorePage({ params }: { params: Promise<{ 
           <Field label="Telefono" name="telefono" defaultValue={item.telefono} />
           <Field label="Email" name="email" type="email" defaultValue={item.email} />
         </div>
-        <Field label="Scadenza contratto" name="scadenzaContratto" type="date" defaultValue={item.scadenzaContratto?.toISOString().slice(0, 10)} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Scadenza contratto" name="scadenzaContratto" type="date" defaultValue={item.scadenzaContratto?.toISOString().slice(0, 10)} />
+          <SelectField
+            label="Tipo di rinnovo"
+            name="tipoRinnovo"
+            defaultValue={item.tipoRinnovo ?? ""}
+            options={[{ value: "", label: "Non specificato" }, ...TIPO_RINNOVO_OPTIONS]}
+          />
+        </div>
         <CheckboxField label="Contratto attivo" name="contrattoAttivo" defaultChecked={item.contrattoAttivo} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            label="Importo fornitura (senza IVA) €"
+            name="importo"
+            type="number"
+            step="0.01"
+            defaultValue={item.importo ?? undefined}
+            hint={
+              item.importo !== null
+                ? `Con IVA: ${formatCurrency(importoConIva(item.importo, item.percentualeIva) ?? 0)}`
+                : "Facoltativo."
+            }
+          />
+          <Field label="IVA (%)" name="percentualeIva" type="number" step="0.01" defaultValue={item.percentualeIva ?? 22} />
+        </div>
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>
