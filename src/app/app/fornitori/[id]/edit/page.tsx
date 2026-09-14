@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updateFornitore } from "@/lib/actions/fornitori";
-import { TIPO_RINNOVO_OPTIONS, importoConIva } from "@/lib/fornitori";
-import { formatCurrency } from "@/lib/compliance";
+import { TIPO_RINNOVO_OPTIONS } from "@/lib/fornitori";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
@@ -49,21 +49,7 @@ export default async function EditFornitorePage({ params }: { params: Promise<{ 
           />
         </div>
         <CheckboxField label="Contratto attivo" name="contrattoAttivo" defaultChecked={item.contrattoAttivo} />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field
-            label="Importo fornitura (senza IVA) €"
-            name="importo"
-            type="number"
-            step="0.01"
-            defaultValue={item.importo ?? undefined}
-            hint={
-              item.importo !== null
-                ? `Con IVA: ${formatCurrency(importoConIva(item.importo, item.percentualeIva) ?? 0)}`
-                : "Facoltativo."
-            }
-          />
-          <Field label="IVA (%)" name="percentualeIva" type="number" step="0.01" defaultValue={item.percentualeIva ?? 22} />
-        </div>
+        <PrezzoIvaFields labelImporto="Importo fornitura (senza IVA) €" importo={item.importo} percentualeIva={item.percentualeIva} />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>

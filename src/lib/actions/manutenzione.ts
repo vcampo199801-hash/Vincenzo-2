@@ -48,6 +48,7 @@ async function risolviTipo(studioId: string, formData: FormData): Promise<string
 function payload(tipo: string, formData: FormData) {
   const dataRaw = String(formData.get("data") ?? "");
   const costoRaw = String(formData.get("costo") ?? "").trim();
+  const percentualeIvaRaw = String(formData.get("percentualeIva") ?? "").trim();
   return {
     tipo,
     data: dataRaw ? new Date(dataRaw) : new Date(),
@@ -55,6 +56,7 @@ function payload(tipo: string, formData: FormData) {
     esito: String(formData.get("esito") ?? "OK"),
     note: String(formData.get("note") ?? "").trim() || null,
     costo: costoRaw ? Math.max(0, Number(costoRaw) || 0) : 0,
+    percentualeIva: percentualeIvaRaw ? Number(percentualeIvaRaw) : null,
   };
 }
 

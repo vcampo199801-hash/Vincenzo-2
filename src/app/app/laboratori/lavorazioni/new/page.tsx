@@ -5,6 +5,7 @@ import { createLavorazione } from "@/lib/actions/laboratori";
 import { TIPOLOGIA_LAVORAZIONE_OPTIONS, STATO_LAVORAZIONE_OPTIONS } from "@/lib/laboratori";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
@@ -54,10 +55,8 @@ export default async function NewLavorazionePage({ searchParams }: { searchParam
           <Field label="Data invio" name="dataInvio" type="date" required />
           <Field label="Data consegna prevista" name="dataConsegnaPrevista" type="date" hint="Facoltativo." />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <SelectField label="Stato" name="stato" defaultValue="INVIATO" options={STATO_LAVORAZIONE_OPTIONS} />
-          <Field label="Costo (€)" name="costo" type="number" step="0.01" hint="Facoltativo." />
-        </div>
+        <SelectField label="Stato" name="stato" defaultValue="INVIATO" options={STATO_LAVORAZIONE_OPTIONS} />
+        <PrezzoIvaFields labelImporto="Costo (senza IVA) €" nameImporto="costo" />
         <TextAreaField label="Note" name="note" />
         <p className="text-xs text-slate-400">
           Dopo il salvataggio potrai caricare la dichiarazione di conformità e gli altri allegati (DDT, prescrizione,

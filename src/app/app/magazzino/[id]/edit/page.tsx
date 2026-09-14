@@ -5,6 +5,7 @@ import { updateMagazzinoItem, deleteMagazzinoItem } from "@/lib/actions/magazzin
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { FornitoreField } from "@/components/ui/fornitore-field";
+import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { MAGAZZINO_CATEGORIE } from "@/lib/compliance";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
@@ -41,10 +42,13 @@ export default async function EditMagazzinoPage({ params }: { params: Promise<{ 
           <Field label="Scorta minima" name="scortaMinima" type="number" step="0.01" defaultValue={item.scortaMinima} />
           <Field label="Quantità attuale" name="quantitaAttuale" type="number" step="0.01" defaultValue={item.quantitaAttuale} />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Scadenza lotto" name="scadenzaLotto" type="date" defaultValue={item.scadenzaLotto?.toISOString().slice(0, 10)} />
-          <Field label="Prezzo unitario (€)" name="prezzoUnitario" type="number" step="0.01" defaultValue={item.prezzoUnitario} />
-        </div>
+        <Field label="Scadenza lotto" name="scadenzaLotto" type="date" defaultValue={item.scadenzaLotto?.toISOString().slice(0, 10)} />
+        <PrezzoIvaFields
+          labelImporto="Prezzo unitario (senza IVA) €"
+          nameImporto="prezzoUnitario"
+          importo={item.prezzoUnitario}
+          percentualeIva={item.percentualeIva}
+        />
         <Field label="Codice a barre / GTIN" name="codice" defaultValue={item.codice} />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <CheckboxField

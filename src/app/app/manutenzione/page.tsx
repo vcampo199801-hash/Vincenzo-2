@@ -17,6 +17,8 @@ import {
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
+import { importoConIva } from "@/lib/iva";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { TipoManutenzioneField } from "@/components/app/tipo-manutenzione-field";
@@ -151,13 +153,10 @@ export default async function ManutenzionePage() {
             <Field label="Operatore (firma)" name="operatore" required placeholder="Nome di chi ha eseguito il controllo" hint="Obbligatorio: è l'attestazione di chi ha eseguito il controllo." />
             <SelectField label="Esito" name="esito" options={ESITO_MANUTENZIONE_OPTIONS} defaultValue="OK" required />
           </div>
-          <Field
-            label="Costo (facoltativo)"
-            name="costo"
-            type="number"
-            step="0.01"
-            placeholder="0"
-            hint="Solo se il controllo ha comportato una spesa (es. tecnico esterno): entra nel Bilancio dell'attività."
+          <PrezzoIvaFields
+            labelImporto="Costo (senza IVA, facoltativo)"
+            nameImporto="costo"
+            hintVuoto="Solo se il controllo ha comportato una spesa (es. tecnico esterno): entra nel Bilancio dell'attività."
           />
           <TextAreaField label="Note" name="note" placeholder="Es. numero ciclo, lotto indicatore biologico, dettagli anomalia..." />
           <SubmitButton>Registra controllo</SubmitButton>
@@ -173,7 +172,8 @@ export default async function ManutenzionePage() {
               <th className="px-4 py-3">Tipo</th>
               <th className="px-4 py-3">Operatore</th>
               <th className="px-4 py-3">Esito</th>
-              <th className="px-4 py-3">Costo</th>
+              <th className="px-4 py-3">Costo (senza IVA)</th>
+              <th className="px-4 py-3">Con IVA</th>
               <th className="px-4 py-3">Note</th>
               <th className="px-4 py-3" />
             </tr>
@@ -190,6 +190,11 @@ export default async function ManutenzionePage() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-slate-600">{r.costo > 0 ? formatCurrency(r.costo) : "—"}</td>
+                <td className="px-4 py-3 text-slate-500">
+                  {r.costo > 0 && r.percentualeIva !== null
+                    ? `${formatCurrency(importoConIva(r.costo, r.percentualeIva) ?? 0)} (${r.percentualeIva}%)`
+                    : "—"}
+                </td>
                 <td className="px-4 py-3 max-w-xs truncate text-slate-500">{r.note ?? "—"}</td>
                 <td className="px-4 py-3 text-right">
                   <DeleteButton action={eliminaManutenzione.bind(null, r.id)} />
@@ -198,7 +203,7 @@ export default async function ManutenzionePage() {
             ))}
             {registrazioni.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                   Nessun controllo registrato finora.
                 </td>
               </tr>

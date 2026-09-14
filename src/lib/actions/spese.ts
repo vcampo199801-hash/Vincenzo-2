@@ -11,11 +11,13 @@ function payload(formData: FormData) {
   const ricorrenzaMesiParsed = ricorrenzaMesiRaw ? Math.round(Number(ricorrenzaMesiRaw)) : NaN;
   const ricorrenzaMesi = Number.isFinite(ricorrenzaMesiParsed) && ricorrenzaMesiParsed > 0 ? ricorrenzaMesiParsed : null;
   const dataFineRaw = String(formData.get("dataFineRicorrenza") ?? "").trim();
+  const percentualeIvaRaw = String(formData.get("percentualeIva") ?? "").trim();
   return {
     data: dataRaw ? new Date(dataRaw) : new Date(),
     categoria: String(formData.get("categoria") ?? "ALTRO"),
     descrizione: String(formData.get("descrizione") ?? "").trim() || null,
     importo: Number(formData.get("importo") ?? 0) || 0,
+    percentualeIva: percentualeIvaRaw ? Number(percentualeIvaRaw) : null,
     ricorrenzaMesi,
     dataFineRicorrenza: ricorrenzaMesi && dataFineRaw ? new Date(dataFineRaw) : null,
   };

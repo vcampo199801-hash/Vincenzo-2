@@ -5,6 +5,7 @@ import { aggiornaSpesa } from "@/lib/actions/spese";
 import { CATEGORIA_SPESA_OPTIONS } from "@/lib/spese";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
 import { RicorrenzaField } from "@/components/app/ricorrenza-field";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
@@ -30,7 +31,12 @@ export default async function ModificaSpesaPage({ params }: { params: Promise<{ 
       <form action={updateWithId} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <Field label="Data" name="data" type="date" required defaultValue={toIsoDate(spesa.data)} />
         <SelectField label="Categoria" name="categoria" options={CATEGORIA_SPESA_OPTIONS} defaultValue={spesa.categoria} required />
-        <Field label="Importo (€)" name="importo" type="number" step="0.01" required defaultValue={spesa.importo} />
+        <PrezzoIvaFields
+          labelImporto="Importo (senza IVA) €"
+          required
+          importo={spesa.importo}
+          percentualeIva={spesa.percentualeIva}
+        />
         <TextAreaField label="Descrizione" name="descrizione" defaultValue={spesa.descrizione} />
         <RicorrenzaField
           defaultRicorrenzaMesi={spesa.ricorrenzaMesi}

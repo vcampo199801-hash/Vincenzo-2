@@ -13,6 +13,7 @@ import {
   CATEGORIA_DICHIARAZIONE_CONFORMITA,
 } from "@/lib/laboratori";
 import { formatDate, formatCurrency } from "@/lib/compliance";
+import { importoConIva } from "@/lib/iva";
 import { StatoBadge } from "@/components/ui/badge";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { DichiarazioneConformitaForm } from "@/components/app/dichiarazione-conformita-form";
@@ -71,7 +72,15 @@ export default async function LavorazionePage({ params }: { params: Promise<{ id
           <dl className="grid grid-cols-2 gap-6 text-sm sm:grid-cols-3">
             <Field2 label="Elementi dentali" value={lavorazione.elementiDentali} />
             <Field2 label="Stato" value={optionLabel(STATO_LAVORAZIONE_OPTIONS, lavorazione.stato)} />
-            <Field2 label="Costo" value={lavorazione.costo ? formatCurrency(lavorazione.costo) : "—"} />
+            <Field2 label="Costo (senza IVA)" value={lavorazione.costo ? formatCurrency(lavorazione.costo) : "—"} />
+            <Field2
+              label="Costo (con IVA)"
+              value={
+                lavorazione.costo && lavorazione.percentualeIva !== null
+                  ? `${formatCurrency(importoConIva(lavorazione.costo, lavorazione.percentualeIva) ?? 0)} (${lavorazione.percentualeIva}%)`
+                  : "—"
+              }
+            />
             <Field2 label="Data invio" value={formatDate(lavorazione.dataInvio)} />
             <Field2 label="Data consegna prevista" value={formatDate(lavorazione.dataConsegnaPrevista)} />
             <Field2 label="Data consegna effettiva" value={formatDate(lavorazione.dataConsegnaEffettiva)} />

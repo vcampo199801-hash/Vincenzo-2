@@ -309,6 +309,7 @@ model MagazzinoItem {
   quantitaAttuale Float     @default(0)
   scadenzaLotto   DateTime?
   prezzoUnitario  Float     @default(0)
+  percentualeIva  Float?
   codice          String?
   note            String?
   notificaSilenziata Boolean @default(false)
@@ -353,6 +354,7 @@ model MagazzinoCodiceMemoria {
   unita          String
   scortaMinima   Float
   prezzoUnitario Float
+  percentualeIva Float?
   aggiornatoIl   DateTime @updatedAt
 
   @@unique([studioId, codice])
@@ -521,6 +523,7 @@ model Lavorazione {
   // StatoLavorazione: INVIATO | IN_LAVORAZIONE | CONSEGNATO_STUDIO | CONSEGNATO_PAZIENTE
   stato                     String      @default("INVIATO")
   costo                     Float?
+  percentualeIva            Float?
   dataConsegnaCopiaPaziente DateTime?
   // Fase 2 (PDF "Consegna dispositivo al paziente"): override facoltativo del
   // template istruzioni manutenzione di Studio, per questa singola lavorazione.
@@ -743,6 +746,7 @@ model SpesaStudio {
   categoria          String    @default("ALTRO")
   descrizione        String?
   importo            Float
+  percentualeIva     Float?
   ricorrenzaMesi     Int?
   dataFineRicorrenza DateTime?
   createdAt          DateTime  @default(now())
@@ -771,6 +775,7 @@ model ManutenzioneLog {
   // Facoltativo: solo quando il controllo comporta un costo reale (es.
   // tecnico esterno), non per i controlli fatti dallo staff interno.
   costo     Float    @default(0)
+  percentualeIva Float?
   createdAt DateTime @default(now())
 
   @@index([studioId])

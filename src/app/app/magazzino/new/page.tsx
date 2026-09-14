@@ -4,6 +4,7 @@ import { createMagazzinoItem, cercaArticoloPerCodice } from "@/lib/actions/magaz
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { FornitoreField } from "@/components/ui/fornitore-field";
+import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
 import { MAGAZZINO_CATEGORIE } from "@/lib/compliance";
 import { BarcodeScanner } from "@/components/app/barcode-scanner";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
@@ -36,10 +37,8 @@ export default async function NewMagazzinoPage() {
           <Field label="Scorta minima" name="scortaMinima" type="number" step="0.01" defaultValue={0} />
           <Field label="Quantità attuale" name="quantitaAttuale" type="number" step="0.01" defaultValue={0} />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Scadenza lotto" name="scadenzaLotto" type="date" />
-          <Field label="Prezzo unitario (€)" name="prezzoUnitario" type="number" step="0.01" defaultValue={0} />
-        </div>
+        <Field label="Scadenza lotto" name="scadenzaLotto" type="date" />
+        <PrezzoIvaFields labelImporto="Prezzo unitario (senza IVA) €" nameImporto="prezzoUnitario" importo={0} />
         <Field label="Codice a barre / GTIN" name="codice" placeholder="Compilato automaticamente dalla scansione" />
         <TextAreaField label="Note" name="note" />
         <SubmitButton>Salva articolo</SubmitButton>

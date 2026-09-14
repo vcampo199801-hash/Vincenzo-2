@@ -3,6 +3,7 @@ import { createFornitore } from "@/lib/actions/fornitori";
 import { TIPO_RINNOVO_OPTIONS } from "@/lib/fornitori";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
@@ -41,10 +42,7 @@ export default async function NewFornitorePage() {
           />
         </div>
         <CheckboxField label="Contratto attivo" name="contrattoAttivo" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Importo fornitura (senza IVA) €" name="importo" type="number" step="0.01" hint="Facoltativo." />
-          <Field label="IVA (%)" name="percentualeIva" type="number" step="0.01" defaultValue={22} />
-        </div>
+        <PrezzoIvaFields labelImporto="Importo fornitura (senza IVA) €" />
         <TextAreaField label="Note" name="note" />
         <SubmitButton>Salva fornitore</SubmitButton>
       </form>

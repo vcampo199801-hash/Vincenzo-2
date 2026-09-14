@@ -30,6 +30,7 @@ export default async function LavorazioniPage() {
     dataConsegnaEffettiva: l.dataConsegnaEffettiva,
     stato: l.stato,
     costo: l.costo,
+    percentualeIva: l.percentualeIva,
     dataConsegnaCopiaPaziente: l.dataConsegnaCopiaPaziente,
     hasDichiarazione: l.allegati.some((a) => a.categoria === CATEGORIA_DICHIARAZIONE_CONFORMITA),
   }));

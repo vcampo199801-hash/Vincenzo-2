@@ -17,6 +17,7 @@ import {
   costoAnnuoProiettatoPerCategoria,
 } from "@/lib/spese";
 import { eliminaSpesa } from "@/lib/actions/spese";
+import { importoConIva } from "@/lib/iva";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { DeleteButton } from "@/components/ui/delete-button";
@@ -146,7 +147,8 @@ export default async function SpesePage({
               <th className="px-4 py-3">Data</th>
               <th className="px-4 py-3">Categoria</th>
               <th className="px-4 py-3">Descrizione</th>
-              <th className="px-4 py-3">Importo</th>
+              <th className="px-4 py-3">Importo (senza IVA)</th>
+              <th className="px-4 py-3">Con IVA</th>
               <th className="px-4 py-3">Ricorrenza</th>
               <th className="px-4 py-3">Scadenza</th>
               <th className="px-4 py-3">Costo annuo</th>
@@ -160,6 +162,9 @@ export default async function SpesePage({
                 <td className="px-4 py-3 font-medium text-slate-900">{optionLabel(CATEGORIA_SPESA_OPTIONS, s.categoria)}</td>
                 <td className="px-4 py-3 max-w-xs truncate text-slate-500">{s.descrizione ?? "—"}</td>
                 <td className="px-4 py-3 text-slate-600">{formatCurrency(s.importo)}</td>
+                <td className="px-4 py-3 text-slate-500">
+                  {s.percentualeIva === null ? "—" : `${formatCurrency(importoConIva(s.importo, s.percentualeIva) ?? 0)} (${s.percentualeIva}%)`}
+                </td>
                 <td className="px-4 py-3 text-slate-500">{ricorrenzaLabel(s.ricorrenzaMesi)}</td>
                 <td className="px-4 py-3 text-slate-500">{s.dataFineRicorrenza ? formatDate(s.dataFineRicorrenza) : "—"}</td>
                 <td className="px-4 py-3 text-slate-500">
@@ -177,7 +182,7 @@ export default async function SpesePage({
             ))}
             {spese.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={9} className="px-4 py-8 text-center text-slate-500">
                   Nessuna spesa registrata finora.
                 </td>
               </tr>

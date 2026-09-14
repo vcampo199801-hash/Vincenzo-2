@@ -9,13 +9,7 @@ export function optionLabel(options: { value: string; label: string }[], value: 
   return options.find((o) => o.value === value)?.label ?? value ?? "—";
 }
 
-/** Importo con IVA calcolato sempre da importo (senza IVA) + percentuale,
- * mai salvato a parte: evita che i due valori vadano fuori sincrono se uno
- * dei due viene corretto in un secondo momento. */
-export function importoConIva(importo: number | null | undefined, percentualeIva: number | null | undefined) {
-  if (importo === null || importo === undefined) return null;
-  return importo * (1 + (percentualeIva ?? 0) / 100);
-}
+export { importoConIva } from "@/lib/iva";
 
 export type ContrattoFornitoreStato = "OK" | "IN_SCADENZA" | "SCADUTO";
 

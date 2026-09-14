@@ -11,6 +11,7 @@ function parseDate(value: FormDataEntryValue | null) {
 }
 
 function payload(formData: FormData) {
+  const percentualeIvaRaw = String(formData.get("percentualeIva") ?? "").trim();
   return {
     categoria: String(formData.get("categoria") ?? "Altro"),
     prodotto: String(formData.get("prodotto") ?? "").trim(),
@@ -20,6 +21,7 @@ function payload(formData: FormData) {
     quantitaAttuale: Number(formData.get("quantitaAttuale") ?? 0) || 0,
     scadenzaLotto: parseDate(formData.get("scadenzaLotto")),
     prezzoUnitario: Number(formData.get("prezzoUnitario") ?? 0) || 0,
+    percentualeIva: percentualeIvaRaw ? Number(percentualeIvaRaw) : null,
     codice: String(formData.get("codice") ?? "").trim() || null,
     note: String(formData.get("note") ?? "").trim() || null,
     notificaSilenziata: formData.get("notificaSilenziata") === "on",
@@ -39,6 +41,7 @@ async function ricordaCodice(studioId: string, data: ReturnType<typeof payload>)
       unita: data.unita,
       scortaMinima: data.scortaMinima,
       prezzoUnitario: data.prezzoUnitario,
+      percentualeIva: data.percentualeIva,
     },
     update: {
       categoria: data.categoria,
@@ -47,6 +50,7 @@ async function ricordaCodice(studioId: string, data: ReturnType<typeof payload>)
       unita: data.unita,
       scortaMinima: data.scortaMinima,
       prezzoUnitario: data.prezzoUnitario,
+      percentualeIva: data.percentualeIva,
     },
   });
 }
@@ -105,6 +109,7 @@ export async function cercaArticoloPerCodice(codice: string) {
     unita: ricordo.unita,
     scortaMinima: String(ricordo.scortaMinima),
     prezzoUnitario: String(ricordo.prezzoUnitario),
+    percentualeIva: ricordo.percentualeIva !== null ? String(ricordo.percentualeIva) : "",
   };
 }
 

@@ -19,6 +19,7 @@ export type LavorazioneRow = {
   dataConsegnaEffettiva: Date | null;
   stato: string;
   costo: number | null;
+  percentualeIva: number | null;
   dataConsegnaCopiaPaziente: Date | null;
   hasDichiarazione: boolean;
 };
@@ -68,6 +69,7 @@ export function LavorazioniTable({
       prev.map((r) => {
         if (r.id !== id) return r;
         if (campo === "costo") return { ...r, costo: valore ? Number(valore) : null };
+        if (campo === "percentualeIva") return { ...r, percentualeIva: valore ? Number(valore) : null };
         if (campo === "stato") return { ...r, stato: valore };
         return { ...r, [campo]: valore ? new Date(valore) : null };
       })
@@ -166,7 +168,8 @@ export function LavorazioniTable({
               <th className="px-3 py-3">Consegna prevista</th>
               <th className="px-3 py-3">Consegna effettiva</th>
               <SortHeader campo="stato">Stato</SortHeader>
-              <SortHeader campo="costo">Costo</SortHeader>
+              <SortHeader campo="costo">Costo (senza IVA)</SortHeader>
+              <th className="px-3 py-3">IVA %</th>
               <th className="px-3 py-3">Copia al paziente</th>
               <th className="px-3 py-3" />
             </tr>
@@ -232,6 +235,15 @@ export function LavorazioniTable({
                   </td>
                   <td className="px-3 py-2.5">
                     <input
+                      type="number"
+                      step="0.01"
+                      defaultValue={r.percentualeIva ?? ""}
+                      onBlur={(e) => aggiorna(r.id, "percentualeIva", e.target.value)}
+                      className="w-16 rounded border border-slate-200 px-2 py-1 text-sm"
+                    />
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <input
                       type="date"
                       defaultValue={toIsoInput(r.dataConsegnaCopiaPaziente)}
                       onChange={(e) => aggiorna(r.id, "dataConsegnaCopiaPaziente", e.target.value)}
@@ -248,7 +260,7 @@ export function LavorazioniTable({
             })}
             {risultato.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={11} className="px-4 py-8 text-center text-slate-500">
                   Nessuna lavorazione corrisponde ai filtri.
                 </td>
               </tr>

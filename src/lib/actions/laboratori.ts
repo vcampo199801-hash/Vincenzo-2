@@ -118,6 +118,7 @@ function lavorazionePayload(formData: FormData) {
     dataConsegnaPrevista: parseDate(formData.get("dataConsegnaPrevista")),
     stato: String(formData.get("stato") ?? "INVIATO"),
     costo: parseFloatOrNull(formData.get("costo")),
+    percentualeIva: parseFloatOrNull(formData.get("percentualeIva")),
     note: String(formData.get("note") ?? "").trim() || null,
   };
 }
@@ -164,15 +165,15 @@ export async function deleteLavorazione(id: string) {
 }
 
 // Campi modificabili tramite l'editing inline del Registro lavorazioni.
-const CAMPI_INLINE = new Set(["stato", "dataConsegnaPrevista", "dataConsegnaEffettiva", "costo", "dataConsegnaCopiaPaziente"]);
+const CAMPI_INLINE = new Set(["stato", "dataConsegnaPrevista", "dataConsegnaEffettiva", "costo", "percentualeIva", "dataConsegnaCopiaPaziente"]);
 
 export async function updateCampoLavorazione(id: string, campo: string, valore: string) {
   const { studio } = await requireActiveSubscription("laboratori");
   if (!CAMPI_INLINE.has(campo)) throw new Error("Campo non modificabile da qui.");
 
   const data: Record<string, unknown> =
-    campo === "costo"
-      ? { costo: valore.trim() ? Number(valore) : null }
+    campo === "costo" || campo === "percentualeIva"
+      ? { [campo]: valore.trim() ? Number(valore) : null }
       : campo === "stato"
         ? { stato: valore }
         : { [campo]: valore.trim() ? new Date(valore) : null };
