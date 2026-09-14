@@ -241,12 +241,16 @@ export const STATO_PREVENTIVO_OPTIONS = [
 ];
 
 export const MODALITA_PAGAMENTO_OPTIONS = [
-  { value: "CONTANTI", label: "Contanti" },
-  { value: "CARTA", label: "Carta" },
-  { value: "BONIFICO", label: "Bonifico" },
-  { value: "FINANZIAMENTO", label: "Finanziamento" },
-  { value: "ASSEGNO", label: "Assegno" },
-  { value: "ALTRO", label: "Altro" },
+  { value: "TUTTO_SUBITO", label: "Tutto subito" },
+  { value: "ACCONTI", label: "Acconti" },
+  { value: "40_30_30", label: "40/30/30" },
+  { value: "IN_FASE_DECISIONE", label: "In fase di decisione" },
+];
+
+export const FASCIA_ETA_OPTIONS = [
+  { value: "UNDER_14", label: "Bambino (under 14)" },
+  { value: "ADULTO", label: "Adulto" },
+  { value: "OVER_60", label: "Adulto (over 60)" },
 ];
 
 export function optionLabelKpi(options: { value: string; label: string }[], value: string | null | undefined) {

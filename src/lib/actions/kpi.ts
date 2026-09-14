@@ -52,6 +52,8 @@ function payloadPreventivo(formData: FormData) {
     data: dataRaw ? new Date(dataRaw) : new Date(),
     dottore: String(formData.get("dottore") ?? "").trim(),
     commerciale: String(formData.get("commerciale") ?? "").trim() || null,
+    pazienteNome: String(formData.get("pazienteNome") ?? "").trim() || null,
+    fasciaEta: String(formData.get("fasciaEta") ?? "").trim() || null,
     totaleProposto: Number(formData.get("totaleProposto") ?? 0) || 0,
     totaleAccettato: totaleAccettatoRaw ? Number(totaleAccettatoRaw) : null,
     scadenza: scadenzaRaw ? new Date(scadenzaRaw) : null,

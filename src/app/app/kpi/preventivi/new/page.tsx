@@ -1,7 +1,7 @@
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { createPreventivo } from "@/lib/actions/kpi";
-import { STATO_PREVENTIVO_OPTIONS, MODALITA_PAGAMENTO_OPTIONS, toIsoDate } from "@/lib/kpi";
+import { STATO_PREVENTIVO_OPTIONS, MODALITA_PAGAMENTO_OPTIONS, FASCIA_ETA_OPTIONS, toIsoDate } from "@/lib/kpi";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { ComboboxLista } from "@/components/ui/combobox-lista";
@@ -29,6 +29,15 @@ export default async function NewPreventivoPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Data" name="data" type="date" required defaultValue={toIsoDate(new Date())} />
           <ComboboxLista label="Dottore" name="dottore" opzioni={dottori} required placeholderNuovo="Es. Dott. Rossi" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Nome e cognome paziente" name="pazienteNome" required />
+          <SelectField
+            label="Età paziente"
+            name="fasciaEta"
+            defaultValue=""
+            options={[{ value: "", label: "Non specificata" }, ...FASCIA_ETA_OPTIONS]}
+          />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ComboboxLista label="Commerciale" name="commerciale" opzioni={commerciali} labelVuoto="Nessuno" placeholderNuovo="Nome del commerciale" />

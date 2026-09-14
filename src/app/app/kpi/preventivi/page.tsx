@@ -9,6 +9,7 @@ import {
   optionLabelKpi,
   STATO_PREVENTIVO_OPTIONS,
   MODALITA_PAGAMENTO_OPTIONS,
+  FASCIA_ETA_OPTIONS,
 } from "@/lib/kpi";
 import { deletePreventivo } from "@/lib/actions/kpi";
 import { KpiTabs } from "@/components/app/kpi-tabs";
@@ -180,6 +181,8 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">Data</th>
+              <th className="px-4 py-3">Paziente</th>
+              <th className="px-4 py-3">Età</th>
               <th className="px-4 py-3">Dottore</th>
               <th className="px-4 py-3">Commerciale</th>
               <th className="px-4 py-3">Proposto</th>
@@ -197,6 +200,8 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
               return (
                 <tr key={p.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">{formatDate(p.data)}</td>
+                  <td className="px-4 py-3 text-slate-600">{p.pazienteNome ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-600">{optionLabelKpi(FASCIA_ETA_OPTIONS, p.fasciaEta)}</td>
                   <td className="px-4 py-3 text-slate-600">{p.dottore}</td>
                   <td className="px-4 py-3 text-slate-600">{p.commerciale ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{formatCurrency(p.totaleProposto)}</td>
@@ -223,7 +228,7 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
             })}
             {filtrati.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={12} className="px-4 py-8 text-center text-slate-500">
                   Nessun preventivo inserito finora.
                 </td>
               </tr>

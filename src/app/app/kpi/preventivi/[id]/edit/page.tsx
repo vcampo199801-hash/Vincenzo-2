@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updatePreventivo } from "@/lib/actions/kpi";
-import { STATO_PREVENTIVO_OPTIONS, MODALITA_PAGAMENTO_OPTIONS, toIsoDate } from "@/lib/kpi";
+import { STATO_PREVENTIVO_OPTIONS, MODALITA_PAGAMENTO_OPTIONS, FASCIA_ETA_OPTIONS, toIsoDate } from "@/lib/kpi";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { ComboboxLista } from "@/components/ui/combobox-lista";
@@ -34,6 +34,15 @@ export default async function EditPreventivoPage({ params }: { params: Promise<{
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Data" name="data" type="date" required defaultValue={toIsoDate(item.data)} />
           <ComboboxLista label="Dottore" name="dottore" opzioni={dottori} defaultValue={item.dottore} required placeholderNuovo="Es. Dott. Rossi" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Nome e cognome paziente" name="pazienteNome" required defaultValue={item.pazienteNome ?? undefined} />
+          <SelectField
+            label="Età paziente"
+            name="fasciaEta"
+            defaultValue={item.fasciaEta ?? ""}
+            options={[{ value: "", label: "Non specificata" }, ...FASCIA_ETA_OPTIONS]}
+          />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ComboboxLista

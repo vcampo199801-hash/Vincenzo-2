@@ -613,6 +613,9 @@ model Preventivo {
   data              DateTime
   dottore           String
   commerciale       String?
+  pazienteNome      String?
+  // FasciaEta: UNDER_14 | ADULTO | OVER_60
+  fasciaEta         String?
   totaleProposto    Float
   totaleAccettato   Float?
   scadenza          DateTime?
