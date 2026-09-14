@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { updateFornitore } from "@/lib/actions/fornitori";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
-import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
@@ -48,7 +47,6 @@ export default async function EditFornitorePage({ params }: { params: Promise<{ 
           />
           <CheckboxField label="Rinnovo tacito" name="rinnovoTacito" defaultChecked={item.rinnovoTacito} />
         </div>
-        <PrezzoIvaFields labelImporto="Importo fornitura (senza IVA) €" importo={item.importo} percentualeIva={item.percentualeIva} />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <SubmitButton>Salva modifiche</SubmitButton>
       </form>

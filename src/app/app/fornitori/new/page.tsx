@@ -2,7 +2,6 @@ import { requireActiveSubscription } from "@/lib/auth-guards";
 import { createFornitore } from "@/lib/actions/fornitori";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
-import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
@@ -35,7 +34,6 @@ export default async function NewFornitorePage() {
           <Field label="Scadenza contratto" name="scadenzaContratto" type="date" hint="Facoltativo." />
           <CheckboxField label="Rinnovo tacito" name="rinnovoTacito" />
         </div>
-        <PrezzoIvaFields labelImporto="Importo fornitura (senza IVA) €" />
         <TextAreaField label="Note" name="note" />
         <SubmitButton>Salva fornitore</SubmitButton>
       </form>

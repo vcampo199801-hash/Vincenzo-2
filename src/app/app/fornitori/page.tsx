@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { formatDate, formatCurrency } from "@/lib/compliance";
+import { formatDate } from "@/lib/compliance";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { StatoBadge } from "@/components/ui/badge";
 import { deleteFornitore } from "@/lib/actions/fornitori";
-import { importoConIva, contrattoFornitoreStato } from "@/lib/fornitori";
+import { contrattoFornitoreStato } from "@/lib/fornitori";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -46,9 +46,6 @@ function FornitoriTable({ title, items }: { title: string; items: Awaited<Return
               <th className="px-4 py-3">Nome / Ditta</th>
               <th className="px-4 py-3">Telefono</th>
               <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">Importo (senza IVA)</th>
-              <th className="px-4 py-3">IVA</th>
-              <th className="px-4 py-3">Importo (con IVA)</th>
               <th className="px-4 py-3">Rinnovo tacito</th>
               <th className="px-4 py-3">Scadenza</th>
               <th className="px-4 py-3" />
@@ -63,11 +60,6 @@ function FornitoriTable({ title, items }: { title: string; items: Awaited<Return
                   <td className="px-4 py-3 text-slate-600">{f.nome ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{f.telefono ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{f.email ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-600">{f.importo === null ? "—" : formatCurrency(f.importo)}</td>
-                  <td className="px-4 py-3 text-slate-600">{f.percentualeIva === null ? "—" : `${f.percentualeIva}%`}</td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {f.importo === null ? "—" : formatCurrency(importoConIva(f.importo, f.percentualeIva) ?? 0)}
-                  </td>
                   <td className="px-4 py-3 text-slate-600">{f.rinnovoTacito ? "Sì" : "—"}</td>
                   <td className="px-4 py-3 text-slate-600">
                     {formatDate(f.scadenzaContratto)}
@@ -86,7 +78,7 @@ function FornitoriTable({ title, items }: { title: string; items: Awaited<Return
             })}
             {items.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
                   Nessun fornitore in questa categoria.
                 </td>
               </tr>

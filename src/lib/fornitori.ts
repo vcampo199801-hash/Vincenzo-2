@@ -1,7 +1,5 @@
 import { daysUntil } from "@/lib/compliance";
 
-export { importoConIva } from "@/lib/iva";
-
 export type ContrattoFornitoreStato = "OK" | "IN_SCADENZA" | "SCADUTO";
 
 /** Stato della scadenza contratto fornitore, stessa finestra di 30 giorni
