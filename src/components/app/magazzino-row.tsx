@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { scortaStato, formatDate, formatCurrency } from "@/lib/compliance";
+import { importoConIva } from "@/lib/iva";
 import { StatoBadge } from "@/components/ui/badge";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { RegistraRiordinoButton } from "@/components/app/registra-riordino-button";
@@ -22,6 +23,7 @@ export function MagazzinoRow({
   scortaMinima,
   unita,
   prezzoUnitario,
+  percentualeIva,
   scadenzaLotto,
   lotto,
   autoApriRiordino = false,
@@ -34,6 +36,7 @@ export function MagazzinoRow({
   scortaMinima: number;
   unita: string;
   prezzoUnitario: number;
+  percentualeIva: number | null;
   scadenzaLotto: Date | null;
   lotto: string | null;
   autoApriRiordino?: boolean;
@@ -63,6 +66,7 @@ export function MagazzinoRow({
 
   const stato = scortaStato(scortaMinima, quantita);
   const valore = quantita * prezzoUnitario;
+  const valoreConIva = quantita * (importoConIva(prezzoUnitario, percentualeIva) ?? prezzoUnitario);
 
   return (
     <tr ref={rowRef} className={`hover:bg-slate-50 ${autoApriRiordino ? "bg-amber-50" : ""}`}>
@@ -98,7 +102,10 @@ export function MagazzinoRow({
       <td className="px-4 py-3">
         <StatoBadge stato={lotto} />
       </td>
-      <td className="px-4 py-3 text-slate-600">{formatCurrency(valore)}</td>
+      <td className="px-4 py-3 text-slate-600">
+        {formatCurrency(valore)}
+        <p className="text-xs text-slate-400">Con IVA: {formatCurrency(valoreConIva)}</p>
+      </td>
       <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-3">
           <Link href={`/app/magazzino/${id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">

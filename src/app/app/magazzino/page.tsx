@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { scortaStato, lottoStato, formatCurrency } from "@/lib/compliance";
+import { importoConIva } from "@/lib/iva";
 import { pianoConsenteModulo } from "@/lib/plans";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
@@ -27,12 +28,14 @@ export default async function MagazzinoPage({
     stato: scortaStato(i.scortaMinima, i.quantitaAttuale),
     lotto: lottoStato(i.scadenzaLotto),
     valore: i.quantitaAttuale * i.prezzoUnitario,
+    valoreConIva: i.quantitaAttuale * (importoConIva(i.prezzoUnitario, i.percentualeIva) ?? i.prezzoUnitario),
   }));
 
   const daRiordinare = rows.filter((r) => r.stato === "DA_RIORDINARE").length;
   const scortaBassa = rows.filter((r) => r.stato === "SCORTA_BASSA").length;
   const lottiCritici = rows.filter((r) => r.lotto === "SCADUTO" || r.lotto === "IN_SCADENZA").length;
   const valoreTotale = rows.reduce((sum, r) => sum + r.valore, 0);
+  const valoreTotaleConIva = rows.reduce((sum, r) => sum + r.valoreConIva, 0);
 
   return (
     <div>
@@ -47,7 +50,11 @@ export default async function MagazzinoPage({
         <StatCard label="Da riordinare" value={daRiordinare} tone={daRiordinare > 0 ? "bad" : "good"} />
         <StatCard label="Scorta bassa" value={scortaBassa} tone={scortaBassa > 0 ? "warn" : "good"} />
         <StatCard label="Lotti scaduti/in scadenza" value={lottiCritici} tone={lottiCritici > 0 ? "bad" : "good"} />
-        <StatCard label="Valore giacenze" value={formatCurrency(valoreTotale)} />
+        <StatCard
+          label="Valore giacenze (senza IVA)"
+          value={formatCurrency(valoreTotale)}
+          hint={`Con IVA: ${formatCurrency(valoreTotaleConIva)}`}
+        />
       </div>
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -70,7 +77,7 @@ export default async function MagazzinoPage({
               <th className="px-4 py-3">Stato scorta</th>
               <th className="px-4 py-3">Scadenza lotto</th>
               <th className="px-4 py-3">Stato lotto</th>
-              <th className="px-4 py-3">Valore</th>
+              <th className="px-4 py-3">Valore (senza IVA)</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -86,6 +93,7 @@ export default async function MagazzinoPage({
                 scortaMinima={i.scortaMinima}
                 unita={i.unita}
                 prezzoUnitario={i.prezzoUnitario}
+                percentualeIva={i.percentualeIva}
                 scadenzaLotto={i.scadenzaLotto}
                 lotto={lotto}
                 autoApriRiordino={i.id === params.riordino}
