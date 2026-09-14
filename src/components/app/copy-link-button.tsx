@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function CopyLinkButton({ url }: { url: string }) {
+export function CopyLinkButton({ url, label = "Copia link da inviare al paziente" }: { url: string; label?: string }) {
   const [copiato, setCopiato] = useState(false);
 
   async function copia() {
@@ -22,7 +22,7 @@ export function CopyLinkButton({ url }: { url: string }) {
       onClick={copia}
       className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
     >
-      {copiato ? "Link copiato ✓" : "Copia link da inviare al paziente"}
+      {copiato ? "Link copiato ✓" : label}
     </button>
   );
 }

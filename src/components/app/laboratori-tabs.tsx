@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/app/laboratori", label: "Laboratori" },
   { href: "/app/laboratori/lavorazioni", label: "Registro lavorazioni" },
+  { href: "/app/laboratori/scadenze", label: "Scadenze" },
 ];
 
 export function LaboratoriTabs() {

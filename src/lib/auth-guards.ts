@@ -33,14 +33,20 @@ export async function requireStudio(moduleKey?: ModuleKey) {
 
 const ENTITLED_STATUSES = new Set(["ACTIVE", "TRIALING"]);
 
+/** Pura, senza redirect: se un abbonamento dà accesso all'app in questo momento.
+ * Riusata anche fuori da una richiesta con sessione (es. i feed calendario
+ * pubblici protetti da token, che un client come Google Calendar interroga
+ * senza login). */
+export function subscriptionEntitled(sub: { status: string; trialEndsAt: Date | null } | null | undefined): boolean {
+  const trialExpired = sub?.status === "TRIALING" && sub.trialEndsAt !== null && sub.trialEndsAt < new Date();
+  return Boolean(sub && ENTITLED_STATUSES.has(sub.status) && !trialExpired);
+}
+
 export async function requireActiveSubscription(moduleKey?: ModuleKey) {
   const { session, studio } = await requireStudio(moduleKey);
   const sub = studio.subscription;
 
-  const trialExpired =
-    sub?.status === "TRIALING" && sub.trialEndsAt !== null && sub.trialEndsAt < new Date();
-
-  const entitled = sub && ENTITLED_STATUSES.has(sub.status) && !trialExpired;
+  const entitled = subscriptionEntitled(sub);
 
   if (!entitled) {
     redirect("/app/abbonamento");
