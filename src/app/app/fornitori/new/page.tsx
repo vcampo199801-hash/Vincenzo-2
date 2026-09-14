@@ -1,6 +1,5 @@
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { createFornitore } from "@/lib/actions/fornitori";
-import { TIPO_RINNOVO_OPTIONS } from "@/lib/fornitori";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
@@ -32,16 +31,10 @@ export default async function NewFornitorePage() {
           <Field label="Telefono" name="telefono" />
           <Field label="Email" name="email" type="email" />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Scadenza contratto" name="scadenzaContratto" type="date" />
-          <SelectField
-            label="Tipo di rinnovo"
-            name="tipoRinnovo"
-            defaultValue=""
-            options={[{ value: "", label: "Non specificato" }, ...TIPO_RINNOVO_OPTIONS]}
-          />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
+          <Field label="Scadenza contratto" name="scadenzaContratto" type="date" hint="Facoltativo." />
+          <CheckboxField label="Rinnovo tacito" name="rinnovoTacito" />
         </div>
-        <CheckboxField label="Contratto attivo" name="contrattoAttivo" />
         <PrezzoIvaFields labelImporto="Importo fornitura (senza IVA) €" />
         <TextAreaField label="Note" name="note" />
         <SubmitButton>Salva fornitore</SubmitButton>

@@ -7,7 +7,7 @@ import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { StatoBadge } from "@/components/ui/badge";
 import { deleteFornitore } from "@/lib/actions/fornitori";
-import { TIPO_RINNOVO_OPTIONS, optionLabel, importoConIva, contrattoFornitoreStato } from "@/lib/fornitori";
+import { importoConIva, contrattoFornitoreStato } from "@/lib/fornitori";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -49,15 +49,14 @@ function FornitoriTable({ title, items }: { title: string; items: Awaited<Return
               <th className="px-4 py-3">Importo (senza IVA)</th>
               <th className="px-4 py-3">IVA</th>
               <th className="px-4 py-3">Importo (con IVA)</th>
-              <th className="px-4 py-3">Contratto</th>
-              <th className="px-4 py-3">Rinnovo</th>
+              <th className="px-4 py-3">Rinnovo tacito</th>
               <th className="px-4 py-3">Scadenza</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {items.map((f) => {
-              const { stato } = contrattoFornitoreStato(f.contrattoAttivo, f.scadenzaContratto);
+              const { stato } = contrattoFornitoreStato(f.scadenzaContratto);
               return (
                 <tr key={f.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">{f.ruolo}</td>
@@ -69,8 +68,7 @@ function FornitoriTable({ title, items }: { title: string; items: Awaited<Return
                   <td className="px-4 py-3 text-slate-600">
                     {f.importo === null ? "—" : formatCurrency(importoConIva(f.importo, f.percentualeIva) ?? 0)}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{f.contrattoAttivo ? "Attivo" : "—"}</td>
-                  <td className="px-4 py-3 text-slate-600">{optionLabel(TIPO_RINNOVO_OPTIONS, f.tipoRinnovo)}</td>
+                  <td className="px-4 py-3 text-slate-600">{f.rinnovoTacito ? "Sì" : "—"}</td>
                   <td className="px-4 py-3 text-slate-600">
                     {formatDate(f.scadenzaContratto)}
                     {stato !== "OK" && <span className="ml-1.5"><StatoBadge stato={stato} /></span>}
@@ -88,7 +86,7 @@ function FornitoriTable({ title, items }: { title: string; items: Awaited<Return
             })}
             {items.length === 0 && (
               <tr>
-                <td colSpan={11} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={10} className="px-4 py-6 text-center text-slate-500">
                   Nessun fornitore in questa categoria.
                 </td>
               </tr>

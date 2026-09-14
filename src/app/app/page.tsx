@@ -106,7 +106,7 @@ export default async function DashboardPage({
     .map((s) => ({ id: s.a.id, titolo: s.a.nome, giorni: s.giorni, prossimaScadenza: s.prossimaScadenza, stato: s.stato }));
 
   const scadenzeFornitori: ScadenzaDash[] = fornitori
-    .map((f) => ({ f, ...contrattoFornitoreStato(f.contrattoAttivo, f.scadenzaContratto) }))
+    .map((f) => ({ f, ...contrattoFornitoreStato(f.scadenzaContratto) }))
     .filter((x): x is typeof x & { giorni: number } => x.giorni !== null)
     .map((x) => ({
       id: x.f.id,

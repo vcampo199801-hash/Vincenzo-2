@@ -142,7 +142,6 @@ async function main() {
         nome: "Antincendio Rossi S.r.l. (esempio)",
         telefono: "02 1234567",
         email: "info@antincendiorossi.it",
-        contrattoAttivo: true,
         scadenzaContratto: daysFromNow(195),
         note: "Contratto semestrale controllo estintori — ESEMPIO",
       },

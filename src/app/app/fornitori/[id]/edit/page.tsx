@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updateFornitore } from "@/lib/actions/fornitori";
-import { TIPO_RINNOVO_OPTIONS } from "@/lib/fornitori";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { PrezzoIvaFields } from "@/components/ui/prezzo-iva-fields";
@@ -39,16 +38,16 @@ export default async function EditFornitorePage({ params }: { params: Promise<{ 
           <Field label="Telefono" name="telefono" defaultValue={item.telefono} />
           <Field label="Email" name="email" type="email" defaultValue={item.email} />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Scadenza contratto" name="scadenzaContratto" type="date" defaultValue={item.scadenzaContratto?.toISOString().slice(0, 10)} />
-          <SelectField
-            label="Tipo di rinnovo"
-            name="tipoRinnovo"
-            defaultValue={item.tipoRinnovo ?? ""}
-            options={[{ value: "", label: "Non specificato" }, ...TIPO_RINNOVO_OPTIONS]}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
+          <Field
+            label="Scadenza contratto"
+            name="scadenzaContratto"
+            type="date"
+            defaultValue={item.scadenzaContratto?.toISOString().slice(0, 10)}
+            hint="Facoltativo."
           />
+          <CheckboxField label="Rinnovo tacito" name="rinnovoTacito" defaultChecked={item.rinnovoTacito} />
         </div>
-        <CheckboxField label="Contratto attivo" name="contrattoAttivo" defaultChecked={item.contrattoAttivo} />
         <PrezzoIvaFields labelImporto="Importo fornitura (senza IVA) €" importo={item.importo} percentualeIva={item.percentualeIva} />
         <TextAreaField label="Note" name="note" defaultValue={item.note} />
         <SubmitButton>Salva modifiche</SubmitButton>
