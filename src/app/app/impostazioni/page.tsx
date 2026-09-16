@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { updateStudioInfo } from "@/lib/actions/studio";
 import { removeMember } from "@/lib/actions/team";
 import { attivaAccessoIllimitatoPerMe } from "@/lib/actions/account";
+import { aggiungiPostiExtra, rimuoviPostiExtra } from "@/lib/actions/billing";
+import { isPostiExtraConfigured } from "@/lib/stripe";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
@@ -15,7 +17,7 @@ import { TableScroll } from "@/components/ui/table-scroll";
 import { formatDate } from "@/lib/compliance";
 import { isEmailConfigured } from "@/lib/email";
 import { parsePermessi, APP_MODULES } from "@/lib/modules";
-import { PIANI, normalizzaPiano } from "@/lib/plans";
+import { normalizzaPiano, maxCollaboratoriEffettivo, POSTI_EXTRA_PER_BLOCCO, PREZZO_EURO_POSTI_EXTRA } from "@/lib/plans";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
 // Session-dependent, must never be prerendered or cached.
@@ -51,8 +53,11 @@ export default async function ImpostazioniPage({
             : `${allowedKeys.length}/${APP_MODULES.length}`;
     return { ...m, sectionsLabel };
   });
-  const maxCollaboratori = PIANI[normalizzaPiano(studio.subscription?.plan)].maxCollaboratori;
+  const sub = studio.subscription;
+  const postiExtra = sub?.postiExtra ?? 0;
+  const maxCollaboratori = maxCollaboratoriEffettivo(normalizzaPiano(sub?.plan), postiExtra);
   const atCap = collaboratorCount >= maxCollaboratori;
+  const postiExtraDisponibili = isPostiExtraConfigured() && Boolean(sub?.stripeSubscriptionId);
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -264,6 +269,40 @@ export default async function ImpostazioniPage({
           <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="mb-3 text-sm font-medium text-slate-700">Invita un collaboratore</p>
             <InviteMemberForm atCap={atCap} maxCollaboratori={maxCollaboratori} />
+          </div>
+        )}
+
+        {isOwner && postiExtraDisponibili && (
+          <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50 p-6 shadow-sm">
+            <p className="text-sm font-semibold text-brand-900">
+              Ti servono più di {maxCollaboratori - postiExtra} postazioni per il team?
+            </p>
+            {postiExtra > 0 ? (
+              <>
+                <p className="mt-1 text-sm text-brand-800">
+                  ✅ Hai già attivato <strong>{postiExtra} postazioni extra</strong> (+{PREZZO_EURO_POSTI_EXTRA}€/mese,
+                  in aggiunta al costo del tuo piano).
+                </p>
+                <form action={rimuoviPostiExtra} className="mt-3">
+                  <SubmitButton>
+                    Rimuovi le postazioni extra
+                  </SubmitButton>
+                </form>
+              </>
+            ) : (
+              <>
+                <p className="mt-1 text-sm text-brand-800">
+                  Puoi aggiungere <strong>{POSTI_EXTRA_PER_BLOCCO} postazioni extra</strong> per il team con un
+                  supplemento di <strong>{PREZZO_EURO_POSTI_EXTRA}€/mese</strong>, in aggiunta al costo del tuo piano
+                  attuale — si somma alla stessa fattura, nessun abbonamento separato da gestire.
+                </p>
+                <form action={aggiungiPostiExtra} className="mt-3">
+                  <SubmitButton>
+                    Sottoscrivi {POSTI_EXTRA_PER_BLOCCO} postazioni extra (+{PREZZO_EURO_POSTI_EXTRA}€/mese)
+                  </SubmitButton>
+                </form>
+              </>
+            )}
           </div>
         )}
       </div>

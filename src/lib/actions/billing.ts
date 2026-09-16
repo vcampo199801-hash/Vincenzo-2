@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireStudio } from "@/lib/auth-guards";
-import { getStripe, isStripeConfigured } from "@/lib/stripe";
-import { isPianoKey, stripePriceIdPerPiano } from "@/lib/plans";
+import { getStripe, isStripeConfigured, isPostiExtraConfigured } from "@/lib/stripe";
+import { isPianoKey, stripePriceIdPerPiano, POSTI_EXTRA_PER_BLOCCO } from "@/lib/plans";
 
 function appUrl() {
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -123,6 +123,60 @@ export async function changePlan(formData: FormData) {
 
   await prisma.subscription.update({ where: { studioId: studio.id }, data: { plan: piano } });
 
+  redirect("/app/abbonamento?success=1");
+}
+
+/** Aggiunge una seconda voce (10€/mese, +5 collaboratori) sullo stesso
+ * abbonamento Stripe già attivo — non è un piano a parte, solo un
+ * supplemento per chi ha bisogno di più postazioni del proprio piano. */
+export async function aggiungiPostiExtra() {
+  const { studio } = await requireStudio();
+  const sub = studio.subscription;
+
+  const priceId = process.env.STRIPE_PRICE_ID_POSTI_EXTRA;
+  if (!isPostiExtraConfigured() || !priceId || !sub?.stripeSubscriptionId) {
+    redirect("/app/abbonamento?error=no-billing-account");
+  }
+
+  const stripe = getStripe()!;
+  await stripe.subscriptionItems.create({
+    subscription: sub!.stripeSubscriptionId!,
+    price: priceId!,
+    quantity: 1,
+  });
+
+  await prisma.subscription.update({
+    where: { studioId: studio.id },
+    data: { postiExtra: { increment: POSTI_EXTRA_PER_BLOCCO } },
+  });
+
+  revalidatePath("/app/abbonamento");
+  revalidatePath("/app/impostazioni");
+  redirect("/app/abbonamento?success=1");
+}
+
+/** Toglie il supplemento posti extra dall'abbonamento Stripe (proration
+ * automatica di Stripe) e riporta il limite collaboratori a quello del piano. */
+export async function rimuoviPostiExtra() {
+  const { studio } = await requireStudio();
+  const sub = studio.subscription;
+
+  const priceId = process.env.STRIPE_PRICE_ID_POSTI_EXTRA;
+  if (!isStripeConfigured() || !priceId || !sub?.stripeSubscriptionId) {
+    redirect("/app/abbonamento?error=no-billing-account");
+  }
+
+  const stripe = getStripe()!;
+  const stripeSub = await stripe.subscriptions.retrieve(sub!.stripeSubscriptionId!);
+  const item = stripeSub.items.data.find((i) => i.price.id === priceId);
+  if (item) {
+    await stripe.subscriptionItems.del(item.id);
+  }
+
+  await prisma.subscription.update({ where: { studioId: studio.id }, data: { postiExtra: 0 } });
+
+  revalidatePath("/app/abbonamento");
+  revalidatePath("/app/impostazioni");
   redirect("/app/abbonamento?success=1");
 }
 

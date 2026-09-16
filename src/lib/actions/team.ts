@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { requireStudio } from "@/lib/auth-guards";
 import { APP_MODULES } from "@/lib/modules";
-import { PIANI, normalizzaPiano } from "@/lib/plans";
+import { normalizzaPiano, maxCollaboratoriEffettivo } from "@/lib/plans";
 import { sendEmail, isEmailConfigured } from "@/lib/email";
 
 export type TeamFormState = { error?: string; success?: string } | undefined;
@@ -87,7 +87,7 @@ export async function inviteMember(_prev: TeamFormState, formData: FormData): Pr
   const name = String(formData.get("name") ?? "").trim();
   if (!email) return { error: "Inserisci un'email." };
 
-  const maxCollaboratori = PIANI[normalizzaPiano(studio.subscription?.plan)].maxCollaboratori;
+  const maxCollaboratori = maxCollaboratoriEffettivo(normalizzaPiano(studio.subscription?.plan), studio.subscription?.postiExtra ?? 0);
   const collaboratorCount = await prisma.membership.count({ where: { studioId: studio.id, role: "MEMBER" } });
   if (collaboratorCount >= maxCollaboratori) {
     return {

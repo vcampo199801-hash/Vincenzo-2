@@ -193,6 +193,9 @@ model Subscription {
   scadenzaTrialInviataAt   DateTime?
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean   @default(false)
+  // Collaboratori aggiuntivi oltre al limite del piano, acquistati a blocchi
+  // di 5 (voce separata "Posti extra" sullo stesso abbonamento Stripe).
+  postiExtra           Int       @default(0)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 }

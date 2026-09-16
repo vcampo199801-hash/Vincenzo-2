@@ -111,3 +111,12 @@ export function pianoMinimoPerModulo(moduleKey: ModuleKey): PianoKey | undefined
 export function stripePriceIdPerPiano(piano: PianoKey): string | undefined {
   return process.env[PIANI[piano].stripePriceEnvVar];
 }
+
+/** Ogni blocco di posti extra vale 5 collaboratori in più, oltre al limite
+ * del piano — venduto come voce aggiuntiva sullo stesso abbonamento Stripe. */
+export const POSTI_EXTRA_PER_BLOCCO = 5;
+export const PREZZO_EURO_POSTI_EXTRA = 10;
+
+export function maxCollaboratoriEffettivo(piano: PianoKey, postiExtra: number): number {
+  return PIANI[piano].maxCollaboratori + postiExtra;
+}

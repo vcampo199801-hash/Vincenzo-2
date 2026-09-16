@@ -22,3 +22,7 @@ export function isStripeConfigured() {
 export function isPianoConfigured(piano: PianoKey) {
   return Boolean(process.env.STRIPE_SECRET_KEY && process.env[PIANI[piano].stripePriceEnvVar]);
 }
+
+export function isPostiExtraConfigured() {
+  return Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRICE_ID_POSTI_EXTRA);
+}
