@@ -139,16 +139,23 @@ export async function aggiungiPostiExtra() {
   }
 
   const stripe = getStripe()!;
-  await stripe.subscriptionItems.create({
-    subscription: sub!.stripeSubscriptionId!,
-    price: priceId!,
-    quantity: 1,
-  });
+  // Controlla prima se la voce esiste già sull'abbonamento: evita di
+  // duplicarla (doppio 10€/mese) se il form viene inviato due volte
+  // (doppio click, doppia scheda) prima che la pagina si aggiorni.
+  const stripeSub = await stripe.subscriptions.retrieve(sub!.stripeSubscriptionId!);
+  const giaPresente = stripeSub.items.data.some((i) => i.price.id === priceId);
 
-  await prisma.subscription.update({
-    where: { studioId: studio.id },
-    data: { postiExtra: { increment: POSTI_EXTRA_PER_BLOCCO } },
-  });
+  if (!giaPresente) {
+    await stripe.subscriptionItems.create({
+      subscription: sub!.stripeSubscriptionId!,
+      price: priceId!,
+      quantity: 1,
+    });
+    await prisma.subscription.update({
+      where: { studioId: studio.id },
+      data: { postiExtra: { increment: POSTI_EXTRA_PER_BLOCCO } },
+    });
+  }
 
   revalidatePath("/app/abbonamento");
   revalidatePath("/app/impostazioni");

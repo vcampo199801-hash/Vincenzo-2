@@ -144,6 +144,10 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
       currentPeriodEnd,
       cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
       ...(trialEndsAt ? { trialEndsAt } : {}),
+      // Un abbonamento cancellato porta con sé anche l'eventuale voce posti
+      // extra: senza questo reset, un nuovo abbonamento futuro erediterebbe
+      // posti extra "gratis" mai più pagati sulla nuova subscription.
+      ...(nuovoStatus === "CANCELED" ? { postiExtra: 0 } : {}),
     },
     create: {
       studioId,
