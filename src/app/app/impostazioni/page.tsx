@@ -57,7 +57,12 @@ export default async function ImpostazioniPage({
   const postiExtra = sub?.postiExtra ?? 0;
   const maxCollaboratori = maxCollaboratoriEffettivo(normalizzaPiano(sub?.plan), postiExtra);
   const atCap = collaboratorCount >= maxCollaboratori;
-  const postiExtraDisponibili = isPostiExtraConfigured() && Boolean(sub?.stripeSubscriptionId);
+  // Sull'account admin il box è visibile anche senza un vero abbonamento Stripe,
+  // solo per poter vedere l'anteprima — il pulsante resta comunque innocuo: senza
+  // uno stripeSubscriptionId reale, aggiungiPostiExtra() reindirizza con un errore
+  // invece di chiamare Stripe.
+  const postiExtraDisponibili =
+    isPostiExtraConfigured() && (Boolean(sub?.stripeSubscriptionId) || isAdminEmail(session.email));
 
   return (
     <div className="max-w-2xl space-y-8">
