@@ -50,27 +50,14 @@ export async function POST(req: NextRequest) {
     case "customer.subscription.deleted": {
       const eventSub = event.data.object as Stripe.Subscription;
       const studioId = eventSub.metadata?.studioId;
-      console.log("[stripe-webhook]", event.type, {
-        eventSubId: eventSub.id,
-        studioId,
-        eventCancelAtPeriodEnd: eventSub.cancel_at_period_end,
-      });
       if (studioId) {
         // L'oggetto dentro l'evento può essere un'istantanea non aggiornata
         // (es. subito dopo un annullamento dal portale clienti): rileggiamo
         // sempre lo stato più recente direttamente da Stripe prima di
         // sincronizzarlo, stesso approccio già usato per il checkout.
         const stripeSub = await stripe.subscriptions.retrieve(eventSub.id);
-        console.log("[stripe-webhook] fresh subscription", {
-          id: stripeSub.id,
-          status: stripeSub.status,
-          cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
-        });
         const customerId = typeof stripeSub.customer === "string" ? stripeSub.customer : stripeSub.customer?.id;
         await syncSubscription(studioId, stripeSub, customerId);
-        console.log("[stripe-webhook] sync done for", studioId);
-      } else {
-        console.log("[stripe-webhook] no studioId in metadata, skipping", eventSub.id);
       }
       break;
     }

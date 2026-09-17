@@ -109,7 +109,7 @@ export default async function AbbonamentoPage({
               {pianoAttuale ? `Piano ${PIANI[pianoAttuale].label}` : "Nessun piano attivo"}
             </p>
           </div>
-          <StatusPill status={sub?.status ?? "INCOMPLETE"} />
+          <StatusPill status={sub?.status ?? "INCOMPLETE"} cancelAtPeriodEnd={sub?.cancelAtPeriodEnd ?? false} />
         </div>
 
         <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
@@ -249,7 +249,7 @@ export default async function AbbonamentoPage({
   );
 }
 
-function StatusPill({ status }: { status: string }) {
+function StatusPill({ status, cancelAtPeriodEnd }: { status: string; cancelAtPeriodEnd: boolean }) {
   const map: Record<string, { label: string; className: string }> = {
     TRIALING: { label: "In prova", className: "bg-brand-50 text-brand-700 border-brand-200" },
     ACTIVE: { label: "Attivo", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
@@ -257,6 +257,13 @@ function StatusPill({ status }: { status: string }) {
     CANCELED: { label: "Annullato", className: "bg-slate-100 text-slate-600 border-slate-200" },
     INCOMPLETE: { label: "Da attivare", className: "bg-amber-50 text-amber-700 border-amber-200" },
   };
-  const s = map[status] ?? map.INCOMPLETE;
+  // Uno stato tecnicamente ancora "active" ma già impostato per annullarsi a
+  // fine periodo non deve apparire identico a un abbonamento senza problemi:
+  // qui sopra c'è comunque l'avviso giallo esteso, ma questa pillola è la
+  // prima cosa che si nota a colpo d'occhio.
+  const s =
+    status === "ACTIVE" && cancelAtPeriodEnd
+      ? { label: "In annullamento", className: "bg-amber-50 text-amber-700 border-amber-200" }
+      : (map[status] ?? map.INCOMPLETE);
   return <span className={`rounded-full border px-3 py-1 text-xs font-medium ${s.className}`}>{s.label}</span>;
 }
