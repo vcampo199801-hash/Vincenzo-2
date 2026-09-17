@@ -2,7 +2,15 @@ import { notFound } from "next/navigation";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updatePreventivo } from "@/lib/actions/kpi";
-import { STATO_PREVENTIVO_OPTIONS, MODALITA_PAGAMENTO_OPTIONS, FASCIA_ETA_OPTIONS, toIsoDate } from "@/lib/kpi";
+import {
+  STATO_PREVENTIVO_OPTIONS,
+  MODALITA_PAGAMENTO_OPTIONS,
+  FASCIA_ETA_OPTIONS,
+  TIPO_PAZIENTE_OPTIONS,
+  MOTIVO_RIFIUTO_OPTIONS,
+  ASSICURAZIONI_PREDEFINITE,
+  toIsoDate,
+} from "@/lib/kpi";
 import { PageHeader } from "@/components/ui/page-header";
 import { Field, SelectField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { ComboboxLista } from "@/components/ui/combobox-lista";
@@ -22,7 +30,9 @@ export default async function EditPreventivoPage({ params }: { params: Promise<{
 
   const dottori = [...new Set(esistenti.map((p) => p.dottore))].sort();
   const commerciali = [...new Set(esistenti.map((p) => p.commerciale).filter((c): c is string => Boolean(c)))].sort();
-  const assicurazioni = [...new Set(esistenti.map((p) => p.assicurazione).filter((a): a is string => Boolean(a)))].sort();
+  const assicurazioni = [
+    ...new Set([...ASSICURAZIONI_PREDEFINITE, ...esistenti.map((p) => p.assicurazione).filter((a): a is string => Boolean(a))]),
+  ].sort();
 
   const updateWithId = updatePreventivo.bind(null, item.id);
 
@@ -53,7 +63,22 @@ export default async function EditPreventivoPage({ params }: { params: Promise<{
             labelVuoto="Nessuno"
             placeholderNuovo="Nome del commerciale"
           />
+          <SelectField
+            label="Tipo paziente"
+            name="tipoPaziente"
+            defaultValue={item.tipoPaziente ?? ""}
+            options={[{ value: "", label: "Non specificato" }, ...TIPO_PAZIENTE_OPTIONS]}
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField label="Stato" name="stato" defaultValue={item.stato} options={STATO_PREVENTIVO_OPTIONS} />
+          <SelectField
+            label="Motivo del rifiuto"
+            name="motivoRifiuto"
+            defaultValue={item.motivoRifiuto ?? ""}
+            options={[{ value: "", label: "—" }, ...MOTIVO_RIFIUTO_OPTIONS]}
+            hint="Rilevante solo se lo stato è “Rifiutato”."
+          />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Totale proposto (€)" name="totaleProposto" type="number" step="0.01" required defaultValue={item.totaleProposto} />

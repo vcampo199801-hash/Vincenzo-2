@@ -47,6 +47,7 @@ function payloadPreventivo(formData: FormData) {
   const dataRaw = String(formData.get("data") ?? "");
   const scadenzaRaw = String(formData.get("scadenza") ?? "").trim();
   const totaleAccettatoRaw = String(formData.get("totaleAccettato") ?? "").trim();
+  const stato = String(formData.get("stato") ?? "PRESENTATO");
 
   return {
     data: dataRaw ? new Date(dataRaw) : new Date(),
@@ -54,12 +55,16 @@ function payloadPreventivo(formData: FormData) {
     commerciale: String(formData.get("commerciale") ?? "").trim() || null,
     pazienteNome: String(formData.get("pazienteNome") ?? "").trim() || null,
     fasciaEta: String(formData.get("fasciaEta") ?? "").trim() || null,
+    tipoPaziente: String(formData.get("tipoPaziente") ?? "").trim() || null,
     totaleProposto: Number(formData.get("totaleProposto") ?? 0) || 0,
     totaleAccettato: totaleAccettatoRaw ? Number(totaleAccettatoRaw) : null,
     scadenza: scadenzaRaw ? new Date(scadenzaRaw) : null,
     assicurazione: String(formData.get("assicurazione") ?? "").trim() || null,
     modalitaPagamento: String(formData.get("modalitaPagamento") ?? "").trim() || null,
-    stato: String(formData.get("stato") ?? "PRESENTATO"),
+    stato,
+    // Ha senso solo per un preventivo rifiutato: se lo stato è un altro, non
+    // si porta dietro un motivo rimasto impostato da una modifica precedente.
+    motivoRifiuto: stato === "RIFIUTATO" ? String(formData.get("motivoRifiuto") ?? "").trim() || null : null,
     note: String(formData.get("note") ?? "").trim() || null,
   };
 }

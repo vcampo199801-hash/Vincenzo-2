@@ -253,6 +253,31 @@ export const FASCIA_ETA_OPTIONS = [
   { value: "OVER_60", label: "Adulto (over 60)" },
 ];
 
+export const TIPO_PAZIENTE_OPTIONS = [
+  { value: "NUOVO", label: "Primo accesso" },
+  { value: "ESISTENTE", label: "Già nostro paziente" },
+];
+
+export const MOTIVO_RIFIUTO_OPTIONS = [
+  { value: "PREZZO", label: "Prezzo" },
+  { value: "ASSICURAZIONE_NON_COPRE", label: "Assicurazione non copre le cure" },
+  { value: "RIMANDA_CURE", label: "Rimanda le cure" },
+  { value: "TRASFERIMENTO_PAZIENTE", label: "Trasferimento paziente" },
+  { value: "ALTRO", label: "Altro" },
+];
+
+// Suggerimenti predefiniti per il campo assicurazione (ComboboxLista): non è
+// un enum rigido, restano selezionabili anche assicurazioni diverse da
+// queste già inserite in passato o aggiungibili con "+ Aggiungi nuovo…".
+export const ASSICURAZIONI_PREDEFINITE = [
+  "Unisalute",
+  "Generali",
+  "Fisde",
+  "Reciproca",
+  "Blue Assistance",
+  "Odontonetwork",
+];
+
 export function optionLabelKpi(options: { value: string; label: string }[], value: string | null | undefined) {
   return options.find((o) => o.value === value)?.label ?? value ?? "—";
 }
