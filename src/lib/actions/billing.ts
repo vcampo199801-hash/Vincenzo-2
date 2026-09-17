@@ -148,10 +148,15 @@ export async function aggiungiPostiExtra() {
   const giaPresente = stripeSub.items.data.some((i) => i.price.id === priceId);
 
   if (!giaPresente) {
+    // proration_behavior "none": niente conguaglio calcolato sui giorni già
+    // trascorsi del mese in corso — le postazioni extra sono utilizzabili da
+    // subito, ma il prossimo addebito resta l'importo pieno e prevedibile
+    // (piano + 10€), invece di un importo gonfiato che sembra un errore.
     await stripe.subscriptionItems.create({
       subscription: sub!.stripeSubscriptionId!,
       price: priceId!,
       quantity: 1,
+      proration_behavior: "none",
     });
     await prisma.subscription.update({
       where: { studioId: studio.id },
@@ -164,8 +169,10 @@ export async function aggiungiPostiExtra() {
   redirect("/app/abbonamento?success=1");
 }
 
-/** Toglie il supplemento posti extra dall'abbonamento Stripe (proration
- * automatica di Stripe) e riporta il limite collaboratori a quello del piano. */
+/** Toglie il supplemento posti extra dall'abbonamento Stripe e riporta il
+ * limite collaboratori a quello del piano — senza conguaglio (vedi nota in
+ * aggiungiPostiExtra): niente rimborso parziale a sorpresa sulla prossima
+ * fattura, semplicemente da qui in poi non viene più addebitato. */
 export async function rimuoviPostiExtra() {
   const { studio } = await requireStudio();
   const sub = studio.subscription;
@@ -179,7 +186,7 @@ export async function rimuoviPostiExtra() {
   const stripeSub = await stripe.subscriptions.retrieve(sub!.stripeSubscriptionId!);
   const item = stripeSub.items.data.find((i) => i.price.id === priceId);
   if (item) {
-    await stripe.subscriptionItems.del(item.id);
+    await stripe.subscriptionItems.del(item.id, { proration_behavior: "none" });
   }
 
   await prisma.subscription.update({ where: { studioId: studio.id }, data: { postiExtra: 0 } });
