@@ -64,7 +64,9 @@ export async function startCheckout(formData: FormData) {
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${appUrl()}/app/abbonamento?success=1`,
+    // Dopo un pagamento riuscito si va dritti alla dashboard: rivedere di
+    // nuovo la pagina piani subito dopo aver pagato confondeva chi si abbona.
+    success_url: `${appUrl()}/app`,
     cancel_url: `${appUrl()}/app/abbonamento?canceled=1`,
     client_reference_id: studio.id,
     subscription_data: {
