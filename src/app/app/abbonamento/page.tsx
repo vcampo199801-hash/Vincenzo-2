@@ -135,7 +135,7 @@ export default async function AbbonamentoPage({
         )}
       </div>
 
-      {sub?.stripeCustomerId && (
+      {sub?.stripeSubscriptionId && (
         <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900">Fatturazione e annullamento</h2>
           <p className="mt-1 text-sm text-slate-500">

@@ -190,7 +190,7 @@ export async function rimuoviPostiExtra() {
 export async function openBillingPortal() {
   const { studio } = await requireStudio();
 
-  if (!isStripeConfigured() || !studio.subscription?.stripeCustomerId) {
+  if (!isStripeConfigured() || !studio.subscription?.stripeSubscriptionId) {
     redirect("/app/abbonamento?error=no-billing-account");
   }
 
