@@ -24,7 +24,7 @@ import { StatoBadge } from "@/components/ui/badge";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-type SearchParams = { dottore?: string; commerciale?: string; stato?: string; vista?: string };
+type SearchParams = { dottore?: string; commerciale?: string; stato?: string; assicurazione?: string; vista?: string };
 
 function chipHref(base: SearchParams, chiave: keyof SearchParams, valore: string) {
   const next: SearchParams = { ...base };
@@ -59,12 +59,14 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
 
   const dottori = [...new Set(tutti.map((p) => p.dottore))].sort();
   const commerciali = [...new Set(tutti.map((p) => p.commerciale).filter((c): c is string => Boolean(c)))].sort();
+  const assicurazioni = [...new Set(tutti.map((p) => p.assicurazione).filter((a): a is string => Boolean(a)))].sort();
 
   const filtrati = tutti.filter(
     (p) =>
       (!params.dottore || p.dottore === params.dottore) &&
       (!params.commerciale || p.commerciale === params.commerciale) &&
-      (!params.stato || p.stato === params.stato)
+      (!params.stato || p.stato === params.stato) &&
+      (!params.assicurazione || p.assicurazione === params.assicurazione)
   );
 
   const vista: "dottore" | "commerciale" = params.vista === "commerciale" ? "commerciale" : "dottore";
@@ -103,6 +105,16 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
             valoreAttuale={params.commerciale ?? ""}
             opzioni={commerciali}
             placeholder="Tutti i commerciali"
+            currentParams={params}
+          />
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Assicurazione</p>
+          <PreventiviFiltroPersona
+            paramName="assicurazione"
+            valoreAttuale={params.assicurazione ?? ""}
+            opzioni={assicurazioni}
+            placeholder="Tutte le assicurazioni"
             currentParams={params}
           />
         </div>
