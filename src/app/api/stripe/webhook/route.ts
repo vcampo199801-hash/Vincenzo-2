@@ -48,9 +48,14 @@ export async function POST(req: NextRequest) {
     case "customer.subscription.updated":
     case "customer.subscription.created":
     case "customer.subscription.deleted": {
-      const stripeSub = event.data.object as Stripe.Subscription;
-      const studioId = stripeSub.metadata?.studioId;
+      const eventSub = event.data.object as Stripe.Subscription;
+      const studioId = eventSub.metadata?.studioId;
       if (studioId) {
+        // L'oggetto dentro l'evento può essere un'istantanea non aggiornata
+        // (es. subito dopo un annullamento dal portale clienti): rileggiamo
+        // sempre lo stato più recente direttamente da Stripe prima di
+        // sincronizzarlo, stesso approccio già usato per il checkout.
+        const stripeSub = await stripe.subscriptions.retrieve(eventSub.id);
         const customerId = typeof stripeSub.customer === "string" ? stripeSub.customer : stripeSub.customer?.id;
         await syncSubscription(studioId, stripeSub, customerId);
       }
