@@ -45,7 +45,9 @@ export default async function LavorazionePage({ params }: { params: Promise<{ id
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-slate-900">{lavorazione.riferimentoPaziente}</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">
+              <span className="text-slate-400">#{lavorazione.numero}</span> {lavorazione.riferimentoPaziente}
+            </h1>
             {statoConsegna !== "OK" && <StatoBadge stato={statoConsegna} />}
           </div>
           <p className="mt-1 text-sm text-slate-500">

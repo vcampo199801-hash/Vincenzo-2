@@ -10,6 +10,7 @@ import { TableScroll } from "@/components/ui/table-scroll";
 
 export type LavorazioneRow = {
   id: string;
+  numero: number;
   laboratorioId: string;
   laboratorioNome: string;
   riferimentoPaziente: string;
@@ -24,7 +25,7 @@ export type LavorazioneRow = {
   hasDichiarazione: boolean;
 };
 
-type CampoOrdinabile = "riferimentoPaziente" | "laboratorioNome" | "dataInvio" | "dataConsegnaPrevista" | "stato" | "costo";
+type CampoOrdinabile = "numero" | "riferimentoPaziente" | "laboratorioNome" | "dataInvio" | "dataConsegnaPrevista" | "stato" | "costo";
 
 function toIsoInput(date: Date | null): string {
   return date ? date.toISOString().slice(0, 10) : "";
@@ -85,7 +86,12 @@ export function LavorazioniTable({
       if (filtroStato !== "TUTTI" && r.stato !== filtroStato) return false;
       if (dataDa && toIsoInput(r.dataInvio) < dataDa) return false;
       if (dataA && toIsoInput(r.dataInvio) > dataA) return false;
-      if (ricerca && !r.riferimentoPaziente.toLowerCase().includes(ricerca.toLowerCase())) return false;
+      if (
+        ricerca &&
+        !r.riferimentoPaziente.toLowerCase().includes(ricerca.toLowerCase()) &&
+        !String(r.numero).includes(ricerca)
+      )
+        return false;
       return true;
     });
     const ordinate = [...filtrate].sort((a, b) => {
@@ -141,7 +147,7 @@ export function LavorazioniTable({
         <input type="date" value={dataA} onChange={(e) => setDataA(e.target.value)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm" />
         <input
           type="text"
-          placeholder="Cerca paziente..."
+          placeholder="Cerca paziente o numero..."
           value={ricerca}
           onChange={(e) => setRicerca(e.target.value)}
           className="rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm"
@@ -161,6 +167,7 @@ export function LavorazioniTable({
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
+              <SortHeader campo="numero">N.</SortHeader>
               <SortHeader campo="riferimentoPaziente">Paziente</SortHeader>
               <SortHeader campo="laboratorioNome">Laboratorio</SortHeader>
               <th className="px-3 py-3">Tipo</th>
@@ -187,6 +194,7 @@ export function LavorazioniTable({
                   }}
                   className={`${rowClass} ${evidenzia === r.id ? "ring-2 ring-inset ring-brand-500" : ""}`}
                 >
+                  <td className="px-3 py-2.5 text-slate-500">#{r.numero}</td>
                   <td className="px-3 py-2.5">
                     <Link href={`/app/laboratori/lavorazioni/${r.id}`} className="font-medium text-slate-800 hover:text-brand-700">
                       {r.riferimentoPaziente}
@@ -260,7 +268,7 @@ export function LavorazioniTable({
             })}
             {risultato.length === 0 && (
               <tr>
-                <td colSpan={11} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={12} className="px-4 py-8 text-center text-slate-500">
                   Nessuna lavorazione corrisponde ai filtri.
                 </td>
               </tr>

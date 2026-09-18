@@ -21,6 +21,7 @@ export default async function LavorazioniPage() {
 
   const rows: LavorazioneRow[] = lavorazioni.map((l) => ({
     id: l.id,
+    numero: l.numero,
     laboratorioId: l.laboratorioId,
     laboratorioNome: l.laboratorio.ragioneSociale,
     riferimentoPaziente: l.riferimentoPaziente,

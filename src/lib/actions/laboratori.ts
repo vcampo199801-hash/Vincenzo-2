@@ -137,7 +137,11 @@ export async function createLavorazione(formData: FormData) {
   const { studio } = await requireActiveSubscription("laboratori");
   const { laboratorioId, ...rest } = lavorazionePayload(formData);
   await assertLaboratorioProprio(laboratorioId, studio.id);
-  const lavorazione = await prisma.lavorazione.create({ data: { studioId: studio.id, laboratorioId, ...rest } });
+  // Numero progressivo per studio: il successivo rispetto al più alto già
+  // usato, non un contatore a livello di database (ogni studio riparte da 1).
+  const ultima = await prisma.lavorazione.aggregate({ where: { studioId: studio.id }, _max: { numero: true } });
+  const numero = (ultima._max.numero ?? 0) + 1;
+  const lavorazione = await prisma.lavorazione.create({ data: { studioId: studio.id, laboratorioId, numero, ...rest } });
   revalidatePath("/app/laboratori/lavorazioni");
   revalidatePath("/app");
   redirect(`/app/laboratori/lavorazioni/${lavorazione.id}`);

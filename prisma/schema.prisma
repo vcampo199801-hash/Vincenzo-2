@@ -517,6 +517,10 @@ model Lavorazione {
   studio                    Studio      @relation(fields: [studioId], references: [id], onDelete: Cascade)
   laboratorioId             String
   laboratorio               Laboratorio @relation(fields: [laboratorioId], references: [id], onDelete: Cascade)
+  // Numero progressivo assegnato in automatico alla creazione, per studio
+  // (riparte da 1 per ogni studio, non è un contatore globale) — comodo per
+  // riferirsi a una lavorazione senza dover scrivere per esteso il paziente.
+  numero                    Int
   riferimentoPaziente       String
   tipoLavorazione           String      @default("ALTRO")
   elementiDentali           String?
@@ -537,6 +541,7 @@ model Lavorazione {
 
   allegati AllegatoLaboratorio[]
 
+  @@unique([studioId, numero])
   @@index([studioId])
   @@index([laboratorioId])
 }
