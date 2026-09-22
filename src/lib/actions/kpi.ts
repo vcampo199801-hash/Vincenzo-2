@@ -47,6 +47,8 @@ function payloadPreventivo(formData: FormData) {
   const dataRaw = String(formData.get("data") ?? "");
   const scadenzaRaw = String(formData.get("scadenza") ?? "").trim();
   const totaleAccettatoRaw = String(formData.get("totaleAccettato") ?? "").trim();
+  const importoListinoRaw = String(formData.get("importoListino") ?? "").trim();
+  const importoAssicurazioneRaw = String(formData.get("importoAssicurazione") ?? "").trim();
   const stato = String(formData.get("stato") ?? "PRESENTATO");
 
   return {
@@ -58,6 +60,8 @@ function payloadPreventivo(formData: FormData) {
     tipoPaziente: String(formData.get("tipoPaziente") ?? "").trim() || null,
     totaleProposto: Number(formData.get("totaleProposto") ?? 0) || 0,
     totaleAccettato: totaleAccettatoRaw ? Number(totaleAccettatoRaw) : null,
+    importoListino: importoListinoRaw ? Number(importoListinoRaw) : null,
+    importoAssicurazione: importoAssicurazioneRaw ? Number(importoAssicurazioneRaw) : null,
     scadenza: scadenzaRaw ? new Date(scadenzaRaw) : null,
     assicurazione: String(formData.get("assicurazione") ?? "").trim() || null,
     modalitaPagamento: String(formData.get("modalitaPagamento") ?? "").trim() || null,

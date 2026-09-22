@@ -136,7 +136,14 @@ export default async function KpiPage({ searchParams }: { searchParams: Promise<
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <Field label="N. prime visite" name="numeroPrimeVisite" type="number" defaultValue={righeGiornoSelezionato?.numeroPrimeVisite ?? 0} />
             <Field label="N. appuntamenti" name="numeroAppuntamenti" type="number" defaultValue={righeGiornoSelezionato?.numeroAppuntamenti ?? 0} />
-            <Field label="Fatturato (€)" name="fatturato" type="number" step="0.01" defaultValue={righeGiornoSelezionato?.fatturato ?? 0} />
+            <Field
+              label="Fatturato (€)"
+              name="fatturato"
+              type="number"
+              step="0.01"
+              defaultValue={righeGiornoSelezionato?.fatturato ?? 0}
+              hint="Si aggiorna da solo se per questo giorno usi la sezione Cassa."
+            />
           </div>
           <TextAreaField label="Note" name="note" defaultValue={righeGiornoSelezionato?.note} />
           <SubmitButton>{isModifica ? "Salva modifiche" : "Salva i dati di oggi"}</SubmitButton>

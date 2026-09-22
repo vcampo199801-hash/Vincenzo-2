@@ -79,6 +79,22 @@ export default async function NewPreventivoPage() {
           />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
+            label="Importo a listino (€)"
+            name="importoListino"
+            type="number"
+            step="0.01"
+            hint="Prezzo pieno dello studio, prima di sconti o assicurazione."
+          />
+          <Field
+            label="Importo coperto da assicurazione (€)"
+            name="importoAssicurazione"
+            type="number"
+            step="0.01"
+            hint="Facoltativo."
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Scadenza del preventivo" name="scadenza" type="date" hint="Facoltativo." />
           <SelectField
             label="Modalità di pagamento"

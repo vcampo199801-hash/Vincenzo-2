@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/app/kpi", label: "Andamento" },
   { href: "/app/kpi/preventivi", label: "Preventivi" },
+  { href: "/app/kpi/cassa", label: "Cassa" },
 ];
 
 export function KpiTabs() {

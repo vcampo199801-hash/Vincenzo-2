@@ -202,6 +202,8 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
               <th className="px-4 py-3">Commerciale</th>
               <th className="px-4 py-3">Proposto</th>
               <th className="px-4 py-3">Accettato</th>
+              <th className="px-4 py-3">Listino</th>
+              <th className="px-4 py-3">Coperto assicurazione</th>
               <th className="px-4 py-3">Scadenza</th>
               <th className="px-4 py-3">Assicurazione</th>
               <th className="px-4 py-3">Pagamento</th>
@@ -223,6 +225,8 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
                   <td className="px-4 py-3 text-slate-600">{p.commerciale ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{formatCurrency(p.totaleProposto)}</td>
                   <td className="px-4 py-3 text-slate-600">{p.totaleAccettato === null ? "—" : formatCurrency(p.totaleAccettato)}</td>
+                  <td className="px-4 py-3 text-slate-600">{p.importoListino === null ? "—" : formatCurrency(p.importoListino)}</td>
+                  <td className="px-4 py-3 text-slate-600">{p.importoAssicurazione === null ? "—" : formatCurrency(p.importoAssicurazione)}</td>
                   <td className="px-4 py-3 text-slate-600">
                     {p.scadenza ? formatDate(p.scadenza) : "—"}
                     {scadenzaStato !== "OK" && <span className="ml-1.5"><StatoBadge stato={scadenzaStato} /></span>}
@@ -248,7 +252,7 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
             })}
             {filtrati.length === 0 && (
               <tr>
-                <td colSpan={14} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={16} className="px-4 py-8 text-center text-slate-500">
                   Nessun preventivo inserito finora.
                 </td>
               </tr>

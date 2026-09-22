@@ -81,6 +81,7 @@ model Studio {
   lavorazioni          Lavorazione[]
   allegatiLaboratorio  AllegatoLaboratorio[]
   kpiGiornalieri       KpiGiornaliero[]
+  movimentiCassa       MovimentoCassa[]
   preventivi           Preventivo[]
   pazienti             Paziente[]
   moduliCompilati      ModuloCompilato[]
@@ -607,6 +608,12 @@ model KpiGiornaliero {
   numeroPrimeVisite          Int      @default(0)
   numeroAppuntamenti         Int      @default(0)
   fatturato                  Float    @default(0)
+  // Totale della chiusura giornaliera POS (carte), inserito nella sezione
+  // Cassa — insieme agli incassi in contanti/assegno registrati per lo stesso
+  // giorno, alimenta in automatico il campo "fatturato" qui sopra (vedi
+  // ricalcolaFatturatoGiorno in lib/actions/cassa.ts). Se per un giorno non si
+  // usa la Cassa, fatturato resta quello inserito a mano, come prima.
+  chiusuraPos                Float    @default(0)
   valorePreventiviPresentati Float    @default(0)
   valorePreventiviAccettati  Float    @default(0)
   note                       String?
@@ -615,6 +622,32 @@ model KpiGiornaliero {
 
   @@unique([studioId, data])
   @@index([studioId])
+}
+
+// Movimenti di cassa dello studio: incassi (contanti/assegno, con numero
+// fattura), prelievi e versamenti. Gli incassi (più la chiusura POS su
+// KpiGiornaliero) alimentano in automatico il fatturato giornaliero — vedi
+// ricalcolaFatturatoGiorno in lib/actions/cassa.ts. Prelievi e versamenti sono
+// solo movimenti di cassa fisica, non contano nel fatturato.
+model MovimentoCassa {
+  id       String   @id @default(cuid())
+  studioId String
+  studio   Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  // TipoMovimentoCassa: INCASSO | PRELIEVO | VERSAMENTO
+  tipo     String
+  data     DateTime
+  importo  Float
+  // Solo per INCASSO — ModalitaIncasso: CONTANTI | ASSEGNO
+  modalitaIncasso String?
+  numeroFattura   String?
+  // Solo per PRELIEVO/VERSAMENTO
+  nominativo      String?
+  note            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([studioId])
+  @@index([studioId, data])
 }
 
 // Un preventivo singolo (a differenza di KpiGiornaliero, che è solo il totale
@@ -634,6 +667,13 @@ model Preventivo {
   tipoPaziente      String?
   totaleProposto    Float
   totaleAccettato   Float?
+  // Prezzo pieno da listino dello studio, prima di eventuali sconti o
+  // copertura assicurativa — separato da totaleProposto/totaleAccettato che
+  // seguono invece la trattativa col paziente.
+  importoListino       Float?
+  // Quota dell'importo coperta dall'assicurazione (nome dell'assicurazione è
+  // già nel campo "assicurazione" qui sotto).
+  importoAssicurazione Float?
   scadenza          DateTime?
   // Nome dell'assicurazione (es. "Previmedical"), non solo sì/no: ce ne sono
   // di diverse. Null/vuoto = nessuna assicurazione coinvolta.

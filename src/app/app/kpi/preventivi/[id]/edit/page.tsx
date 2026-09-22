@@ -93,6 +93,24 @@ export default async function EditPreventivoPage({ params }: { params: Promise<{
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
+            label="Importo a listino (€)"
+            name="importoListino"
+            type="number"
+            step="0.01"
+            defaultValue={item.importoListino ?? undefined}
+            hint="Prezzo pieno dello studio, prima di sconti o assicurazione."
+          />
+          <Field
+            label="Importo coperto da assicurazione (€)"
+            name="importoAssicurazione"
+            type="number"
+            step="0.01"
+            defaultValue={item.importoAssicurazione ?? undefined}
+            hint="Facoltativo."
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field
             label="Scadenza del preventivo"
             name="scadenza"
             type="date"
