@@ -26,9 +26,10 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
   // già salvata a mezzanotte, mostrando sempre 0 anche appena dopo un salvataggio.
   const posDataSelezionata = params.posData ? new Date(params.posData) : new Date(toIsoDate(new Date()));
 
-  const [movimenti, giornoPos] = await Promise.all([
+  const [movimenti, giornoPos, giorniKpi] = await Promise.all([
     prisma.movimentoCassa.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } }),
     prisma.kpiGiornaliero.findFirst({ where: { studioId: studio.id, data: posDataSelezionata } }),
+    prisma.kpiGiornaliero.findMany({ where: { studioId: studio.id }, select: { data: true, chiusuraPos: true } }),
   ]);
 
   const filtrati = movimenti.filter((m) => {
@@ -38,7 +39,20 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
     return true;
   });
 
-  const totaleIncassi = filtrati.filter((m) => m.tipo === "INCASSO").reduce((s, m) => s + m.importo, 0);
+  const incassi = filtrati.filter((m) => m.tipo === "INCASSO");
+  const totaleContanti = incassi.filter((m) => m.modalitaIncasso === "CONTANTI").reduce((s, m) => s + m.importo, 0);
+  const totaleAssegni = incassi.filter((m) => m.modalitaIncasso === "ASSEGNO").reduce((s, m) => s + m.importo, 0);
+  const totaleBonifici = incassi.filter((m) => m.modalitaIncasso === "BONIFICO").reduce((s, m) => s + m.importo, 0);
+  // Il totale POS non è un movimento come gli altri (vedi chiusuraPos su
+  // KpiGiornaliero): lo si somma qui solo se il filtro Tipo non esclude già
+  // gli incassi, così i totali restano coerenti con quel filtro.
+  const totalePos =
+    !params.tipo || params.tipo === "INCASSO"
+      ? giorniKpi
+          .filter((g) => (!params.da || toIsoDate(g.data) >= params.da) && (!params.a || toIsoDate(g.data) <= params.a))
+          .reduce((s, g) => s + g.chiusuraPos, 0)
+      : 0;
+  const totaleIncassi = totaleContanti + totaleAssegni + totaleBonifici + totalePos;
   const totalePrelievi = filtrati.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
   const totaleVersamenti = filtrati.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
 
@@ -68,9 +82,9 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
         </UnsavedChangesGuard>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs text-slate-500">Totale incassi (periodo filtrato)</p>
+          <p className="text-xs text-slate-500">Totale incassi — contanti+POS+assegni+bonifici (periodo filtrato)</p>
           <p className="mt-1 text-2xl font-bold text-emerald-700">{formatCurrency(totaleIncassi)}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -80,6 +94,25 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Totale versamenti (periodo filtrato)</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{formatCurrency(totaleVersamenti)}</p>
+        </div>
+      </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-slate-500">Contanti</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{formatCurrency(totaleContanti)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-slate-500">POS</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{formatCurrency(totalePos)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-slate-500">Assegni</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{formatCurrency(totaleAssegni)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-slate-500">Bonifici</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{formatCurrency(totaleBonifici)}</p>
         </div>
       </div>
 

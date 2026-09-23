@@ -47,7 +47,9 @@ function movimentoPayload(formData: FormData) {
     // se il form li avesse inviati.
     modalitaIncasso: tipo === "INCASSO" ? String(formData.get("modalitaIncasso") ?? "CONTANTI") : null,
     numeroFattura: tipo === "INCASSO" ? String(formData.get("numeroFattura") ?? "").trim() || null : null,
-    nominativo: tipo !== "INCASSO" ? String(formData.get("nominativo") ?? "").trim() || null : null,
+    // Utile soprattutto per bonifici e prelievi/versamenti, ma disponibile
+    // per qualsiasi movimento — non solo per chi non è un incasso.
+    nominativo: String(formData.get("nominativo") ?? "").trim() || null,
     note: String(formData.get("note") ?? "").trim() || null,
   };
 }

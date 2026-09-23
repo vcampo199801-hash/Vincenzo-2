@@ -50,15 +50,23 @@ export function MovimentoCassaForm({ action, defaultValues, submitLabel = "Salva
       <Field label="Importo (€)" name="importo" type="number" step="0.01" required defaultValue={defaultValues?.importo ?? undefined} />
 
       {isIncasso ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <SelectField
-            label="Modalità"
-            name="modalitaIncasso"
-            defaultValue={defaultValues?.modalitaIncasso ?? "CONTANTI"}
-            options={[...MODALITA_INCASSO_OPTIONS]}
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <SelectField
+              label="Modalità"
+              name="modalitaIncasso"
+              defaultValue={defaultValues?.modalitaIncasso ?? "CONTANTI"}
+              options={[...MODALITA_INCASSO_OPTIONS]}
+            />
+            <Field label="Numero fattura" name="numeroFattura" defaultValue={defaultValues?.numeroFattura} hint="Facoltativo." />
+          </div>
+          <Field
+            label="Nominativo"
+            name="nominativo"
+            defaultValue={defaultValues?.nominativo}
+            hint="Facoltativo — utile in particolare per i bonifici."
           />
-          <Field label="Numero fattura" name="numeroFattura" defaultValue={defaultValues?.numeroFattura} hint="Facoltativo." />
-        </div>
+        </>
       ) : (
         <Field label="Nominativo" name="nominativo" defaultValue={defaultValues?.nominativo} hint="Facoltativo." />
       )}

@@ -10,6 +10,7 @@ export type TipoMovimento = (typeof TIPO_MOVIMENTO_OPTIONS)[number]["value"];
 export const MODALITA_INCASSO_OPTIONS = [
   { value: "CONTANTI", label: "Contanti" },
   { value: "ASSEGNO", label: "Assegno" },
+  { value: "BONIFICO", label: "Bonifico" },
 ] as const;
 
 export function optionLabelCassa(options: { value: string; label: string }[], value: string | null | undefined) {
