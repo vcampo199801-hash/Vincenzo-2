@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PIANI, PIANI_ORDINE } from "@/lib/plans";
+import { trialDays } from "@/lib/trial";
 import { CookieSettingsLink } from "@/components/cookie-settings-link";
 import { InstallAppButton } from "@/components/app/install-app-button";
 
@@ -47,7 +48,7 @@ export default function Home() {
               href="/signup"
               className="whitespace-nowrap rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700 sm:py-2"
             >
-              Prova gratis 7 giorni
+              Prova gratis {trialDays()} giorni
             </Link>
           </nav>
         </div>
@@ -96,7 +97,7 @@ export default function Home() {
               Vedi i prezzi
             </a>
           </div>
-          <p className="mt-3 text-xs text-slate-400">7 giorni gratis, nessuna carta richiesta.</p>
+          <p className="mt-3 text-xs text-slate-400">{trialDays()} giorni gratis, nessuna carta richiesta.</p>
 
           <div className="mx-auto mt-6 flex max-w-xl items-center justify-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3.5 text-left shadow-sm">
             <span className="text-2xl shrink-0" aria-hidden>🧾</span>
@@ -267,7 +268,7 @@ export default function Home() {
           </div>
 
           <p className="mt-8 text-sm text-slate-500">
-            Ogni piano include 7 giorni di prova gratuita, promemoria scadenze automatici e report stampabile per le
+            Ogni piano include {trialDays()} giorni di prova gratuita, promemoria scadenze automatici e report stampabile per le
             ispezioni ASL.
           </p>
 

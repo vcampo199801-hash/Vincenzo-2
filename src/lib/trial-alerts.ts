@@ -1,6 +1,7 @@
 import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { daysUntil } from "@/lib/compliance";
 import { prisma } from "@/lib/prisma";
+import { trialDays } from "@/lib/trial";
 
 const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -29,7 +30,7 @@ function emailWrapper(titolo: string, corpo: string, ctaHref: string, ctaLabel: 
 
 function renderWelcomeHtml(studioName: string) {
   const corpo = `<p>Ciao, benvenuto su Scadenze in Regola! La prova gratuita di <strong>${escapeHtml(studioName)}</strong> è
-    partita: hai 7 giorni per vedere se l'app fa al caso tuo, con tutte le funzionalità sbloccate.</p>
+    partita: hai ${trialDays()} giorni per vedere se l'app fa al caso tuo, con tutte le funzionalità sbloccate.</p>
     <p>Buona notizia: nello Scadenzario abbiamo già caricato per te le 24 scadenze normative standard di uno studio
     odontoiatrico (estintori, autoclave, DVR, formazione sicurezza e le altre) — non parti da zero. Ti basta:</p>
     <ol style="padding-left:20px;">
@@ -55,7 +56,7 @@ function renderTrialHtml(studioName: string, tipo: "promemoria" | "scaduta") {
       ? `<p>Ciao, la prova gratuita di <strong>${escapeHtml(studioName)}</strong> scade tra 2 giorni. Scegli il piano più
          adatto al tuo studio per continuare ad avere scadenze, magazzino e tutto il resto sotto controllo, senza
          interruzioni.</p>`
-      : `<p>Ciao, la prova gratuita di 7 giorni di <strong>${escapeHtml(studioName)}</strong> è terminata. Nessun dato è
+      : `<p>Ciao, la prova gratuita di ${trialDays()} giorni di <strong>${escapeHtml(studioName)}</strong> è terminata. Nessun dato è
          andato perso: tutto quello che hai inserito in questi giorni ti aspetta così com'è. Scegli un piano qui sotto
          per sbloccare subito l'accesso.</p>`;
   return emailWrapper(titolo, corpo, "/app/abbonamento", "Scegli il tuo piano");
@@ -107,12 +108,14 @@ export async function sendWelcomeEmail(studio: { id: string; name: string; email
 
 /** Controlla lo stato della prova gratuita di uno studio e invia, al
  * massimo una volta ciascuna, le email del suo ciclo di vita: un consiglio
- * a metà prova (giorno 3-4), un promemoria entro gli ultimi 2 giorni, e
- * l'avviso di scadenza una volta che è effettivamente terminata. Usa i
- * campi *InviataAt (non più un confronto sul giorno esatto) apposta per
- * essere "recuperabile": se un giorno viene saltato per qualsiasi motivo
- * (es. l'email dello studio non era ancora impostata, un intoppo del cron),
- * la prossima esecuzione manda comunque l'email invece di perdere quella
+ * a metà prova, un promemoria entro gli ultimi 2 giorni, e l'avviso di
+ * scadenza una volta che è effettivamente terminata. La "metà prova" è
+ * calcolata in proporzione a trialDays() (non più un valore fisso), così
+ * resta corretta anche se la durata della prova cambia. Usa i campi
+ * *InviataAt (non più un confronto sul giorno esatto) apposta per essere
+ * "recuperabile": se un giorno viene saltato per qualsiasi motivo (es.
+ * l'email dello studio non era ancora impostata, un intoppo del cron), la
+ * prossima esecuzione manda comunque l'email invece di perdere quella
  * finestra per sempre. Indipendente dal flag "notificheAttive" dello
  * studio: quello riguarda i promemoria di scadenza normativa, non lo stato
  * dell'abbonamento. */
@@ -141,7 +144,8 @@ export async function sendTrialAlertForStudio(studio: {
   const giorni = daysUntil(sub.trialEndsAt);
   if (giorni === null) return null;
 
-  if (giorni >= 3 && giorni <= 4 && !sub.nurtureTrialInviataAt) {
+  const metaProva = Math.floor(trialDays() / 2);
+  if (giorni >= metaProva && giorni <= metaProva + 1 && !sub.nurtureTrialInviataAt) {
     await sendEmail({
       to: studio.email,
       subject: `💡 Un consiglio per Scadenze in Regola — ${studio.name}`,

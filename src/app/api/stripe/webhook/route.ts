@@ -131,7 +131,7 @@ async function syncSubscription(studioId: string, stripeSub: Stripe.Subscription
   // mai svuotato qui: a fine prova Stripe manda un altro evento con
   // trial_end nullo, ma a quel punto lo status non e piu TRIALING e il
   // valore vecchio resta solo come traccia storica (stesso comportamento
-  // gia usato per la prova gratuita interna dei 7 giorni).
+  // gia usato per la prova gratuita interna, vedi trialDays() in lib/trial.ts).
   const trialEndsAt = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000) : undefined;
 
   const precedente = await prisma.subscription.findUnique({

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { trialDays } from "@/lib/trial";
 
 export const metadata = {
   title: "Termini di servizio — Scadenze in Regola",
@@ -72,7 +73,7 @@ export default function TerminiPage() {
             <p className="mt-2 leading-relaxed">
               Il servizio è offerto in tre piani (Base, Plus, Completo), ciascuno con un proprio prezzo mensile
               indicato nella pagina &quot;Abbonamento&quot; dell&apos;app. Ogni nuovo studio riceve un periodo di
-              prova gratuita di 7 giorni; allo scadere della prova, l&apos;accesso ai moduli richiede
+              prova gratuita di {trialDays()} giorni; allo scadere della prova, l&apos;accesso ai moduli richiede
               l&apos;attivazione di un piano a pagamento.
             </p>
           </section>

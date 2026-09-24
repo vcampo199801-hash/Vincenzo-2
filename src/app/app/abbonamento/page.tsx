@@ -8,6 +8,7 @@ import { startCheckout, changePlan, openBillingPortal } from "@/lib/actions/bill
 import { PageHeader } from "@/components/ui/page-header";
 import { SubmitButton } from "@/components/ui/form";
 import { RedeemCodeForm } from "@/components/app/redeem-code-form";
+import { trialDays } from "@/lib/trial";
 
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -47,8 +48,8 @@ export default async function AbbonamentoPage({
 
       {trialExpired && (
         <p className="mb-4 rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-800">
-          ⏳ La tua prova gratuita di 7 giorni è terminata. Nessun dato è andato perso: tutto quello che hai
-          compilato in questa settimana ti aspetta così com&apos;è. Scegli un piano qui sotto per sbloccare subito
+          ⏳ La tua prova gratuita di {trialDays()} giorni è terminata. Nessun dato è andato perso: tutto quello che hai
+          compilato in questi giorni ti aspetta così com&apos;è. Scegli un piano qui sotto per sbloccare subito
           l&apos;accesso.
         </p>
       )}

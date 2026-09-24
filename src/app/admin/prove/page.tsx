@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { daysUntil, formatDate } from "@/lib/compliance";
+import { trialDays } from "@/lib/trial";
 import { ControllaOraButton } from "@/components/admin/controlla-ora-button";
 
 export const dynamic = "force-dynamic";
@@ -107,7 +108,7 @@ export default async function ProveGratuitePage() {
       />
       <Sezione
         titolo="In corso"
-        descrizione="Ancora nei 7 giorni di prova."
+        descrizione={`Ancora nei ${trialDays()} giorni di prova.`}
         righe={inCorso}
         vuoto="Nessuna prova in corso al momento."
       />

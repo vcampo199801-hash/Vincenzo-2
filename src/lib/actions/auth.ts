@@ -8,13 +8,9 @@ import { createSession, destroySession } from "@/lib/session";
 import { provisionStudioDefaults } from "@/lib/seed-data";
 import { notificaTitolare } from "@/lib/owner-alerts";
 import { sendWelcomeEmail } from "@/lib/trial-alerts";
+import { trialDays } from "@/lib/trial";
 
 export type FormState = { error?: string } | undefined;
-
-function trialDays() {
-  const raw = Number(process.env.TRIAL_DAYS ?? "7");
-  return Number.isFinite(raw) && raw > 0 ? raw : 7;
-}
 
 export async function signupAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const nomeStudio = String(formData.get("nomeStudio") ?? "").trim();
