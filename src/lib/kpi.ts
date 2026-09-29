@@ -244,6 +244,8 @@ export const MODALITA_PAGAMENTO_OPTIONS = [
   { value: "TUTTO_SUBITO", label: "Tutto subito" },
   { value: "ACCONTI", label: "Acconti" },
   { value: "40_30_30", label: "40/30/30" },
+  { value: "FINANZIAMENTO", label: "Finanziamento" },
+  { value: "PAGODIL", label: "PagoDIL" },
   { value: "IN_FASE_DECISIONE", label: "In fase di decisione" },
 ];
 
@@ -276,6 +278,19 @@ export const ASSICURAZIONI_PREDEFINITE = [
   "Reciproca",
   "Blue Assistance",
   "Odontonetwork",
+];
+
+// Suggerimenti predefiniti per "Come ci ha conosciuto" (ComboboxLista): stesso
+// meccanismo dell'assicurazione, lo studio arricchisce la lista da solo con
+// "+ Aggiungi nuovo…" invece di dover chiedere una modifica al codice.
+export const COME_CI_HA_CONOSCIUTO_PREDEFINITE = [
+  "Passaparola",
+  "Google",
+  "Social (Instagram/Facebook)",
+  "Sito web",
+  "Vetrina/cartellonistica studio",
+  "Convenzione aziendale",
+  "Altro",
 ];
 
 export function optionLabelKpi(options: { value: string; label: string }[], value: string | null | undefined) {

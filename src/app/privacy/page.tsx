@@ -110,9 +110,15 @@ export default function PrivacyPage() {
               browser e i nostri server avvengono sempre via HTTPS. L&apos;accesso ai dati del modulo Personale è
               riservato al solo titolare dello studio ed è tracciato in un registro di accesso interno.
             </p>
+            <p className="mt-2 leading-relaxed">
+              Ogni studio vede esclusivamente i propri dati: ogni richiesta è autenticata e vincolata allo studio
+              di appartenenza, non esiste alcuna vista che mostri dati di più studi insieme. Il database è ospitato
+              su Neon (si veda la sezione 5), che esegue backup automatici continui, così da poter ripristinare i
+              dati in caso di guasto tecnico.
+            </p>
           </section>
 
-          <section>
+          <section id="fornitori">
             <h2 className="text-lg font-semibold text-slate-900">5. Fornitori e sub-responsabili</h2>
             <p className="mt-2 leading-relaxed">
               Per erogare il servizio ci appoggiamo ai seguenti fornitori esterni, che trattano i dati in qualità

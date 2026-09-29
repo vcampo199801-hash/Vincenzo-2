@@ -49,15 +49,18 @@ function payloadPreventivo(formData: FormData) {
   const totaleAccettatoRaw = String(formData.get("totaleAccettato") ?? "").trim();
   const importoListinoRaw = String(formData.get("importoListino") ?? "").trim();
   const importoAssicurazioneRaw = String(formData.get("importoAssicurazione") ?? "").trim();
+  const dataAccettazioneRaw = String(formData.get("dataAccettazione") ?? "").trim();
   const stato = String(formData.get("stato") ?? "PRESENTATO");
+  const data = dataRaw ? new Date(dataRaw) : new Date();
 
   return {
-    data: dataRaw ? new Date(dataRaw) : new Date(),
+    data,
     dottore: String(formData.get("dottore") ?? "").trim(),
     commerciale: String(formData.get("commerciale") ?? "").trim() || null,
     pazienteNome: String(formData.get("pazienteNome") ?? "").trim() || null,
     fasciaEta: String(formData.get("fasciaEta") ?? "").trim() || null,
     tipoPaziente: String(formData.get("tipoPaziente") ?? "").trim() || null,
+    comeCiHaConosciuto: String(formData.get("comeCiHaConosciuto") ?? "").trim() || null,
     totaleProposto: Number(formData.get("totaleProposto") ?? 0) || 0,
     totaleAccettato: totaleAccettatoRaw ? Number(totaleAccettatoRaw) : null,
     importoListino: importoListinoRaw ? Number(importoListinoRaw) : null,
@@ -69,6 +72,10 @@ function payloadPreventivo(formData: FormData) {
     // Ha senso solo per un preventivo rifiutato: se lo stato è un altro, non
     // si porta dietro un motivo rimasto impostato da una modifica precedente.
     motivoRifiuto: stato === "RIFIUTATO" ? String(formData.get("motivoRifiuto") ?? "").trim() || null : null,
+    // Se accettato e non specificata a mano, di default è la data del
+    // preventivo stesso — stesso trattamento "solo se rilevante per lo
+    // stato" già usato per motivoRifiuto qui sopra.
+    dataAccettazione: stato === "ACCETTATO" ? (dataAccettazioneRaw ? new Date(dataAccettazioneRaw) : data) : null,
     note: String(formData.get("note") ?? "").trim() || null,
   };
 }

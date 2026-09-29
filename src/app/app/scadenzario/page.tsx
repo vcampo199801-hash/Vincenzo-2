@@ -41,12 +41,18 @@ export default async function ScadenzarioPage() {
         actionHref="/app/scadenzario/new"
       />
 
-      <div className="-mt-4 mb-6">
+      <div className="-mt-4 mb-6 flex flex-wrap gap-x-5 gap-y-1">
         <a
           href="/api/calendario"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-800"
         >
           📅 Esporta scadenze nel calendario (.ics) — promemoria su telefono/Google/Apple Calendar
+        </a>
+        <a
+          href="/api/export/scadenzario"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-800"
+        >
+          ⬇️ Esporta in Excel/CSV
         </a>
       </div>
 

@@ -43,6 +43,8 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
   const totaleContanti = incassi.filter((m) => m.modalitaIncasso === "CONTANTI").reduce((s, m) => s + m.importo, 0);
   const totaleAssegni = incassi.filter((m) => m.modalitaIncasso === "ASSEGNO").reduce((s, m) => s + m.importo, 0);
   const totaleBonifici = incassi.filter((m) => m.modalitaIncasso === "BONIFICO").reduce((s, m) => s + m.importo, 0);
+  const totaleFinanziamento = incassi.filter((m) => m.modalitaIncasso === "FINANZIAMENTO").reduce((s, m) => s + m.importo, 0);
+  const totalePagodil = incassi.filter((m) => m.modalitaIncasso === "PAGODIL").reduce((s, m) => s + m.importo, 0);
   // Il totale POS non è un movimento come gli altri (vedi chiusuraPos su
   // KpiGiornaliero): lo si somma qui solo se il filtro Tipo non esclude già
   // gli incassi, così i totali restano coerenti con quel filtro.
@@ -52,9 +54,12 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
           .filter((g) => (!params.da || toIsoDate(g.data) >= params.da) && (!params.a || toIsoDate(g.data) <= params.a))
           .reduce((s, g) => s + g.chiusuraPos, 0)
       : 0;
-  const totaleIncassi = totaleContanti + totaleAssegni + totaleBonifici + totalePos;
+  const totaleIncassi = totaleContanti + totaleAssegni + totaleBonifici + totaleFinanziamento + totalePagodil + totalePos;
   const totalePrelievi = filtrati.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
   const totaleVersamenti = filtrati.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
+  const exportQuery = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => Boolean(v)) as [string, string][]
+  ).toString();
 
   return (
     <div>
@@ -66,6 +71,15 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
       />
 
       <KpiTabs />
+
+      <div className="-mt-2 mb-6">
+        <a
+          href={`/api/export/cassa${exportQuery ? `?${exportQuery}` : ""}`}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-800"
+        >
+          ⬇️ Esporta in Excel/CSV {exportQuery ? "(con i filtri applicati)" : ""}
+        </a>
+      </div>
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-sm font-semibold text-slate-900">Chiusura POS giornaliera</h2>
@@ -84,7 +98,7 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
 
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs text-slate-500">Totale incassi — contanti+POS+assegni+bonifici (periodo filtrato)</p>
+          <p className="text-xs text-slate-500">Totale incassi — tutte le modalità (periodo filtrato)</p>
           <p className="mt-1 text-2xl font-bold text-emerald-700">{formatCurrency(totaleIncassi)}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -97,7 +111,7 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
         </div>
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-xs text-slate-500">Contanti</p>
           <p className="mt-1 text-lg font-semibold text-slate-900">{formatCurrency(totaleContanti)}</p>
@@ -113,6 +127,14 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-xs text-slate-500">Bonifici</p>
           <p className="mt-1 text-lg font-semibold text-slate-900">{formatCurrency(totaleBonifici)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-slate-500">Finanziamento</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{formatCurrency(totaleFinanziamento)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-slate-500">PagoDIL</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{formatCurrency(totalePagodil)}</p>
         </div>
       </div>
 

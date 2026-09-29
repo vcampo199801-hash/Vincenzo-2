@@ -13,6 +13,7 @@ import { ChangePasswordForm } from "@/components/app/change-password-form";
 import { NotificationPreferenceForm } from "@/components/app/notification-preference-form";
 import { MemberPermissionsForm } from "@/components/app/member-permissions-form";
 import { TestDigestButton } from "@/components/app/test-digest-button";
+import { TestRecapAttivitaButton } from "@/components/app/test-recap-attivita-button";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { formatDate } from "@/lib/compliance";
 import { isEmailConfigured } from "@/lib/email";
@@ -117,6 +118,22 @@ export default async function ImpostazioniPage({
             name="notificheAttive"
             defaultChecked={studio.notificheAttive}
           />
+          <div className="border-t border-slate-100 pt-4">
+            <CheckboxField
+              label="Ricevi ogni giorno un recap dell'attività (preventivi caricati, incassi di Cassa, lavorazioni di laboratorio)"
+              name="recapAttivitaAttivo"
+              defaultChecked={studio.recapAttivitaAttivo}
+            />
+            <div className="mt-3">
+              <Field
+                label="Email per il recap attività"
+                name="emailRecapAttivita"
+                type="email"
+                defaultValue={studio.emailRecapAttivita ?? studio.email}
+                hint="Pensato per la Direzione: può essere un indirizzo diverso da quello dei promemoria di scadenze qui sopra. Parte precompilato con la stessa email, ma da qui in poi i due campi restano indipendenti."
+              />
+            </div>
+          </div>
           <SubmitButton>Salva impostazioni</SubmitButton>
         </form>
         </UnsavedChangesGuard>
@@ -130,14 +147,30 @@ export default async function ImpostazioniPage({
         </p>
         <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">Email</p>
+            <p className="mb-2 text-sm font-medium text-slate-700">Riepilogo scadenze</p>
             <TestDigestButton />
+          </div>
+          <div className="border-t border-slate-100 pt-4">
+            <p className="mb-2 text-sm font-medium text-slate-700">Recap attività</p>
+            <TestRecapAttivitaButton />
             {!isEmailConfigured() && (
               <p className="mt-3 text-xs text-slate-400">
                 Nota per lo sviluppatore: imposta RESEND_API_KEY e EMAIL_FROM in .env per abilitare l&apos;invio reale.
               </p>
             )}
           </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900">Documenti legali</h2>
+        <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm text-sm">
+          <a href="/termini" target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 underline hover:text-brand-800">
+            Termini di servizio
+          </a>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 underline hover:text-brand-800">
+            Informativa privacy e sicurezza dei dati
+          </a>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireStudio } from "@/lib/auth-guards";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
 import { buildDigestForStudio, renderDigestHtml } from "@/lib/notifications";
+import { buildRecapAttivita, renderRecapAttivitaHtml } from "@/lib/recap-attivita";
 
 export async function updateStudioInfo(formData: FormData) {
   const { studio } = await requireStudio();
@@ -23,6 +24,8 @@ export async function updateStudioInfo(formData: FormData) {
       codiceFiscale: String(formData.get("codiceFiscale") ?? "").trim() || null,
       pec: String(formData.get("pec") ?? "").trim() || null,
       notificheAttive: formData.get("notificheAttive") === "on",
+      recapAttivitaAttivo: formData.get("recapAttivitaAttivo") === "on",
+      emailRecapAttivita: String(formData.get("emailRecapAttivita") ?? "").trim() || null,
     },
   });
 
@@ -60,6 +63,33 @@ export async function sendTestDigest(): Promise<TestDigestState> {
       html: await renderDigestHtml(studio.name, digest),
     });
     return { success: `Email di riepilogo inviata a ${studio.email}.` };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Invio non riuscito." };
+  }
+}
+
+export async function sendTestRecapAttivita(): Promise<TestDigestState> {
+  const { studio } = await requireStudio();
+
+  if (!isEmailConfigured()) {
+    return { error: "Le email non sono ancora configurate su questa istanza (manca RESEND_API_KEY/EMAIL_FROM)." };
+  }
+  const destinatario = studio.emailRecapAttivita || studio.email;
+  if (!destinatario) {
+    return { error: "Imposta prima l'email per il recap attività qui sopra." };
+  }
+
+  try {
+    const recap = await buildRecapAttivita(studio.id);
+    if (!recap) {
+      return { success: "Nessuna attività registrata oggi: non c'è nulla da segnalare, quindi non è stata inviata alcuna email." };
+    }
+    await sendEmail({
+      to: destinatario,
+      subject: `Recap attività di oggi — ${studio.name}`,
+      html: renderRecapAttivitaHtml(studio.name, recap),
+    });
+    return { success: `Email di recap inviata a ${destinatario}.` };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Invio non riuscito." };
   }

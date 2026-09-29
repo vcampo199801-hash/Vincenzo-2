@@ -8,6 +8,7 @@ import {
   TIPO_PAZIENTE_OPTIONS,
   MOTIVO_RIFIUTO_OPTIONS,
   ASSICURAZIONI_PREDEFINITE,
+  COME_CI_HA_CONOSCIUTO_PREDEFINITE,
   toIsoDate,
 } from "@/lib/kpi";
 import { PageHeader } from "@/components/ui/page-header";
@@ -23,13 +24,19 @@ export default async function NewPreventivoPage() {
 
   const esistenti = await prisma.preventivo.findMany({
     where: { studioId: studio.id },
-    select: { dottore: true, commerciale: true, assicurazione: true },
+    select: { dottore: true, commerciale: true, assicurazione: true, comeCiHaConosciuto: true },
   });
   const dottori = [...new Set(esistenti.map((p) => p.dottore))].sort();
   const commerciali = [...new Set(esistenti.map((p) => p.commerciale).filter((c): c is string => Boolean(c)))].sort();
   const assicurazioni = [
     ...new Set([...ASSICURAZIONI_PREDEFINITE, ...esistenti.map((p) => p.assicurazione).filter((a): a is string => Boolean(a))]),
   ].sort();
+  const comeCiHaConosciutoOpzioni = [
+    ...new Set([
+      ...COME_CI_HA_CONOSCIUTO_PREDEFINITE,
+      ...esistenti.map((p) => p.comeCiHaConosciuto).filter((c): c is string => Boolean(c)),
+    ]),
+  ];
 
   return (
     <div className="max-w-2xl">
@@ -58,6 +65,13 @@ export default async function NewPreventivoPage() {
             options={[{ value: "", label: "Non specificato" }, ...TIPO_PAZIENTE_OPTIONS]}
           />
         </div>
+        <ComboboxLista
+          label="Come ci ha conosciuto"
+          name="comeCiHaConosciuto"
+          opzioni={comeCiHaConosciutoOpzioni}
+          labelVuoto="Non specificato"
+          placeholderNuovo="Es. Passaparola, Google, Instagram…"
+        />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField label="Stato" name="stato" defaultValue="PRESENTATO" options={STATO_PREVENTIVO_OPTIONS} />
           <SelectField
@@ -68,6 +82,12 @@ export default async function NewPreventivoPage() {
             hint="Rilevante solo se lo stato è “Rifiutato”."
           />
         </div>
+        <Field
+          label="Data accettazione"
+          name="dataAccettazione"
+          type="date"
+          hint="Se lo stato è “Accettato” e la lasci vuota, viene usata la data del preventivo qui sopra."
+        />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Totale proposto (€)" name="totaleProposto" type="number" step="0.01" required />
           <Field

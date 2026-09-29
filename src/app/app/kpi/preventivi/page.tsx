@@ -24,7 +24,14 @@ import { StatoBadge } from "@/components/ui/badge";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-type SearchParams = { dottore?: string; commerciale?: string; stato?: string; assicurazione?: string; vista?: string };
+type SearchParams = {
+  dottore?: string;
+  commerciale?: string;
+  stato?: string;
+  assicurazione?: string;
+  comeCiHaConosciuto?: string;
+  vista?: string;
+};
 
 function chipHref(base: SearchParams, chiave: keyof SearchParams, valore: string) {
   const next: SearchParams = { ...base };
@@ -60,14 +67,19 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
   const dottori = [...new Set(tutti.map((p) => p.dottore))].sort();
   const commerciali = [...new Set(tutti.map((p) => p.commerciale).filter((c): c is string => Boolean(c)))].sort();
   const assicurazioni = [...new Set(tutti.map((p) => p.assicurazione).filter((a): a is string => Boolean(a)))].sort();
+  const comeCiHaConosciutoValori = [...new Set(tutti.map((p) => p.comeCiHaConosciuto).filter((c): c is string => Boolean(c)))].sort();
 
   const filtrati = tutti.filter(
     (p) =>
       (!params.dottore || p.dottore === params.dottore) &&
       (!params.commerciale || p.commerciale === params.commerciale) &&
       (!params.stato || p.stato === params.stato) &&
-      (!params.assicurazione || p.assicurazione === params.assicurazione)
+      (!params.assicurazione || p.assicurazione === params.assicurazione) &&
+      (!params.comeCiHaConosciuto || p.comeCiHaConosciuto === params.comeCiHaConosciuto)
   );
+  const exportQuery = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => Boolean(v)) as [string, string][]
+  ).toString();
 
   const vista: "dottore" | "commerciale" = params.vista === "commerciale" ? "commerciale" : "dottore";
   const report = reportPerPersona(filtrati, vista);
@@ -86,6 +98,15 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
       />
 
       <KpiTabs />
+
+      <div className="-mt-4 mb-4">
+        <a
+          href={`/api/export/preventivi${exportQuery ? `?${exportQuery}` : ""}`}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-800"
+        >
+          ⬇️ Esporta in Excel/CSV {exportQuery ? "(con i filtri applicati)" : ""}
+        </a>
+      </div>
 
       <div className="mb-6 flex flex-wrap gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div>
@@ -115,6 +136,16 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
             valoreAttuale={params.assicurazione ?? ""}
             opzioni={assicurazioni}
             placeholder="Tutte le assicurazioni"
+            currentParams={params}
+          />
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Come ci ha conosciuto</p>
+          <PreventiviFiltroPersona
+            paramName="comeCiHaConosciuto"
+            valoreAttuale={params.comeCiHaConosciuto ?? ""}
+            opzioni={comeCiHaConosciutoValori}
+            placeholder="Tutti i canali"
             currentParams={params}
           />
         </div>
@@ -200,8 +231,10 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
               <th className="px-4 py-3">Tipo paziente</th>
               <th className="px-4 py-3">Dottore</th>
               <th className="px-4 py-3">Commerciale</th>
+              <th className="px-4 py-3">Come ci ha conosciuto</th>
               <th className="px-4 py-3">Proposto</th>
               <th className="px-4 py-3">Accettato</th>
+              <th className="px-4 py-3">Data accettazione</th>
               <th className="px-4 py-3">Listino</th>
               <th className="px-4 py-3">Coperto assicurazione</th>
               <th className="px-4 py-3">Scadenza</th>
@@ -223,8 +256,10 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
                   <td className="px-4 py-3 text-slate-600">{p.tipoPaziente ? optionLabelKpi(TIPO_PAZIENTE_OPTIONS, p.tipoPaziente) : "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{p.dottore}</td>
                   <td className="px-4 py-3 text-slate-600">{p.commerciale ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-600">{p.comeCiHaConosciuto ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{formatCurrency(p.totaleProposto)}</td>
                   <td className="px-4 py-3 text-slate-600">{p.totaleAccettato === null ? "—" : formatCurrency(p.totaleAccettato)}</td>
+                  <td className="px-4 py-3 text-slate-600">{p.dataAccettazione ? formatDate(p.dataAccettazione) : "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{p.importoListino === null ? "—" : formatCurrency(p.importoListino)}</td>
                   <td className="px-4 py-3 text-slate-600">{p.importoAssicurazione === null ? "—" : formatCurrency(p.importoAssicurazione)}</td>
                   <td className="px-4 py-3 text-slate-600">
@@ -252,7 +287,7 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
             })}
             {filtrati.length === 0 && (
               <tr>
-                <td colSpan={16} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={18} className="px-4 py-8 text-center text-slate-500">
                   Nessun preventivo inserito finora.
                 </td>
               </tr>

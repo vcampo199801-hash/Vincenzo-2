@@ -11,6 +11,8 @@ export const MODALITA_INCASSO_OPTIONS = [
   { value: "CONTANTI", label: "Contanti" },
   { value: "ASSEGNO", label: "Assegno" },
   { value: "BONIFICO", label: "Bonifico" },
+  { value: "FINANZIAMENTO", label: "Finanziamento" },
+  { value: "PAGODIL", label: "PagoDIL" },
 ] as const;
 
 export function optionLabelCassa(options: { value: string; label: string }[], value: string | null | undefined) {

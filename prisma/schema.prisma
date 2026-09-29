@@ -46,6 +46,15 @@ model Studio {
   // di default spento, ogni studio decide se aderire o meno.
   forumAttivo                    Boolean  @default(false)
   notificheAttive                Boolean  @default(true)
+  // Recap giornaliero (separato dalle notifiche di scadenze sopra) con
+  // preventivi caricati, incassi di Cassa e lavorazioni di laboratorio
+  // movimentate nella giornata — pensato per la Direzione, non per chi usa
+  // l'app sul campo. Di default spento: va attivato esplicitamente.
+  recapAttivitaAttivo            Boolean  @default(false)
+  // Se vuota, in Impostazioni il campo si pre-compila con "email" qui sopra
+  // ma resta un valore indipendente: cambiare l'email dei promemoria non
+  // sposta più questa una volta salvata la prima volta.
+  emailRecapAttivita             String?
   // Se true, i riordini registrati in Magazzino (MovimentoMagazzino) contano
   // anche nel Bilancio generale della Dashboard, non solo nel resoconto
   // interno al modulo Magazzino.
@@ -678,9 +687,17 @@ model Preventivo {
   // Nome dell'assicurazione (es. "Previmedical"), non solo sì/no: ce ne sono
   // di diverse. Null/vuoto = nessuna assicurazione coinvolta.
   assicurazione     String?
+  // Canale con cui il paziente ha conosciuto lo studio (es. "Passaparola",
+  // "Google"): stesso meccanismo dell'assicurazione, valori liberi suggeriti
+  // da ComboboxLista, non un enum rigido.
+  comeCiHaConosciuto String?
   modalitaPagamento String?
   // StatoPreventivo: PRESENTATO | ACCETTATO | RIFIUTATO
   stato             String    @default("PRESENTATO")
+  // Valorizzata quando stato passa ad ACCETTATO (di default = data del
+  // preventivo se non specificata a mano); azzerata se lo stato cambia,
+  // stesso trattamento già usato per motivoRifiuto qui sotto.
+  dataAccettazione  DateTime?
   // MotivoRifiuto: PREZZO | ASSICURAZIONE_NON_COPRE | RIMANDA_CURE |
   // TRASFERIMENTO_PAZIENTE | ALTRO — ha senso solo quando stato = RIFIUTATO.
   motivoRifiuto     String?

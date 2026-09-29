@@ -117,6 +117,15 @@ export default function TerminiPage() {
               dello studio che li ha inseriti. In caso di disdetta, lo studio può richiedere l&apos;esportazione
               dei propri dati prima della cancellazione dell&apos;account.
             </p>
+            <p className="mt-2 leading-relaxed">
+              Ci impegniamo a non vendere, cedere o condividere questi dati con terzi per finalità commerciali
+              estranee all&apos;erogazione del servizio. Gli unici soggetti terzi coinvolti sono i fornitori
+              tecnici elencati nell&apos;
+              <Link href="/privacy#fornitori" className="text-brand-700 underline">Informativa Privacy</Link>{" "}
+              (hosting, database, email, pagamenti), che trattano i dati esclusivamente in qualità di responsabili
+              del trattamento per nostro conto, secondo le istruzioni fornite e nei limiti di quanto necessario a
+              far funzionare il servizio.
+            </p>
           </section>
 
           <section>
@@ -126,6 +135,11 @@ export default function TerminiPage() {
               ininterrotto o privo di errori. Il servizio è uno strumento di supporto organizzativo: resta
               responsabilità esclusiva dello studio verificare il rispetto dei propri obblighi normativi,
               indipendentemente dai promemoria generati dall&apos;app.
+            </p>
+            <p className="mt-2 leading-relaxed">
+              Nell&apos;eventualità in cui decidessimo di cessare definitivamente il servizio, ci impegniamo a
+              darne comunicazione via email con almeno 60 giorni di anticipo, così da lasciare a ogni studio il
+              tempo di esportare i propri dati prima della disattivazione.
             </p>
           </section>
 
