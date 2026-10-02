@@ -10,6 +10,7 @@ import {
   MOTIVO_RIFIUTO_OPTIONS,
   ASSICURAZIONI_PREDEFINITE,
   COME_CI_HA_CONOSCIUTO_PREDEFINITE,
+  TIPO_OFFERTA_OPTIONS,
   toIsoDate,
 } from "@/lib/kpi";
 import { PageHeader } from "@/components/ui/page-header";
@@ -104,6 +105,12 @@ export default async function EditPreventivoPage({ params }: { params: Promise<{
           type="date"
           defaultValue={item.dataAccettazione ? toIsoDate(item.dataAccettazione) : undefined}
           hint="Se lo stato è “Accettato” e la lasci vuota, viene usata la data del preventivo qui sopra."
+        />
+        <SelectField
+          label="Tipo di offerta"
+          name="tipoOfferta"
+          defaultValue={item.tipoOfferta ?? ""}
+          options={[{ value: "", label: "Non specificato" }, ...TIPO_OFFERTA_OPTIONS]}
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Totale proposto (€)" name="totaleProposto" type="number" step="0.01" required defaultValue={item.totaleProposto} />

@@ -15,12 +15,15 @@ export async function GET(req: NextRequest) {
   const tipo = params.get("tipo") ?? "";
   const da = params.get("da") ?? "";
   const a = params.get("a") ?? "";
+  const versati = params.get("versati") ?? "";
 
   const movimenti = await prisma.movimentoCassa.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } });
   const filtrati = movimenti.filter((m) => {
     if (tipo && m.tipo !== tipo) return false;
     if (da && toIsoDate(m.data) < da) return false;
     if (a && toIsoDate(m.data) > a) return false;
+    if (versati === "si" && !(m.modalitaIncasso === "ASSEGNO" && m.dataVersamento)) return false;
+    if (versati === "no" && !(m.modalitaIncasso === "ASSEGNO" && !m.dataVersamento)) return false;
     return true;
   });
 
@@ -31,6 +34,9 @@ export async function GET(req: NextRequest) {
     modalita: m.modalitaIncasso ? optionLabelCassa([...MODALITA_INCASSO_OPTIONS], m.modalitaIncasso) : "",
     numeroFattura: m.numeroFattura ?? "",
     nominativo: m.nominativo ?? "",
+    fotocopiaFR: m.modalitaIncasso === "ASSEGNO" ? (m.fotocopiaFR ? "Sì" : "No") : "",
+    timbroRSD: m.modalitaIncasso === "ASSEGNO" ? (m.timbroRSD ? "Sì" : "No") : "",
+    dataVersamento: m.modalitaIncasso === "ASSEGNO" ? (m.dataVersamento ? formatDate(m.dataVersamento) : "Non versato") : "",
     note: m.note ?? "",
   }));
 
@@ -41,6 +47,9 @@ export async function GET(req: NextRequest) {
     { key: "modalita", label: "Modalità" },
     { key: "numeroFattura", label: "N. fattura" },
     { key: "nominativo", label: "Nominativo" },
+    { key: "fotocopiaFR", label: "Fotocopia f/r" },
+    { key: "timbroRSD", label: "Timbro RSD" },
+    { key: "dataVersamento", label: "Versamento in banca" },
     { key: "note", label: "Note" },
   ]);
 

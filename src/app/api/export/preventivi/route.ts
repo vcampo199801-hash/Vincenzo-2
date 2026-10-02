@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireActiveSubscription } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/compliance";
-import { optionLabelKpi, FASCIA_ETA_OPTIONS, TIPO_PAZIENTE_OPTIONS, MODALITA_PAGAMENTO_OPTIONS, MOTIVO_RIFIUTO_OPTIONS } from "@/lib/kpi";
+import { optionLabelKpi, FASCIA_ETA_OPTIONS, TIPO_PAZIENTE_OPTIONS, MODALITA_PAGAMENTO_OPTIONS, MOTIVO_RIFIUTO_OPTIONS, TIPO_OFFERTA_OPTIONS } from "@/lib/kpi";
 import { toCsv } from "@/lib/csv";
 
 // Session-dependent, must never be prerendered or cached.
@@ -15,6 +15,8 @@ export async function GET(req: NextRequest) {
   const commerciale = params.get("commerciale") ?? "";
   const stato = params.get("stato") ?? "";
   const assicurazione = params.get("assicurazione") ?? "";
+  const comeCiHaConosciuto = params.get("comeCiHaConosciuto") ?? "";
+  const tipoOfferta = params.get("tipoOfferta") ?? "";
 
   const tutti = await prisma.preventivo.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } });
   const filtrati = tutti.filter(
@@ -22,7 +24,9 @@ export async function GET(req: NextRequest) {
       (!dottore || p.dottore === dottore) &&
       (!commerciale || p.commerciale === commerciale) &&
       (!stato || p.stato === stato) &&
-      (!assicurazione || p.assicurazione === assicurazione)
+      (!assicurazione || p.assicurazione === assicurazione) &&
+      (!comeCiHaConosciuto || p.comeCiHaConosciuto === comeCiHaConosciuto) &&
+      (!tipoOfferta || p.tipoOfferta === tipoOfferta)
   );
 
   const righe = filtrati.map((p) => ({
@@ -33,6 +37,7 @@ export async function GET(req: NextRequest) {
     dottore: p.dottore,
     commerciale: p.commerciale ?? "",
     comeCiHaConosciuto: p.comeCiHaConosciuto ?? "",
+    tipoOfferta: p.tipoOfferta ? optionLabelKpi(TIPO_OFFERTA_OPTIONS, p.tipoOfferta) : "",
     proposto: p.totaleProposto,
     accettato: p.totaleAccettato ?? "",
     dataAccettazione: p.dataAccettazione ? formatDate(p.dataAccettazione) : "",
@@ -54,6 +59,7 @@ export async function GET(req: NextRequest) {
     { key: "dottore", label: "Dottore" },
     { key: "commerciale", label: "Commerciale" },
     { key: "comeCiHaConosciuto", label: "Come ci ha conosciuto" },
+    { key: "tipoOfferta", label: "Tipo di offerta" },
     { key: "proposto", label: "Proposto" },
     { key: "accettato", label: "Accettato" },
     { key: "dataAccettazione", label: "Data accettazione" },

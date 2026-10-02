@@ -646,9 +646,16 @@ model MovimentoCassa {
   tipo     String
   data     DateTime
   importo  Float
-  // Solo per INCASSO — ModalitaIncasso: CONTANTI | ASSEGNO
+  // Solo per INCASSO — ModalitaIncasso: CONTANTI | ASSEGNO | BONIFICO |
+  // FINANZIAMENTO | PAGODIL (vedi MODALITA_INCASSO_OPTIONS in lib/cassa.ts).
   modalitaIncasso String?
   numeroFattura   String?
+  // Solo per INCASSO con modalitaIncasso = ASSEGNO: checklist e data del
+  // versamento in banca, per tenere traccia di quali assegni sono già stati
+  // depositati e quali ancora da portare in banca.
+  fotocopiaFR   Boolean   @default(false)
+  timbroRSD     Boolean   @default(false)
+  dataVersamento DateTime?
   // Solo per PRELIEVO/VERSAMENTO
   nominativo      String?
   note            String?
@@ -674,6 +681,11 @@ model Preventivo {
   fasciaEta         String?
   // TipoPaziente: NUOVO | ESISTENTE
   tipoPaziente      String?
+  // TipoOfferta: tipologia clinica del trattamento proposto (es. chirurgia
+  // impianti, ortodonzia, protesi mobile...) — vedi TIPO_OFFERTA_OPTIONS in
+  // lib/kpi.ts. Un enum fisso (non un ComboboxLista) perché usato per filtri
+  // di reportistica su categorie condivise da tutti gli studi.
+  tipoOfferta       String?
   totaleProposto    Float
   totaleAccettato   Float?
   // Prezzo pieno da listino dello studio, prima di eventuali sconti o

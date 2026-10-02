@@ -36,6 +36,9 @@ export default async function EditMovimentoCassaPage({ params }: { params: Promi
             numeroFattura: item.numeroFattura,
             nominativo: item.nominativo,
             note: item.note,
+            fotocopiaFR: item.fotocopiaFR,
+            timbroRSD: item.timbroRSD,
+            dataVersamento: item.dataVersamento ? toIsoDate(item.dataVersamento) : undefined,
           }}
         />
       </UnsavedChangesGuard>

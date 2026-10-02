@@ -14,11 +14,14 @@ export function PreventiviFiltroPersona({
 }: {
   paramName: string;
   valoreAttuale: string;
-  opzioni: string[];
+  // Un elenco di nomi liberi (dottore, assicurazione...) oppure, per un
+  // enum fisso come Tipo di offerta, coppie {value,label} già pronte.
+  opzioni: string[] | { value: string; label: string }[];
   placeholder: string;
   currentParams: Record<string, string | undefined>;
 }) {
   const router = useRouter();
+  const normalizzate = opzioni.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
 
   return (
     <select
@@ -36,9 +39,9 @@ export function PreventiviFiltroPersona({
       className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
     >
       <option value="">{placeholder}</option>
-      {opzioni.map((o) => (
-        <option key={o} value={o}>
-          {o}
+      {normalizzate.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
         </option>
       ))}
     </select>

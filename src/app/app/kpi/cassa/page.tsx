@@ -15,7 +15,7 @@ import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 // Session-dependent, must never be prerendered or cached.
 export const dynamic = "force-dynamic";
 
-type SearchParams = { tipo?: string; da?: string; a?: string; posData?: string };
+type SearchParams = { tipo?: string; da?: string; a?: string; posData?: string; versati?: string };
 
 export default async function CassaPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const { studio } = await requireActiveSubscription("kpi");
@@ -36,6 +36,10 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
     if (params.tipo && m.tipo !== params.tipo) return false;
     if (params.da && toIsoDate(m.data) < params.da) return false;
     if (params.a && toIsoDate(m.data) > params.a) return false;
+    // Filtro assegni versati/non versati: ha senso solo per gli incassi in
+    // assegno, quindi quando è attivo nasconde tutto il resto.
+    if (params.versati === "si" && !(m.modalitaIncasso === "ASSEGNO" && m.dataVersamento)) return false;
+    if (params.versati === "no" && !(m.modalitaIncasso === "ASSEGNO" && !m.dataVersamento)) return false;
     return true;
   });
 
@@ -162,10 +166,22 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
           <span className="mb-1 block font-medium text-slate-700">A</span>
           <input type="date" name="a" defaultValue={params.a ?? ""} className="rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm" />
         </label>
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Assegni</span>
+          <select
+            name="versati"
+            defaultValue={params.versati ?? ""}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm"
+          >
+            <option value="">Tutti</option>
+            <option value="si">Solo versati</option>
+            <option value="no">Solo non versati</option>
+          </select>
+        </label>
         <button type="submit" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
           Filtra
         </button>
-        {(params.tipo || params.da || params.a) && (
+        {(params.tipo || params.da || params.a || params.versati) && (
           <Link href="/app/kpi/cassa" className="text-sm font-medium text-brand-600 hover:underline">
             Azzera filtri
           </Link>
@@ -182,33 +198,67 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
               <th className="px-4 py-3">Modalità</th>
               <th className="px-4 py-3">N. fattura</th>
               <th className="px-4 py-3">Nominativo</th>
+              <th className="px-4 py-3">Controlli assegno</th>
+              <th className="px-4 py-3">Versato il</th>
               <th className="px-4 py-3">Note</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtrati.map((m) => (
-              <tr key={m.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-900">{formatDate(m.data)}</td>
-                <td className="px-4 py-3 text-slate-600">{optionLabelCassa([...TIPO_MOVIMENTO_OPTIONS], m.tipo)}</td>
-                <td className="px-4 py-3 text-slate-600">{formatCurrency(m.importo)}</td>
-                <td className="px-4 py-3 text-slate-600">{m.modalitaIncasso ? optionLabelCassa([...MODALITA_INCASSO_OPTIONS], m.modalitaIncasso) : "—"}</td>
-                <td className="px-4 py-3 text-slate-600">{m.numeroFattura ?? "—"}</td>
-                <td className="px-4 py-3 text-slate-600">{m.nominativo ?? "—"}</td>
-                <td className="px-4 py-3 text-slate-600">{m.note ?? "—"}</td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    <Link href={`/app/kpi/cassa/${m.id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">
-                      Modifica
-                    </Link>
-                    <DeleteButton action={deleteMovimentoCassa.bind(null, m.id)} />
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {filtrati.map((m) => {
+              const isAssegno = m.modalitaIncasso === "ASSEGNO";
+              return (
+                <tr key={m.id} className="hover:bg-slate-50">
+                  <td className="px-4 py-3 font-medium text-slate-900">{formatDate(m.data)}</td>
+                  <td className="px-4 py-3 text-slate-600">{optionLabelCassa([...TIPO_MOVIMENTO_OPTIONS], m.tipo)}</td>
+                  <td className="px-4 py-3 text-slate-600">{formatCurrency(m.importo)}</td>
+                  <td className="px-4 py-3">
+                    {m.modalitaIncasso ? (
+                      isAssegno ? (
+                        <span className="rounded-full border border-red-600 bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">
+                          {optionLabelCassa([...MODALITA_INCASSO_OPTIONS], m.modalitaIncasso)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-600">{optionLabelCassa([...MODALITA_INCASSO_OPTIONS], m.modalitaIncasso)}</span>
+                      )
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">{m.numeroFattura ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-600">{m.nominativo ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-600">
+                    {isAssegno ? (
+                      <div className="flex flex-col gap-1 text-xs">
+                        <span className={m.fotocopiaFR ? "text-emerald-700" : "text-slate-400"}>
+                          {m.fotocopiaFR ? "✓" : "✗"} Fotocopia f/r
+                        </span>
+                        <span className={m.timbroRSD ? "text-emerald-700" : "text-slate-400"}>
+                          {m.timbroRSD ? "✓" : "✗"} Timbro RSD
+                        </span>
+                      </div>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">
+                    {isAssegno ? (m.dataVersamento ? formatDate(m.dataVersamento) : "Non versato") : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">{m.note ?? "—"}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-3">
+                      <Link href={`/app/kpi/cassa/${m.id}/edit`} className="text-sm font-medium text-brand-600 hover:text-brand-800">
+                        Modifica
+                      </Link>
+                      <DeleteButton action={deleteMovimentoCassa.bind(null, m.id)} />
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {filtrati.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
                   Nessun movimento di cassa registrato finora.
                 </td>
               </tr>

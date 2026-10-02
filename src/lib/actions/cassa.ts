@@ -39,14 +39,24 @@ function parseDate(value: FormDataEntryValue | null) {
 
 function movimentoPayload(formData: FormData) {
   const tipo = String(formData.get("tipo") ?? "INCASSO");
+  const modalitaIncasso = tipo === "INCASSO" ? String(formData.get("modalitaIncasso") ?? "CONTANTI") : null;
+  const isAssegno = modalitaIncasso === "ASSEGNO";
+  const dataVersamentoRaw = String(formData.get("dataVersamento") ?? "").trim();
+
   return {
     tipo,
     data: parseDate(formData.get("data")),
     importo: Number(formData.get("importo") ?? 0) || 0,
     // Ha senso solo per un incasso: per prelievi/versamenti resta vuoto anche
     // se il form li avesse inviati.
-    modalitaIncasso: tipo === "INCASSO" ? String(formData.get("modalitaIncasso") ?? "CONTANTI") : null,
+    modalitaIncasso,
     numeroFattura: tipo === "INCASSO" ? String(formData.get("numeroFattura") ?? "").trim() || null : null,
+    // Checklist e data versamento hanno senso solo per un incasso in assegno:
+    // se si cambia modalità, non restano a sporcare un valore impostato in
+    // precedenza — stesso trattamento già usato per motivoRifiuto sui preventivi.
+    fotocopiaFR: isAssegno && formData.get("fotocopiaFR") === "on",
+    timbroRSD: isAssegno && formData.get("timbroRSD") === "on",
+    dataVersamento: isAssegno && dataVersamentoRaw ? new Date(dataVersamentoRaw) : null,
     // Utile soprattutto per bonifici e prelievi/versamenti, ma disponibile
     // per qualsiasi movimento — non solo per chi non è un incasso.
     nominativo: String(formData.get("nominativo") ?? "").trim() || null,

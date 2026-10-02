@@ -12,6 +12,7 @@ import {
   FASCIA_ETA_OPTIONS,
   TIPO_PAZIENTE_OPTIONS,
   MOTIVO_RIFIUTO_OPTIONS,
+  TIPO_OFFERTA_OPTIONS,
 } from "@/lib/kpi";
 import { deletePreventivo } from "@/lib/actions/kpi";
 import { KpiTabs } from "@/components/app/kpi-tabs";
@@ -30,6 +31,7 @@ type SearchParams = {
   stato?: string;
   assicurazione?: string;
   comeCiHaConosciuto?: string;
+  tipoOfferta?: string;
   vista?: string;
 };
 
@@ -75,7 +77,8 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
       (!params.commerciale || p.commerciale === params.commerciale) &&
       (!params.stato || p.stato === params.stato) &&
       (!params.assicurazione || p.assicurazione === params.assicurazione) &&
-      (!params.comeCiHaConosciuto || p.comeCiHaConosciuto === params.comeCiHaConosciuto)
+      (!params.comeCiHaConosciuto || p.comeCiHaConosciuto === params.comeCiHaConosciuto) &&
+      (!params.tipoOfferta || p.tipoOfferta === params.tipoOfferta)
   );
   const exportQuery = new URLSearchParams(
     Object.entries(params).filter(([, v]) => Boolean(v)) as [string, string][]
@@ -146,6 +149,16 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
             valoreAttuale={params.comeCiHaConosciuto ?? ""}
             opzioni={comeCiHaConosciutoValori}
             placeholder="Tutti i canali"
+            currentParams={params}
+          />
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Tipo di offerta</p>
+          <PreventiviFiltroPersona
+            paramName="tipoOfferta"
+            valoreAttuale={params.tipoOfferta ?? ""}
+            opzioni={TIPO_OFFERTA_OPTIONS}
+            placeholder="Tutte le tipologie"
             currentParams={params}
           />
         </div>
@@ -232,6 +245,7 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
               <th className="px-4 py-3">Dottore</th>
               <th className="px-4 py-3">Commerciale</th>
               <th className="px-4 py-3">Come ci ha conosciuto</th>
+              <th className="px-4 py-3">Tipo di offerta</th>
               <th className="px-4 py-3">Proposto</th>
               <th className="px-4 py-3">Accettato</th>
               <th className="px-4 py-3">Data accettazione</th>
@@ -257,6 +271,7 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
                   <td className="px-4 py-3 text-slate-600">{p.dottore}</td>
                   <td className="px-4 py-3 text-slate-600">{p.commerciale ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{p.comeCiHaConosciuto ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-600">{p.tipoOfferta ? optionLabelKpi(TIPO_OFFERTA_OPTIONS, p.tipoOfferta) : "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{formatCurrency(p.totaleProposto)}</td>
                   <td className="px-4 py-3 text-slate-600">{p.totaleAccettato === null ? "—" : formatCurrency(p.totaleAccettato)}</td>
                   <td className="px-4 py-3 text-slate-600">{p.dataAccettazione ? formatDate(p.dataAccettazione) : "—"}</td>
@@ -287,7 +302,7 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
             })}
             {filtrati.length === 0 && (
               <tr>
-                <td colSpan={18} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={19} className="px-4 py-8 text-center text-slate-500">
                   Nessun preventivo inserito finora.
                 </td>
               </tr>

@@ -249,6 +249,22 @@ export const MODALITA_PAGAMENTO_OPTIONS = [
   { value: "IN_FASE_DECISIONE", label: "In fase di decisione" },
 ];
 
+// Tassonomia fissa delle tipologie di trattamento, decisa dalla Direzione
+// per poter filtrare/aggregare i preventivi per tipologia — a differenza di
+// Assicurazione/Come-ci-ha-conosciuto, qui niente ComboboxLista: le voci
+// sono condivise e non vanno arricchite studio per studio.
+export const TIPO_OFFERTA_OPTIONS = [
+  { value: "CHIRURGIA_DENTI_GIUDIZIO", label: "Chirurgia: ex denti del giudizio" },
+  { value: "CHIRURGIA_IMPIANTI", label: "Chirurgia: impianti (singoli, ponti)" },
+  { value: "CHIRURGIA_TORONTO_ZIGOMATICO", label: "Chirurgia: Toronto/iuxta/zigomatico" },
+  { value: "PROTESI_DENTI_NATURALI", label: "Protesi: denti naturali" },
+  { value: "PROTESI_MOBILE", label: "Protesi mobile" },
+  { value: "CONSERVATIVA_ENDO", label: "Conservativa / Endo" },
+  { value: "ORTODONZIA", label: "Ortodonzia" },
+  { value: "ESTETICA_FACCETTE", label: "Estetica: faccette dentali" },
+  { value: "ABT_PARODONTO_SBIANCAMENTO", label: "ABT/Parodonto/Sbiancamento" },
+];
+
 export const FASCIA_ETA_OPTIONS = [
   { value: "UNDER_14", label: "Bambino (under 14)" },
   { value: "ADULTO", label: "Adulto" },
