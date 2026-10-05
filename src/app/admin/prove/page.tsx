@@ -56,8 +56,8 @@ export default async function ProveGratuitePage() {
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           <EsitoEmail label="Benvenuto" inviataAt={s.benvenutoInviatoAt} />
-          <EsitoEmail label="Consiglio (metà prova)" inviataAt={s.nurtureTrialInviataAt} />
-          <EsitoEmail label="Promemoria (-2gg)" inviataAt={s.promemoriaTrialInviatoAt} />
+          <EsitoEmail label="Consiglio (inizio prova)" inviataAt={s.nurtureTrialInviataAt} />
+          <EsitoEmail label="Promemoria (fine prova)" inviataAt={s.promemoriaTrialInviatoAt} />
           <EsitoEmail label="Scaduta" inviataAt={s.scadenzaTrialInviataAt} />
         </div>
         {s.status === "TRIALING" && <ControllaOraButton studioId={s.studioId} />}
@@ -92,8 +92,8 @@ export default async function ProveGratuitePage() {
       <div>
         <h1 className="text-xl font-semibold text-slate-900">Prove gratuite</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Ogni riga mostra se le quattro email del ciclo di vita della prova (benvenuto, consiglio a metà prova,
-          promemoria a 2 giorni, avviso di scadenza) sono state effettivamente inviate a quello studio, non solo se
+          Ogni riga mostra se le quattro email del ciclo di vita della prova (benvenuto, consiglio a inizio prova,
+          promemoria verso la fine, avviso di scadenza) sono state effettivamente inviate a quello studio, non solo se
           dovevano esserlo — così puoi verificare caso per caso invece di fidarti solo del riepilogo del cron. Il
           controllo vero gira da solo ogni giorno alle 9:00; su chi è ancora in prova trovi anche &quot;Controlla e
           invia ora&quot; per farlo scattare subito, senza aspettare la prossima esecuzione.

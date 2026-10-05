@@ -42,18 +42,23 @@ function renderWelcomeHtml(studioName: string) {
 }
 
 function renderNurtureHtml(studioName: string) {
-  const corpo = `<p>Ciao, la prova gratuita di <strong>${escapeHtml(studioName)}</strong> è a metà strada. Oltre alle
+  const corpo = `<p>Ciao, come sta andando la prova gratuita di <strong>${escapeHtml(studioName)}</strong>? Oltre alle
     scadenze, hai già dato un'occhiata al Bilancio? Confronta da solo il fatturato con tutti i costi dello studio —
     spese, personale, laboratori, manutenzioni — e ti dice subito se sei in utile o in perdita, per anno, mese o un
     periodo a tua scelta. Niente più fogli Excel o attese per il commercialista.</p>`;
-  return emailWrapper("💡 Un consiglio a metà prova", corpo, "/app/bilancio", "Guarda il Bilancio");
+  return emailWrapper("💡 Un consiglio per partire bene", corpo, "/app/bilancio", "Guarda il Bilancio");
 }
 
-function renderTrialHtml(studioName: string, tipo: "promemoria" | "scaduta") {
-  const titolo = tipo === "promemoria" ? "La tua prova gratuita scade tra 2 giorni" : "La tua prova gratuita è terminata";
+function renderTrialHtml(studioName: string, tipo: "promemoria" | "scaduta", giorniRimanenti?: number) {
+  // Il numero di giorni viene passato da chi chiama invece di essere fisso
+  // ("tra 2 giorni"): la finestra di invio del promemoria è ampia un paio di
+  // giorni, quindi il testo deve restare corretto qualunque sia il giorno
+  // esatto in cui il cron lo intercetta.
+  const titolo =
+    tipo === "promemoria" ? `La tua prova gratuita scade tra ${giorniRimanenti} giorni` : "La tua prova gratuita è terminata";
   const corpo =
     tipo === "promemoria"
-      ? `<p>Ciao, la prova gratuita di <strong>${escapeHtml(studioName)}</strong> scade tra 2 giorni. Scegli il piano più
+      ? `<p>Ciao, la prova gratuita di <strong>${escapeHtml(studioName)}</strong> scade tra ${giorniRimanenti} giorni. Scegli il piano più
          adatto al tuo studio per continuare ad avere scadenze, magazzino e tutto il resto sotto controllo, senza
          interruzioni.</p>`
       : `<p>Ciao, la prova gratuita di ${trialDays()} giorni di <strong>${escapeHtml(studioName)}</strong> è terminata. Nessun dato è
@@ -108,10 +113,12 @@ export async function sendWelcomeEmail(studio: { id: string; name: string; email
 
 /** Controlla lo stato della prova gratuita di uno studio e invia, al
  * massimo una volta ciascuna, le email del suo ciclo di vita: un consiglio
- * a metà prova, un promemoria entro gli ultimi 2 giorni, e l'avviso di
- * scadenza una volta che è effettivamente terminata. La "metà prova" è
- * calcolata in proporzione a trialDays() (non più un valore fisso), così
- * resta corretta anche se la durata della prova cambia. Usa i campi
+ * presto nella prova (circa un terzo iniziale, mentre lo studio sta ancora
+ * valutando l'app), un promemoria con più margine prima della scadenza
+ * (non più fisso a 2 giorni), e l'avviso di scadenza una volta che è
+ * effettivamente terminata. Entrambe le soglie sono calcolate in proporzione
+ * a trialDays() (non valori fissi), così restano sensate anche se la durata
+ * della prova cambia. Usa i campi
  * *InviataAt (non più un confronto sul giorno esatto) apposta per essere
  * "recuperabile": se un giorno viene saltato per qualsiasi motivo (es.
  * l'email dello studio non era ancora impostata, un intoppo del cron), la
@@ -144,8 +151,19 @@ export async function sendTrialAlertForStudio(studio: {
   const giorni = daysUntil(sub.trialEndsAt);
   if (giorni === null) return null;
 
-  const metaProva = Math.floor(trialDays() / 2);
-  if (giorni >= metaProva && giorni <= metaProva + 1 && !sub.nurtureTrialInviataAt) {
+  // Cadenza ripensata per accompagnare meglio tutta la prova invece di
+  // lasciare un vuoto di quasi una settimana dopo il benvenuto: il consiglio
+  // arriva presto (circa un terzo della prova, mentre lo studio sta ancora
+  // valutando l'app), il promemoria arriva con più margine prima della
+  // scadenza (non più solo 2 giorni) per dare più tempo a decidere. Entrambi
+  // restano proporzionali a trialDays(), non valori fissi, e "offset" tiene
+  // i due momenti distanti almeno 2 giorni anche se la prova fosse molto
+  // corta.
+  const offset = Math.max(2, Math.round(trialDays() / 3.5));
+  const giorniPromemoriaTarget = offset;
+  const giorniConsiglioTarget = Math.max(giorniPromemoriaTarget + 2, trialDays() - offset);
+
+  if (giorni >= giorniConsiglioTarget - 1 && giorni <= giorniConsiglioTarget && !sub.nurtureTrialInviataAt) {
     await sendEmail({
       to: studio.email,
       subject: `💡 Un consiglio per Scadenze in Regola — ${studio.name}`,
@@ -158,11 +176,11 @@ export async function sendTrialAlertForStudio(studio: {
     return "nurture";
   }
 
-  if (giorni >= 0 && giorni <= 2 && !sub.promemoriaTrialInviatoAt) {
+  if (giorni >= giorniPromemoriaTarget - 1 && giorni <= giorniPromemoriaTarget && !sub.promemoriaTrialInviatoAt) {
     await sendEmail({
       to: studio.email,
-      subject: `⏳ La tua prova gratuita scade tra 2 giorni — ${studio.name}`,
-      html: renderTrialHtml(studio.name, "promemoria"),
+      subject: `⏳ La tua prova gratuita scade tra ${giorni} giorni — ${studio.name}`,
+      html: renderTrialHtml(studio.name, "promemoria", giorni),
     });
     await prisma.subscription.update({
       where: { studioId: studio.id },
