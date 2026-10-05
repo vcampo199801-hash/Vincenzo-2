@@ -20,6 +20,7 @@ export function SignupForm({ trialDays }: { trialDays: number }) {
         <p className="mt-1 text-sm text-slate-500">
           {trialDays} giorni di prova gratuita, nessuna carta richiesta.
         </p>
+        <p className="mt-1 text-xs text-slate-400">Ti mandiamo un&apos;email per confermare l&apos;indirizzo prima di iniziare.</p>
 
         <form action={formAction} className="mt-6 space-y-4">
           <Field label="Nome dello studio" name="nomeStudio" required placeholder="Studio Dentistico Rossi" />

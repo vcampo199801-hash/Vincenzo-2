@@ -18,6 +18,14 @@ model User {
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+  // null = email non ancora confermata: l'accesso resta bloccato finché non
+  // clicca il link ricevuto via email (vedi /api/verifica-email). Gli utenti
+  // già esistenti al momento in cui questo controllo è stato introdotto sono
+  // stati valorizzati in automatico dalla migration, per non restare
+  // bloccati fuori dal proprio account.
+  emailVerificataAt     DateTime?
+  tokenVerificaEmail    String?   @unique
+  tokenVerificaScadenza DateTime?
 
   studios     Studio[]
   memberships Membership[]

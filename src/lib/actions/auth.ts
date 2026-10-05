@@ -1,16 +1,24 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { createSession, destroySession } from "@/lib/session";
 import { provisionStudioDefaults } from "@/lib/seed-data";
-import { notificaTitolare } from "@/lib/owner-alerts";
-import { sendWelcomeEmail } from "@/lib/trial-alerts";
+import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { trialDays } from "@/lib/trial";
+import { nuovoTokenVerifica, renderVerificaEmailHtml } from "@/lib/email-verification";
 
-export type FormState = { error?: string } | undefined;
+export type FormState = { error?: string; emailDaVerificare?: string } | undefined;
+
+async function inviaEmailVerifica(nomeStudio: string, email: string, token: string) {
+  if (!isEmailConfigured()) return;
+  await sendEmail({
+    to: email,
+    subject: "Conferma la tua email — Scadenze in Regola",
+    html: renderVerificaEmailHtml(nomeStudio, token),
+  });
+}
 
 export async function signupAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const nomeStudio = String(formData.get("nomeStudio") ?? "").trim();
@@ -27,6 +35,19 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
+    // Si era registrato ma non aveva mai confermato l'email (es. l'aveva
+    // persa, o aveva usato un indirizzo che non controlla spesso): invece di
+    // bloccarlo con un errore permanente, gli rimandiamo un nuovo link sullo
+    // stesso account già creato, senza ricrearne uno nuovo.
+    if (!existing.emailVerificataAt) {
+      const { token, scadenza } = nuovoTokenVerifica();
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: { tokenVerificaEmail: token, tokenVerificaScadenza: scadenza },
+      });
+      await inviaEmailVerifica(nomeStudio, email, token);
+      redirect(`/verifica-email-inviata?email=${encodeURIComponent(email)}`);
+    }
     return { error: "Esiste già un account con questa email." };
   }
 
@@ -35,12 +56,16 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + trialDays());
 
-  const { user, studio } = await prisma.$transaction(async (tx) => {
+  const { token, scadenza } = nuovoTokenVerifica();
+
+  const { studio } = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
         name: name || null,
         email,
         passwordHash,
+        tokenVerificaEmail: token,
+        tokenVerificaScadenza: scadenza,
         studios: {
           create: {
             name: nomeStudio,
@@ -63,30 +88,21 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
     return { user, studio };
   });
 
+  // Dati di base già pronti (scadenzario standard, ecc.) non appena conferma
+  // l'email — niente attesa aggiuntiva al primo accesso.
   await provisionStudioDefaults(studio.id);
-  await createSession({ userId: user.id, email: user.email, studioId: studio.id });
 
+  // Niente sessione, niente email di benvenuto, niente avviso alla
+  // Direzione: tutto questo scatta solo dopo la conferma (vedi
+  // /api/verifica-email), cosi un indirizzo falso/usa-e-getta non diventa
+  // mai un account utilizzabile né genera notifiche inutili.
   try {
-    await sendWelcomeEmail({ id: studio.id, name: nomeStudio, email });
+    await inviaEmailVerifica(nomeStudio, email, token);
   } catch (err) {
-    console.error("Email di benvenuto fallita:", err);
+    console.error("Email di verifica fallita:", err);
   }
 
-  await notificaTitolare(
-    "🆕 Nuova prova gratuita — Scadenze in Regola",
-    `<p>Nuovo studio registrato: <strong>${nomeStudio}</strong></p>
-     <p>Email: ${email}</p>
-     <p>Prova gratuita fino al ${trialEndsAt.toLocaleDateString("it-IT")}.</p>`,
-  );
-
-  // Un ID univoco per evento, generato qui lato server: il tracker client lo
-  // usa per il Pixel (fbq eventID), e in futuro la Conversions API lato
-  // server userà lo stesso ID per lo stesso evento, cosi Meta deduplica
-  // automaticamente le due segnalazioni dello stesso evento invece di
-  // contarlo due volte.
-  const registrationEventId = randomUUID();
-  const trialEventId = randomUUID();
-  redirect(`/app?signup=1&reg_eid=${registrationEventId}&trial_eid=${trialEventId}`);
+  redirect(`/verifica-email-inviata?email=${encodeURIComponent(email)}`);
 }
 
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -99,11 +115,43 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) return { error: "Credenziali non valide." };
 
+  if (!user.emailVerificataAt) {
+    return {
+      error: "Devi prima confermare la tua email: controlla la posta (anche lo spam) e clicca il link ricevuto.",
+      emailDaVerificare: email,
+    };
+  }
+
   const membership = await prisma.membership.findFirst({ where: { userId: user.id } });
   if (!membership) return { error: "Nessuno studio associato a questo account." };
 
   await createSession({ userId: user.id, email: user.email, studioId: membership.studioId });
   redirect("/app");
+}
+
+export type ResendState = { error?: string; success?: string } | undefined;
+
+/** Richiamata dal piccolo form "Rinvia email" nella pagina di login, per chi
+ * ha perso la prima email di conferma o il link è scaduto. Risponde sempre
+ * con lo stesso messaggio generico, indipendentemente dal fatto che
+ * l'account esista o sia già verificato, per non rivelare quali email sono
+ * registrate. */
+export async function resendVerificationEmail(_prev: ResendState, formData: FormData): Promise<ResendState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const messaggioGenerico = { success: "Se l'indirizzo risulta registrato e da confermare, ti abbiamo inviato una nuova email." };
+  if (!email) return { error: "Inserisci un'email." };
+
+  const user = await prisma.user.findUnique({ where: { email }, include: { studios: true } });
+  if (!user || user.emailVerificataAt) return messaggioGenerico;
+
+  const { token, scadenza } = nuovoTokenVerifica();
+  await prisma.user.update({ where: { id: user.id }, data: { tokenVerificaEmail: token, tokenVerificaScadenza: scadenza } });
+  try {
+    await inviaEmailVerifica(user.studios[0]?.name ?? "il tuo studio", email, token);
+  } catch (err) {
+    console.error("Reinvio email di verifica fallito:", err);
+  }
+  return messaggioGenerico;
 }
 
 export async function logoutAction() {
