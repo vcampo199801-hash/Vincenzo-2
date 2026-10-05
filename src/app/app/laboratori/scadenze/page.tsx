@@ -40,7 +40,12 @@ export default async function ScadenzeLaboratoriPage({ searchParams }: { searchP
   const ultimoGiorno = new Date(anno, meseIndex + 1, 0);
 
   const lavorazioni = await prisma.lavorazione.findMany({
-    where: { studioId: studio.id, dataConsegnaEffettiva: null, dataConsegnaPrevista: { not: null } },
+    where: {
+      studioId: studio.id,
+      dataConsegnaEffettiva: null,
+      dataConsegnaPrevista: { not: null },
+      stato: { notIn: ["CONSEGNATO_STUDIO", "CONSEGNATO_PAZIENTE"] },
+    },
     include: { laboratorio: true },
     orderBy: { dataConsegnaPrevista: "asc" },
   });
@@ -120,7 +125,7 @@ export default async function ScadenzeLaboratoriPage({ searchParams }: { searchP
               const eOggi = isSameDay(giorno, oggi);
               const eventi = (perGiorno.get(giorno.toDateString()) ?? []).map((l) => ({
                 l,
-                ...consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva),
+                ...consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva, l.stato),
               }));
               return (
                 <div

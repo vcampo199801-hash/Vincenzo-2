@@ -182,6 +182,27 @@ export async function updateCampoLavorazione(id: string, campo: string, valore: 
         ? { stato: valore }
         : { [campo]: valore.trim() ? new Date(valore) : null };
 
+  // La data di consegna effettiva è un campo a sé, modificabile anche da
+  // solo: se chi usa la tabella cambia qui lo stato in "Consegnato" senza
+  // toccare anche la data, la valorizziamo da sola a oggi (senza sovrascrivere
+  // una data già inserita a mano). Se invece lo stato torna indietro (es.
+  // selezionato per errore), la data si svuota di nuovo, cosi non resta a
+  // indicare una consegna mai avvenuta davvero.
+  if (campo === "stato") {
+    const consegnata = valore === "CONSEGNATO_STUDIO" || valore === "CONSEGNATO_PAZIENTE";
+    if (consegnata) {
+      const attuale = await prisma.lavorazione.findFirst({
+        where: { id, studioId: studio.id },
+        select: { dataConsegnaEffettiva: true },
+      });
+      if (!attuale?.dataConsegnaEffettiva) {
+        data.dataConsegnaEffettiva = new Date();
+      }
+    } else {
+      data.dataConsegnaEffettiva = null;
+    }
+  }
+
   await prisma.lavorazione.updateMany({ where: { id, studioId: studio.id }, data });
   revalidatePath("/app/laboratori/lavorazioni");
   revalidatePath("/app/laboratori");

@@ -4,6 +4,10 @@ export const TIPO_MOVIMENTO_OPTIONS = [
   { value: "INCASSO", label: "Incasso" },
   { value: "PRELIEVO", label: "Prelievo" },
   { value: "VERSAMENTO", label: "Versamento" },
+  // Non è un flusso come gli altri tre, ma un conteggio periodico: "quanto
+  // contante c'è davvero, fisicamente, in cassa adesso" — serve a controllare
+  // che torni con quanto risulta dagli incassi/prelievi/versamenti registrati.
+  { value: "FONDO_CASSA", label: "Fondo cassa (conteggio)" },
 ] as const;
 export type TipoMovimento = (typeof TIPO_MOVIMENTO_OPTIONS)[number]["value"];
 

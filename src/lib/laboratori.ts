@@ -90,11 +90,17 @@ export function serializeTipologie(values: string[]): string {
 export type ConsegnaStato = "OK" | "IN_SCADENZA" | "SCADUTO";
 
 /** Stato della consegna prevista, finestra 7 giorni. Una volta consegnata
- * (dataConsegnaEffettiva valorizzata) non genera più alert. */
+ * non genera più alert — controlla sia dataConsegnaEffettiva sia lo stato
+ * stesso (CONSEGNATO_STUDIO/CONSEGNATO_PAZIENTE), perché i due campi sono
+ * modificabili indipendentemente dalla tabella: chi aggiorna solo lo stato
+ * senza valorizzare anche la data non deve restare segnalato come "scaduto"
+ * per sempre. */
 export function consegnaStato(
   dataConsegnaPrevista: Date | null | undefined,
-  dataConsegnaEffettiva: Date | null | undefined
+  dataConsegnaEffettiva: Date | null | undefined,
+  stato?: string
 ): { giorni: number | null; stato: ConsegnaStato } {
+  if (stato === "CONSEGNATO_STUDIO" || stato === "CONSEGNATO_PAZIENTE") return { giorni: null, stato: "OK" };
   if (dataConsegnaEffettiva) return { giorni: null, stato: "OK" };
   if (!dataConsegnaPrevista) return { giorni: null, stato: "OK" };
   const giorni = daysUntil(dataConsegnaPrevista);

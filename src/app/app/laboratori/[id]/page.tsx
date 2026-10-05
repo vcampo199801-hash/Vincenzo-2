@@ -166,7 +166,7 @@ export default async function LaboratorioPage({ params }: { params: Promise<{ id
           </div>
           <ul className="divide-y divide-slate-100">
             {laboratorio.lavorazioni.map((l) => {
-              const { stato: statoConsegna } = consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva);
+              const { stato: statoConsegna } = consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva, l.stato);
               return (
                 <li key={l.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
                   <Link href={`/app/laboratori/lavorazioni/${l.id}`} className="min-w-0 font-medium text-slate-800 hover:text-brand-700">

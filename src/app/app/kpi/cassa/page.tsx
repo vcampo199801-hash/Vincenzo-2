@@ -65,6 +65,25 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
     Object.entries(params).filter(([, v]) => Boolean(v)) as [string, string][]
   ).toString();
 
+  // Riconciliazione fondo cassa: indipendente dai filtri sopra, perché
+  // riguarda lo stato fisico del contante "adesso", non un periodo scelto.
+  // Confronta l'ultimo conteggio inserito con quanto dovrebbe esserci in
+  // base a tutti gli incassi in contanti meno prelievi e versamenti fino a
+  // quella data.
+  const ultimoFondoCassa = movimenti.find((m) => m.tipo === "FONDO_CASSA");
+  let fondoCassaAtteso: number | null = null;
+  if (ultimoFondoCassa) {
+    const finoAQuellaData = movimenti.filter((m) => m.data <= ultimoFondoCassa.data);
+    const contantiFinoA = finoAQuellaData
+      .filter((m) => m.tipo === "INCASSO" && m.modalitaIncasso === "CONTANTI")
+      .reduce((s, m) => s + m.importo, 0);
+    const prelieviFinoA = finoAQuellaData.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
+    const versamentiFinoA = finoAQuellaData.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
+    fondoCassaAtteso = contantiFinoA - prelieviFinoA - versamentiFinoA;
+  }
+  const differenzaFondoCassa = ultimoFondoCassa && fondoCassaAtteso !== null ? ultimoFondoCassa.importo - fondoCassaAtteso : null;
+  const fondoCassaTorna = differenzaFondoCassa !== null && Math.abs(differenzaFondoCassa) < 0.01;
+
   return (
     <div>
       <PageHeader
@@ -98,6 +117,36 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
             <SubmitButton>Salva chiusura</SubmitButton>
           </form>
         </UnsavedChangesGuard>
+      </div>
+
+      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-1 text-sm font-semibold text-slate-900">Fondo cassa</h2>
+        <p className="mb-4 text-xs text-slate-500">
+          Conta il contante fisicamente presente in cassa e registralo come movimento "Fondo cassa (conteggio)" — qui
+          sotto vedi se torna con contanti incassati, prelievi e versamenti.
+        </p>
+        {ultimoFondoCassa ? (
+          <div className={`rounded-lg border p-4 ${fondoCassaTorna ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs text-slate-500">Ultimo conteggio — {formatDate(ultimoFondoCassa.data)}</p>
+                <p className="text-lg font-bold text-slate-900">{formatCurrency(ultimoFondoCassa.importo)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Atteso in base ai movimenti fino a quella data</p>
+                <p className="text-lg font-bold text-slate-900">{formatCurrency(fondoCassaAtteso ?? 0)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Differenza</p>
+                <p className={`text-lg font-bold ${fondoCassaTorna ? "text-emerald-700" : "text-amber-700"}`}>
+                  {fondoCassaTorna ? "✓ Torna" : `⚠ ${formatCurrency(differenzaFondoCassa ?? 0)}`}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400">Non hai ancora registrato nessun conteggio del fondo cassa.</p>
+        )}
       </div>
 
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">

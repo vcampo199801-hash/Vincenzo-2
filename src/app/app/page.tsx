@@ -209,8 +209,8 @@ export default async function DashboardPage({
   // conformità mancanti e spesa del mese corrente (per data di invio).
   const statiLavorazioniLab = contaStatiLavorazione(lavorazioniLab);
   const consegneImminentiCount = lavorazioniLab.filter((l) => {
-    const { stato } = consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva);
-    return stato === "IN_SCADENZA" || stato === "SCADUTO";
+    const { stato: statoConsegna } = consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva, l.stato);
+    return statoConsegna === "IN_SCADENZA" || statoConsegna === "SCADUTO";
   }).length;
   const dichiarazioniMancantiCount = lavorazioniLab.filter(
     (l) =>

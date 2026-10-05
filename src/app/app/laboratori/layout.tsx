@@ -19,7 +19,7 @@ export default async function LaboratoriLayout({ children }: { children: React.R
   ]);
 
   const consegneImminenti = lavorazioni
-    .map((l) => ({ l, ...consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva) }))
+    .map((l) => ({ l, ...consegnaStato(l.dataConsegnaPrevista, l.dataConsegnaEffettiva, l.stato) }))
     .filter((x): x is typeof x & { stato: "IN_SCADENZA" | "SCADUTO" } => x.stato !== "OK")
     .map((x) => ({
       id: x.l.id,

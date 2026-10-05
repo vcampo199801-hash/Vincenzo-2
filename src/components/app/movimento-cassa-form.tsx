@@ -31,6 +31,7 @@ export function MovimentoCassaForm({ action, defaultValues, submitLabel = "Salva
   const [modalitaIncasso, setModalitaIncasso] = useState(defaultValues?.modalitaIncasso ?? "CONTANTI");
   const isIncasso = tipo === "INCASSO";
   const isAssegno = isIncasso && modalitaIncasso === "ASSEGNO";
+  const isFondoCassa = tipo === "FONDO_CASSA";
 
   return (
     <form action={action} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -53,9 +54,17 @@ export function MovimentoCassaForm({ action, defaultValues, submitLabel = "Salva
         <Field label="Data" name="data" type="date" required defaultValue={defaultValues?.data} />
       </div>
 
-      <Field label="Importo (€)" name="importo" type="number" step="0.01" required defaultValue={defaultValues?.importo ?? undefined} />
+      <Field
+        label={isFondoCassa ? "Contante contato in cassa (€)" : "Importo (€)"}
+        name="importo"
+        type="number"
+        step="0.01"
+        required
+        defaultValue={defaultValues?.importo ?? undefined}
+        hint={isFondoCassa ? "Il totale del contante che hai fisicamente in cassa in questo momento, non un movimento." : undefined}
+      />
 
-      {isIncasso ? (
+      {isFondoCassa ? null : isIncasso ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="block min-w-0 text-sm">

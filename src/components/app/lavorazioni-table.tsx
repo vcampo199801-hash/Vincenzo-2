@@ -183,7 +183,7 @@ export function LavorazioniTable({
           </thead>
           <tbody className="divide-y divide-slate-100">
             {risultato.map((r) => {
-              const { stato: statoConsegna } = consegnaStato(r.dataConsegnaPrevista, r.dataConsegnaEffettiva);
+              const { stato: statoConsegna } = consegnaStato(r.dataConsegnaPrevista, r.dataConsegnaEffettiva, r.stato);
               const senzaDichiarazione = (r.stato === "CONSEGNATO_STUDIO" || r.stato === "CONSEGNATO_PAZIENTE") && !r.hasDichiarazione;
               const rowClass = senzaDichiarazione ? "bg-red-50 hover:bg-red-100" : statoConsegna !== "OK" ? "bg-amber-50 hover:bg-amber-100" : "hover:bg-slate-50";
               return (

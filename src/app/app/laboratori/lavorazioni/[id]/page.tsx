@@ -37,7 +37,7 @@ export default async function LavorazionePage({ params }: { params: Promise<{ id
 
   const dichiarazione = lavorazione.allegati.find((a) => a.categoria === CATEGORIA_DICHIARAZIONE_CONFORMITA);
   const altriAllegati = lavorazione.allegati.filter((a) => a.categoria !== CATEGORIA_DICHIARAZIONE_CONFORMITA);
-  const { stato: statoConsegna } = consegnaStato(lavorazione.dataConsegnaPrevista, lavorazione.dataConsegnaEffettiva);
+  const { stato: statoConsegna } = consegnaStato(lavorazione.dataConsegnaPrevista, lavorazione.dataConsegnaEffettiva, lavorazione.stato);
   const storageConfigured = isLaboratoriStorageConfigured();
 
   return (
