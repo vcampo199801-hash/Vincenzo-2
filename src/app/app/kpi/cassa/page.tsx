@@ -122,7 +122,7 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-sm font-semibold text-slate-900">Fondo cassa</h2>
         <p className="mb-4 text-xs text-slate-500">
-          Conta il contante fisicamente presente in cassa e registralo come movimento "Fondo cassa (conteggio)" — qui
+          Conta il contante fisicamente presente in cassa e registralo come movimento &quot;Fondo cassa (conteggio)&quot; — qui
           sotto vedi se torna con contanti incassati, prelievi e versamenti.
         </p>
         {ultimoFondoCassa ? (

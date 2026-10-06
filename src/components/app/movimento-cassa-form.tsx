@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Field, SelectField, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
+import { Field, CheckboxField, TextAreaField, SubmitButton } from "@/components/ui/form";
 import { TIPO_MOVIMENTO_OPTIONS, MODALITA_INCASSO_OPTIONS, type TipoMovimento } from "@/lib/cassa";
 
 type Props = {
