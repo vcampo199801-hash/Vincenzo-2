@@ -21,7 +21,19 @@ export function GeneraCodiceForm() {
   return (
     <div className="space-y-4">
       <form action={formAction} className="flex flex-wrap items-end gap-3">
-        <Field label="Giorni" name="giorni" type="number" defaultValue={30} required hint="30 = un mese." />
+        <Field
+          // La key forza un remount quando arriva un nuovo risultato, così il
+          // campo mostra l'ultimo valore davvero usato invece di tornare
+          // sempre a 30 — altrimenti sembra che il sito ignori quello che hai
+          // scritto, anche se il codice generato è giusto.
+          key={state && "codice" in state ? state.codice : "iniziale"}
+          label="Giorni"
+          name="giorni"
+          type="number"
+          defaultValue={state && "giorni" in state ? state.giorni : 30}
+          required
+          hint="30 = un mese."
+        />
         <div className="min-w-[200px] flex-1">
           <Field label="Nota (facoltativa)" name="nota" placeholder="Es. Dr. Rossi, richiesto il 31/08" />
         </div>
