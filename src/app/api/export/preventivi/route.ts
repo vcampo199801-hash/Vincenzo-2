@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
   const assicurazione = params.get("assicurazione") ?? "";
   const comeCiHaConosciuto = params.get("comeCiHaConosciuto") ?? "";
   const tipoOfferta = params.get("tipoOfferta") ?? "";
+  const paziente = params.get("paziente") ?? "";
 
   const tutti = await prisma.preventivo.findMany({ where: { studioId: studio.id }, orderBy: { data: "desc" } });
   const filtrati = tutti.filter(
@@ -26,7 +27,8 @@ export async function GET(req: NextRequest) {
       (!stato || p.stato === stato) &&
       (!assicurazione || p.assicurazione === assicurazione) &&
       (!comeCiHaConosciuto || p.comeCiHaConosciuto === comeCiHaConosciuto) &&
-      (!tipoOfferta || p.tipoOfferta === tipoOfferta)
+      (!tipoOfferta || p.tipoOfferta === tipoOfferta) &&
+      (!paziente || (p.pazienteNome ?? "").toLowerCase().includes(paziente.toLowerCase()))
   );
 
   const righe = filtrati.map((p) => ({

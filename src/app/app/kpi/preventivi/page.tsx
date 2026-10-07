@@ -17,6 +17,7 @@ import {
 import { deletePreventivo } from "@/lib/actions/kpi";
 import { KpiTabs } from "@/components/app/kpi-tabs";
 import { PreventiviFiltroPersona } from "@/components/app/preventivi-filtro-persona";
+import { PreventiviFiltroTesto } from "@/components/app/preventivi-filtro-testo";
 import { PageHeader } from "@/components/ui/page-header";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { TableScroll } from "@/components/ui/table-scroll";
@@ -32,6 +33,7 @@ type SearchParams = {
   assicurazione?: string;
   comeCiHaConosciuto?: string;
   tipoOfferta?: string;
+  paziente?: string;
   vista?: string;
 };
 
@@ -78,7 +80,8 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
       (!params.stato || p.stato === params.stato) &&
       (!params.assicurazione || p.assicurazione === params.assicurazione) &&
       (!params.comeCiHaConosciuto || p.comeCiHaConosciuto === params.comeCiHaConosciuto) &&
-      (!params.tipoOfferta || p.tipoOfferta === params.tipoOfferta)
+      (!params.tipoOfferta || p.tipoOfferta === params.tipoOfferta) &&
+      (!params.paziente || (p.pazienteNome ?? "").toLowerCase().includes(params.paziente.toLowerCase()))
   );
   const exportQuery = new URLSearchParams(
     Object.entries(params).filter(([, v]) => Boolean(v)) as [string, string][]
@@ -112,6 +115,10 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
       </div>
 
       <div className="mb-6 flex flex-wrap gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="min-w-[220px] flex-1">
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Paziente</p>
+          <PreventiviFiltroTesto valoreAttuale={params.paziente ?? ""} currentParams={params} />
+        </div>
         <div>
           <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Dottore</p>
           <PreventiviFiltroPersona
@@ -234,39 +241,53 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
         </TableScroll>
       </div>
 
-      <TableScroll className="rounded-xl border border-slate-200 bg-white shadow-sm">
+      {/* Altezza limitata con scroll verticale proprio: così la barra di scorrimento
+          orizzontale resta subito sotto le righe visibili invece che in fondo a
+          tutto l'elenco. Le prime tre colonne (data, paziente, età) restano
+          "congelate" a sinistra mentre si scorre in orizzontale, così il nome
+          del paziente non sparisce mai dallo schermo (richiesta di laboratorio). */}
+      <TableScroll className="max-h-[32rem] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+          <thead className="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
-              <th className="px-4 py-3">Data</th>
-              <th className="px-4 py-3">Paziente</th>
-              <th className="px-4 py-3">Età</th>
-              <th className="px-4 py-3">Tipo paziente</th>
-              <th className="px-4 py-3">Dottore</th>
-              <th className="px-4 py-3">Commerciale</th>
-              <th className="px-4 py-3">Come ci ha conosciuto</th>
-              <th className="px-4 py-3">Tipo di offerta</th>
-              <th className="px-4 py-3">Proposto</th>
-              <th className="px-4 py-3">Accettato</th>
-              <th className="px-4 py-3">Data accettazione</th>
-              <th className="px-4 py-3">Listino</th>
-              <th className="px-4 py-3">Coperto assicurazione</th>
-              <th className="px-4 py-3">Scadenza</th>
-              <th className="px-4 py-3">Assicurazione</th>
-              <th className="px-4 py-3">Pagamento</th>
-              <th className="px-4 py-3">Stato</th>
-              <th className="px-4 py-3">Motivo rifiuto</th>
-              <th className="px-4 py-3" />
+              <th className="sticky left-0 top-0 z-30 w-[96px] bg-slate-50 px-4 py-3">Data</th>
+              <th className="sticky left-[96px] top-0 z-30 w-[170px] border-r border-slate-200 bg-slate-50 px-4 py-3">Paziente</th>
+              <th className="sticky left-[266px] top-0 z-30 w-[64px] border-r border-slate-200 bg-slate-50 px-4 py-3">Età</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Tipo paziente</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Dottore</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Commerciale</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Come ci ha conosciuto</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Tipo di offerta</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Proposto</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Accettato</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Data accettazione</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Listino</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Coperto assicurazione</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Scadenza</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Assicurazione</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Pagamento</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Stato</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3">Motivo rifiuto</th>
+              <th className="sticky top-0 z-20 bg-slate-50 px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filtrati.map((p) => {
               const scadenzaStato = preventivoScadenzaStato(p.scadenza, p.stato);
               return (
-                <tr key={p.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{formatDate(p.data)}</td>
-                  <td className="px-4 py-3 text-slate-600">{p.pazienteNome ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-600">{optionLabelKpi(FASCIA_ETA_OPTIONS, p.fasciaEta)}</td>
+                <tr key={p.id} className="group hover:bg-slate-50">
+                  <td className="sticky left-0 z-10 w-[96px] truncate bg-white px-4 py-3 font-medium text-slate-900 group-hover:bg-slate-50">
+                    {formatDate(p.data)}
+                  </td>
+                  <td
+                    className="sticky left-[96px] z-10 w-[170px] truncate border-r border-slate-200 bg-white px-4 py-3 text-slate-600 group-hover:bg-slate-50"
+                    title={p.pazienteNome ?? undefined}
+                  >
+                    {p.pazienteNome ?? "—"}
+                  </td>
+                  <td className="sticky left-[266px] z-10 w-[64px] truncate border-r border-slate-200 bg-white px-4 py-3 text-slate-600 group-hover:bg-slate-50">
+                    {optionLabelKpi(FASCIA_ETA_OPTIONS, p.fasciaEta)}
+                  </td>
                   <td className="px-4 py-3 text-slate-600">{p.tipoPaziente ? optionLabelKpi(TIPO_PAZIENTE_OPTIONS, p.tipoPaziente) : "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{p.dottore}</td>
                   <td className="px-4 py-3 text-slate-600">{p.commerciale ?? "—"}</td>
