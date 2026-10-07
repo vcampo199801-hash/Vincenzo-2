@@ -16,7 +16,7 @@ export const APP_MODULES = [
   { key: "report", label: "Report ispezione", href: "/app/report" },
   { key: "kpi", label: "KPI Studio", href: "/app/kpi" },
   { key: "personale", label: "Personale", href: "/app/personale" },
-  { key: "laboratori", label: "Laboratori", href: "/app/laboratori" },
+  { key: "laboratori", label: "Laboratori", href: "/app/laboratori/lavorazioni" },
   { key: "comunicazione", label: "Comunicazione Pazienti", href: "/app/comunicazione" },
   { key: "spese", label: "Spese", href: "/app/spese" },
   { key: "manutenzione", label: "Manutenzione", href: "/app/manutenzione" },

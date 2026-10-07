@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ModuleKey } from "@/lib/modules";
 import { PIANI, type PianoKey } from "@/lib/plans";
 
-const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey | null; external?: boolean }[] = [
+const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey | null; external?: boolean; activePrefix?: string }[] = [
   { href: "/app", label: "Dashboard", icon: "📊", moduleKey: "dashboard" },
   { href: "/app/bilancio", label: "Bilancio", icon: "⚖️", moduleKey: "bilancio" },
   { href: "/app/scadenzario", label: "Scadenzario", icon: "🗓️", moduleKey: "scadenzario" },
@@ -18,7 +18,9 @@ const LINKS: { href: string; label: string; icon: string; moduleKey: ModuleKey |
   { href: "/app/report", label: "Report ispezione", icon: "📋", moduleKey: "report" },
   { href: "/app/kpi", label: "KPI Studio", icon: "📈", moduleKey: "kpi" },
   { href: "/app/personale", label: "Personale", icon: "🧑‍⚕️", moduleKey: "personale" },
-  { href: "/app/laboratori", label: "Laboratori", icon: "🧪", moduleKey: "laboratori" },
+  // Porta subito al registro lavorazioni (quello che si usa tutti i giorni) invece
+  // che alla panoramica, ma resta "attivo" su tutta la sezione /app/laboratori/*.
+  { href: "/app/laboratori/lavorazioni", activePrefix: "/app/laboratori", label: "Laboratori", icon: "🧪", moduleKey: "laboratori" },
   { href: "/app/comunicazione", label: "Comunicazione Pazienti", icon: "🎬", moduleKey: "comunicazione" },
   { href: "/app/spese", label: "Spese", icon: "💶", moduleKey: "spese" },
   { href: "/app/manutenzione", label: "Manutenzione", icon: "🧯", moduleKey: "manutenzione" },
@@ -94,7 +96,8 @@ export function NavLinks({
 
         const locked = link.moduleKey ? !PIANI[piano].moduli.includes(link.moduleKey) : false;
         const href = locked ? `/app/abbonamento?upgrade=${link.moduleKey}` : link.href;
-        const active = !locked && (link.href === "/app" ? pathname === "/app" : pathname.startsWith(link.href));
+        const active =
+          !locked && (link.href === "/app" ? pathname === "/app" : pathname.startsWith(link.activePrefix ?? link.href));
         return (
           <Link
             key={link.href}
