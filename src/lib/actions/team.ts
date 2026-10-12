@@ -121,7 +121,13 @@ export async function inviteMember(_prev: TeamFormState, formData: FormData): Pr
   const passwordHash = await bcrypt.hash(tempPassword, 10);
 
   await prisma.$transaction(async (tx) => {
-    const newUser = await tx.user.create({ data: { email, name: name || null, passwordHash } });
+    // Verificata subito: a differenza di un'iscrizione pubblica (/signup, dove la
+    // verifica serve a bloccare email usa-e-getta), qui è il titolare — già un
+    // cliente verificato — a scegliere direttamente la persona e a consegnarle le
+    // credenziali. Senza questo la collaboratrice resta bloccata al primo accesso
+    // con "Devi prima confermare la tua email", senza aver mai ricevuto alcuna
+    // email di verifica (solo quella con le credenziali).
+    const newUser = await tx.user.create({ data: { email, name: name || null, passwordHash, emailVerificataAt: new Date() } });
     await tx.membership.create({
       data: { studioId: studio.id, userId: newUser.id, role: "MEMBER", permessi, notificheAttive: true, notificheEmail: email },
     });
