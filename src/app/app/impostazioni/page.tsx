@@ -10,6 +10,7 @@ import { Field, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { InviteMemberForm } from "@/components/app/invite-member-form";
 import { ResetMemberPasswordButton } from "@/components/app/reset-member-password-button";
+import { EditMemberNameButton } from "@/components/app/edit-member-name-button";
 import { ChangePasswordForm } from "@/components/app/change-password-form";
 import { NotificationPreferenceForm } from "@/components/app/notification-preference-form";
 import { MemberPermissionsForm } from "@/components/app/member-permissions-form";
@@ -242,7 +243,8 @@ export default async function ImpostazioniPage({
                 )}
               </div>
               {isOwner && m.role !== "OWNER" && (
-                <div className="mt-2">
+                <div className="mt-2 flex flex-wrap gap-3">
+                  <EditMemberNameButton membershipId={m.id} currentName={m.user.name} />
                   <ResetMemberPasswordButton membershipId={m.id} email={m.user.email} />
                 </div>
               )}
@@ -287,6 +289,7 @@ export default async function ImpostazioniPage({
                   <td className="whitespace-nowrap px-4 py-3 text-right">
                     {isOwner && m.role !== "OWNER" && (
                       <div className="flex flex-col items-end gap-1.5">
+                        <EditMemberNameButton membershipId={m.id} currentName={m.user.name} />
                         <ResetMemberPasswordButton membershipId={m.id} email={m.user.email} />
                         <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
                       </div>

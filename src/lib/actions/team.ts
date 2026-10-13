@@ -192,6 +192,23 @@ export async function resetMemberPassword(membershipId: string, _prev: TeamFormS
   };
 }
 
+/** Cambia il nome visualizzato di un collaboratore (non la sua email, che
+ * resta l'identificativo di accesso) — es. corregge un nominativo inserito
+ * sbagliato in fase di invito. */
+export async function updateMemberName(membershipId: string, _prev: TeamFormState, formData: FormData): Promise<TeamFormState> {
+  const { studio, isOwner } = await requireOwner();
+  if (!isOwner) return { error: "Solo il titolare dello studio può modificare i nominativi del team." };
+
+  const target = await prisma.membership.findFirst({ where: { id: membershipId, studioId: studio.id } });
+  if (!target || target.role === "OWNER") return { error: "Operazione non consentita per questo utente." };
+
+  const name = String(formData.get("name") ?? "").trim();
+
+  await prisma.user.update({ where: { id: target.userId }, data: { name: name || null } });
+  revalidatePath("/app/impostazioni");
+  return { success: "Nome aggiornato." };
+}
+
 export async function removeMember(membershipId: string) {
   const { studio, isOwner } = await requireOwner();
   if (!isOwner) return;
