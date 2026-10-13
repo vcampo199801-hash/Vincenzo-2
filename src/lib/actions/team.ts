@@ -65,6 +65,21 @@ async function sendInviteEmail(params: { email: string; studioName: string; nuov
   });
 }
 
+async function sendPasswordResetEmail(params: { email: string; studioName: string; tempPassword: string }) {
+  if (!isEmailConfigured()) return;
+
+  const corpo = `<p>Il titolare di <strong>${escapeHtml(params.studioName)}</strong> ti ha rigenerato la password di accesso a Scadenze in Regola.</p>
+     <p>Ecco le tue nuove credenziali:</p>
+     <p>Email: <strong>${escapeHtml(params.email)}</strong><br/>Nuova password temporanea: <strong>${escapeHtml(params.tempPassword)}</strong></p>
+     <p>Al primo accesso ti consigliamo di impostarne una tua: vai su Impostazioni → Account → "Cambia password".</p>`;
+
+  await sendEmail({
+    to: params.email,
+    subject: `Nuova password per Scadenze in Regola — ${params.studioName}`,
+    html: emailWrapper("La tua password è stata rigenerata", corpo),
+  });
+}
+
 async function requireOwner() {
   const { session, studio, membership } = await requireStudio();
   return { session, studio, isOwner: membership.role === "OWNER" };
@@ -144,6 +159,36 @@ export async function inviteMember(_prev: TeamFormState, formData: FormData): Pr
   }
   return {
     success: `Account creato per ${email}: gli abbiamo inviato via email le credenziali per accedere. Password temporanea (nel caso non gli fosse arrivata): ${tempPassword}`,
+  };
+}
+
+/** Genera una nuova password temporanea per un collaboratore già nel team.
+ * Serve soprattutto quando un invito viene ripetuto per la stessa email dopo
+ * una rimozione: rimuovere un collaboratore cancella solo il suo
+ * collegamento allo studio, non l'account — un nuovo invito alla stessa
+ * email lo ricollega senza generare credenziali nuove (vedi inviteMember),
+ * quindi se quella password è andata persa il titolare non aveva prima
+ * d'ora alcun modo di recuperare l'accesso per lui. */
+export async function resetMemberPassword(membershipId: string, _prev: TeamFormState, _formData: FormData): Promise<TeamFormState> {
+  const { studio, isOwner } = await requireOwner();
+  if (!isOwner) return { error: "Solo il titolare dello studio può reimpostare le password." };
+
+  const target = await prisma.membership.findFirst({ where: { id: membershipId, studioId: studio.id }, include: { user: true } });
+  if (!target || target.role === "OWNER") return { error: "Operazione non consentita per questo utente." };
+
+  const tempPassword = generateTempPassword();
+  const passwordHash = await bcrypt.hash(tempPassword, 10);
+  await prisma.user.update({ where: { id: target.userId }, data: { passwordHash } });
+
+  try {
+    await sendPasswordResetEmail({ email: target.user.email, studioName: studio.name, tempPassword });
+  } catch {
+    return {
+      success: `Nuova password generata per ${target.user.email}, ma non siamo riusciti a inviargliela via email. Password temporanea: ${tempPassword} — condividila tu in modo sicuro.`,
+    };
+  }
+  return {
+    success: `Nuova password inviata via email a ${target.user.email}. Password temporanea (nel caso non gli fosse arrivata): ${tempPassword}`,
   };
 }
 

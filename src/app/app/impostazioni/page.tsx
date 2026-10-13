@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Field, CheckboxField, SubmitButton } from "@/components/ui/form";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { InviteMemberForm } from "@/components/app/invite-member-form";
+import { ResetMemberPasswordButton } from "@/components/app/reset-member-password-button";
 import { ChangePasswordForm } from "@/components/app/change-password-form";
 import { NotificationPreferenceForm } from "@/components/app/notification-preference-form";
 import { MemberPermissionsForm } from "@/components/app/member-permissions-form";
@@ -240,6 +241,11 @@ export default async function ImpostazioniPage({
                   <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
                 )}
               </div>
+              {isOwner && m.role !== "OWNER" && (
+                <div className="mt-2">
+                  <ResetMemberPasswordButton membershipId={m.id} email={m.user.email} />
+                </div>
+              )}
               <dl className="mt-3 grid grid-cols-3 gap-x-2 gap-y-1 text-xs">
                 <div>
                   <dt className="text-slate-400">Ruolo</dt>
@@ -280,7 +286,10 @@ export default async function ImpostazioniPage({
                   <td className="whitespace-nowrap px-4 py-3 text-slate-600">{m.role !== "OWNER" ? m.sectionsLabel : "—"}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-right">
                     {isOwner && m.role !== "OWNER" && (
-                      <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
+                      <div className="flex flex-col items-end gap-1.5">
+                        <ResetMemberPasswordButton membershipId={m.id} email={m.user.email} />
+                        <DeleteButton action={removeMember.bind(null, m.id)} label="Rimuovi" />
+                      </div>
                     )}
                   </td>
                 </tr>
