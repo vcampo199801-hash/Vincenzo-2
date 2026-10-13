@@ -67,23 +67,50 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
 
   // Riconciliazione fondo cassa: indipendente dai filtri sopra, perché
   // riguarda lo stato fisico del contante nei vari momenti in cui è stato
-  // contato, non un periodo scelto. Per OGNI conteggio registrato (non solo
-  // l'ultimo) calcola quanto ci si aspettava in base a tutti gli incassi in
-  // contanti meno prelievi e versamenti fino a quella data — così si può
-  // seguire giorno per giorno se tornava, non solo nell'ultimo controllo.
-  const storicoFondoCassa = movimenti
-    .filter((m) => m.tipo === "FONDO_CASSA")
-    .map((conteggio) => {
-      const finoAQuellaData = movimenti.filter((m) => m.data <= conteggio.data);
-      const contantiFinoA = finoAQuellaData
-        .filter((m) => m.tipo === "INCASSO" && m.modalitaIncasso === "CONTANTI")
-        .reduce((s, m) => s + m.importo, 0);
-      const prelieviFinoA = finoAQuellaData.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
-      const versamentiFinoA = finoAQuellaData.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
-      const atteso = contantiFinoA - prelieviFinoA - versamentiFinoA;
-      const differenza = conteggio.importo - atteso;
-      return { id: conteggio.id, data: conteggio.data, contato: conteggio.importo, atteso, differenza, torna: Math.abs(differenza) < 0.01 };
+  // contato, non un periodo scelto. Ogni conteggio diventa il nuovo punto di
+  // partenza per quello successivo (come lasciare un fondo cassa dichiarato
+  // dopo un versamento): l'atteso di un conteggio è il contato del conteggio
+  // precedente più i movimenti registrati nel mezzo, non la somma di tutto lo
+  // storico dall'inizio — altrimenti un singolo giorno sbagliato resterebbe a
+  // sballare il conto per sempre. L'ordine usa data+orario di inserimento
+  // (createdAt) come criterio secondario, per gestire correttamente due
+  // conteggi fatti nello stesso giorno (es. prima e dopo un versamento).
+  function chiave(m: { data: Date; createdAt: Date }) {
+    return [m.data.getTime(), m.createdAt.getTime()] as const;
+  }
+  function confronta(a: readonly [number, number], b: readonly [number, number]) {
+    return a[0] - b[0] || a[1] - b[1];
+  }
+
+  const fondoCassaAsc = [...movimenti].filter((m) => m.tipo === "FONDO_CASSA").sort((a, b) => confronta(chiave(a), chiave(b)));
+  let baselineContato = 0;
+  let baselineChiave: readonly [number, number] = [-Infinity, -Infinity];
+  const storicoFondoCassaAsc = fondoCassaAsc.map((conteggio) => {
+    const chiaveConteggio = chiave(conteggio);
+    const delPeriodo = movimenti.filter((m) => {
+      const k = chiave(m);
+      return confronta(k, baselineChiave) > 0 && confronta(k, chiaveConteggio) <= 0;
     });
+    const contantiPeriodo = delPeriodo
+      .filter((m) => m.tipo === "INCASSO" && m.modalitaIncasso === "CONTANTI")
+      .reduce((s, m) => s + m.importo, 0);
+    const prelieviPeriodo = delPeriodo.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
+    const versamentiPeriodo = delPeriodo.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
+    const atteso = baselineContato + contantiPeriodo - prelieviPeriodo - versamentiPeriodo;
+    const differenza = conteggio.importo - atteso;
+    const risultato = {
+      id: conteggio.id,
+      data: conteggio.data,
+      contato: conteggio.importo,
+      atteso,
+      differenza,
+      torna: Math.abs(differenza) < 0.01,
+    };
+    baselineContato = conteggio.importo;
+    baselineChiave = chiaveConteggio;
+    return risultato;
+  });
+  const storicoFondoCassa = [...storicoFondoCassaAsc].reverse();
   const ultimoFondoCassa = storicoFondoCassa[0] ?? null;
 
   return (
@@ -125,8 +152,11 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
         <h2 className="mb-1 text-sm font-semibold text-slate-900">Fondo cassa</h2>
         <p className="mb-4 text-xs text-slate-500">
           Conta il contante fisicamente presente in cassa e registralo come movimento &quot;Fondo cassa (conteggio)&quot;.
-          Ogni conteggio resta salvato con la sua data — qui sotto trovi lo storico di tutti i controlli fatti, ognuno
-          confrontato con quanto ci si aspettava in base a incassi in contanti, prelievi e versamenti fino a quel giorno.
+          Ogni conteggio diventa il nuovo punto di partenza per quello successivo: se dopo aver contato versi dei
+          soldi in banca, registra il versamento e poi un nuovo conteggio con quello che resta in cassa, così il
+          controllo del giorno dopo riparte da lì. Qui sotto trovi lo storico di tutti i controlli fatti, ognuno
+          confrontato con quanto ci si aspettava in base agli incassi in contanti, prelievi e versamenti registrati
+          dal conteggio precedente.
         </p>
         {ultimoFondoCassa ? (
           <div className="space-y-2">
