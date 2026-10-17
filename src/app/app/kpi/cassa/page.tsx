@@ -113,6 +113,13 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
   const storicoFondoCassa = [...storicoFondoCassaAsc].reverse();
   const ultimoFondoCassa = storicoFondoCassa[0] ?? null;
 
+  // Storico chiusure POS, consultabile oltre al singolo giorno selezionato nel
+  // form qui sopra — i giorni mai toccati non compaiono (chiusuraPos resta a 0
+  // di default anche per righe create da altre sezioni di KPI Studio).
+  const storicoChiusurePos = [...giorniKpi]
+    .filter((g) => g.chiusuraPos !== 0)
+    .sort((a, b) => b.data.getTime() - a.data.getTime());
+
   return (
     <div>
       <PageHeader
@@ -133,7 +140,7 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
         </a>
       </div>
 
-      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div id="chiusura-pos" className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-sm font-semibold text-slate-900">Chiusura POS giornaliera</h2>
         <p className="mb-4 text-xs text-slate-500">
           Un totale unico al giorno (non per singola transazione) — si somma agli incassi in contanti/assegno dello
@@ -146,6 +153,32 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
             <SubmitButton>Salva chiusura</SubmitButton>
           </form>
         </UnsavedChangesGuard>
+
+        {storicoChiusurePos.length > 0 && (
+          <div className="mt-5 border-t border-slate-100 pt-4">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Storico chiusure POS</p>
+            <div className="max-h-64 overflow-y-auto rounded-lg border border-slate-200">
+              <table className="min-w-full divide-y divide-slate-100 text-sm">
+                <tbody className="divide-y divide-slate-100">
+                  {storicoChiusurePos.map((g) => (
+                    <tr key={g.data.toISOString()} className="hover:bg-slate-50">
+                      <td className="px-3 py-2 text-slate-600">{formatDate(g.data)}</td>
+                      <td className="px-3 py-2 text-right font-medium text-slate-900">{formatCurrency(g.chiusuraPos)}</td>
+                      <td className="px-3 py-2 text-right">
+                        <Link
+                          href={`/app/kpi/cassa?posData=${toIsoDate(g.data)}#chiusura-pos`}
+                          className="text-xs font-medium text-brand-600 hover:text-brand-800"
+                        >
+                          Modifica
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
