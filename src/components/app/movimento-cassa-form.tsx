@@ -19,6 +19,8 @@ type Props = {
     dataVersamento?: string | null;
   };
   submitLabel?: string;
+  // Nomi dei membri del team, per la tendina "Operatore" di un ritiro cassa.
+  operatori?: string[];
 };
 
 /** Un solo movimento può essere un incasso (contanti/assegno, con numero
@@ -26,12 +28,13 @@ type Props = {
  * cambiano in base al tipo scelto, per questo serve un componente client
  * invece del solito form server-rendered statico. Gli assegni hanno in più
  * una checklist (fotocopia f/r, timbro RSD) e la data di versamento in banca. */
-export function MovimentoCassaForm({ action, defaultValues, submitLabel = "Salva movimento" }: Props) {
+export function MovimentoCassaForm({ action, defaultValues, submitLabel = "Salva movimento", operatori = [] }: Props) {
   const [tipo, setTipo] = useState<TipoMovimento>((defaultValues?.tipo as TipoMovimento) ?? "INCASSO");
   const [modalitaIncasso, setModalitaIncasso] = useState(defaultValues?.modalitaIncasso ?? "CONTANTI");
   const isIncasso = tipo === "INCASSO";
   const isAssegno = isIncasso && modalitaIncasso === "ASSEGNO";
   const isFondoCassa = tipo === "FONDO_CASSA";
+  const isRitiroCassa = tipo === "RITIRO_CASSA";
 
   return (
     <form action={action} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -107,6 +110,40 @@ export function MovimentoCassaForm({ action, defaultValues, submitLabel = "Salva
                 />
               </div>
             </div>
+          )}
+        </>
+      ) : isRitiroCassa ? (
+        <>
+          <label className="block min-w-0 text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Modalità</span>
+            <select
+              name="modalitaIncasso"
+              value={modalitaIncasso}
+              onChange={(e) => setModalitaIncasso(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            >
+              <option value="CONTANTI">Contanti</option>
+              <option value="ASSEGNO">Assegno</option>
+            </select>
+          </label>
+          {operatori.length > 0 ? (
+            <label className="block min-w-0 text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Operatore</span>
+              <select
+                name="nominativo"
+                defaultValue={defaultValues?.nominativo ?? ""}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              >
+                <option value="">Seleziona...</option>
+                {operatori.map((nome) => (
+                  <option key={nome} value={nome}>
+                    {nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <Field label="Operatore" name="nominativo" defaultValue={defaultValues?.nominativo} hint="Chi ha fatto il ritiro." />
           )}
         </>
       ) : (

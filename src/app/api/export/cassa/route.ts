@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
     if (tipo && m.tipo !== tipo) return false;
     if (da && toIsoDate(m.data) < da) return false;
     if (a && toIsoDate(m.data) > a) return false;
-    if (versati === "si" && !(m.modalitaIncasso === "ASSEGNO" && m.dataVersamento)) return false;
-    if (versati === "no" && !(m.modalitaIncasso === "ASSEGNO" && !m.dataVersamento)) return false;
+    if (versati === "si" && !(m.tipo === "INCASSO" && m.modalitaIncasso === "ASSEGNO" && m.dataVersamento)) return false;
+    if (versati === "no" && !(m.tipo === "INCASSO" && m.modalitaIncasso === "ASSEGNO" && !m.dataVersamento)) return false;
     return true;
   });
 
@@ -34,9 +34,10 @@ export async function GET(req: NextRequest) {
     modalita: m.modalitaIncasso ? optionLabelCassa([...MODALITA_INCASSO_OPTIONS], m.modalitaIncasso) : "",
     numeroFattura: m.numeroFattura ?? "",
     nominativo: m.nominativo ?? "",
-    fotocopiaFR: m.modalitaIncasso === "ASSEGNO" ? (m.fotocopiaFR ? "Sì" : "No") : "",
-    timbroRSD: m.modalitaIncasso === "ASSEGNO" ? (m.timbroRSD ? "Sì" : "No") : "",
-    dataVersamento: m.modalitaIncasso === "ASSEGNO" ? (m.dataVersamento ? formatDate(m.dataVersamento) : "Non versato") : "",
+    fotocopiaFR: m.tipo === "INCASSO" && m.modalitaIncasso === "ASSEGNO" ? (m.fotocopiaFR ? "Sì" : "No") : "",
+    timbroRSD: m.tipo === "INCASSO" && m.modalitaIncasso === "ASSEGNO" ? (m.timbroRSD ? "Sì" : "No") : "",
+    dataVersamento:
+      m.tipo === "INCASSO" && m.modalitaIncasso === "ASSEGNO" ? (m.dataVersamento ? formatDate(m.dataVersamento) : "Non versato") : "",
     note: m.note ?? "",
   }));
 

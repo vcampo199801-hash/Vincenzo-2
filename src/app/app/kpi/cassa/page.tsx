@@ -38,8 +38,8 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
     if (params.a && toIsoDate(m.data) > params.a) return false;
     // Filtro assegni versati/non versati: ha senso solo per gli incassi in
     // assegno, quindi quando è attivo nasconde tutto il resto.
-    if (params.versati === "si" && !(m.modalitaIncasso === "ASSEGNO" && m.dataVersamento)) return false;
-    if (params.versati === "no" && !(m.modalitaIncasso === "ASSEGNO" && !m.dataVersamento)) return false;
+    if (params.versati === "si" && !(m.tipo === "INCASSO" && m.modalitaIncasso === "ASSEGNO" && m.dataVersamento)) return false;
+    if (params.versati === "no" && !(m.tipo === "INCASSO" && m.modalitaIncasso === "ASSEGNO" && !m.dataVersamento)) return false;
     return true;
   });
 
@@ -59,7 +59,12 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
           .reduce((s, g) => s + g.chiusuraPos, 0)
       : 0;
   const totaleIncassi = totaleContanti + totaleAssegni + totaleBonifici + totaleFinanziamento + totalePagodil + totalePos;
-  const totalePrelievi = filtrati.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
+  // Un ritiro cassa è concettualmente un prelievo (valore che esce dalla
+  // cassa), solo con più dettaglio su chi l'ha fatto e con cosa — conta
+  // quindi insieme ai prelievi nel totale.
+  const totalePrelievi = filtrati
+    .filter((m) => m.tipo === "PRELIEVO" || m.tipo === "RITIRO_CASSA")
+    .reduce((s, m) => s + m.importo, 0);
   const totaleVersamenti = filtrati.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
   const exportQuery = new URLSearchParams(
     Object.entries(params).filter(([, v]) => Boolean(v)) as [string, string][]
@@ -94,7 +99,12 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
     const contantiPeriodo = delPeriodo
       .filter((m) => m.tipo === "INCASSO" && m.modalitaIncasso === "CONTANTI")
       .reduce((s, m) => s + m.importo, 0);
-    const prelieviPeriodo = delPeriodo.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
+    // Un ritiro cassa in contanti riduce il contante atteso come un prelievo;
+    // uno in assegni no, perché gli assegni non fanno mai parte del conteggio
+    // del contante fisico (non erano mai stati sommati a contantiPeriodo).
+    const prelieviPeriodo = delPeriodo
+      .filter((m) => m.tipo === "PRELIEVO" || (m.tipo === "RITIRO_CASSA" && m.modalitaIncasso === "CONTANTI"))
+      .reduce((s, m) => s + m.importo, 0);
     const versamentiPeriodo = delPeriodo.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
     const atteso = baselineContato + contantiPeriodo - prelieviPeriodo - versamentiPeriodo;
     const differenza = conteggio.importo - atteso;
@@ -329,6 +339,10 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
           <tbody className="divide-y divide-slate-100">
             {filtrati.map((m) => {
               const isAssegno = m.modalitaIncasso === "ASSEGNO";
+              // Fotocopia/timbro/versamento riguardano solo un assegno
+              // ricevuto in incasso, da controllare prima di portarlo in
+              // banca — non un assegno uscito con un ritiro cassa.
+              const isAssegnoIncasso = m.tipo === "INCASSO" && isAssegno;
               return (
                 <tr key={m.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">{formatDate(m.data)}</td>
@@ -350,7 +364,7 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
                   <td className="px-4 py-3 text-slate-600">{m.numeroFattura ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-600">{m.nominativo ?? "—"}</td>
                   <td className="px-4 py-3 text-slate-600">
-                    {isAssegno ? (
+                    {isAssegnoIncasso ? (
                       <div className="flex flex-col gap-1 text-xs">
                         <span className={m.fotocopiaFR ? "text-emerald-700" : "text-slate-400"}>
                           {m.fotocopiaFR ? "✓" : "✗"} Fotocopia f/r
@@ -364,7 +378,7 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
                     )}
                   </td>
                   <td className="px-4 py-3 text-slate-600">
-                    {isAssegno ? (m.dataVersamento ? formatDate(m.dataVersamento) : "Non versato") : "—"}
+                    {isAssegnoIncasso ? (m.dataVersamento ? formatDate(m.dataVersamento) : "Non versato") : "—"}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{m.note ?? "—"}</td>
                   <td className="px-4 py-3 text-right">

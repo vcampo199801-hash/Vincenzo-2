@@ -4,6 +4,11 @@ export const TIPO_MOVIMENTO_OPTIONS = [
   { value: "INCASSO", label: "Incasso" },
   { value: "PRELIEVO", label: "Prelievo" },
   { value: "VERSAMENTO", label: "Versamento" },
+  // Come un Prelievo, ma con modalità (contanti/assegno) e un operatore
+  // scelto tra i membri del team — per tracciare chi ha ritirato cosa dalla
+  // cassa fisica. Due ritiri separati (uno contanti, uno assegno) coprono il
+  // caso di un ritiro "misto" nello stesso momento.
+  { value: "RITIRO_CASSA", label: "Ritiro cassa" },
   // Non è un flusso come gli altri tre, ma un conteggio periodico: "quanto
   // contante c'è davvero, fisicamente, in cassa adesso" — serve a controllare
   // che torni con quanto risulta dagli incassi/prelievi/versamenti registrati.

@@ -39,8 +39,15 @@ function parseDate(value: FormDataEntryValue | null) {
 
 function movimentoPayload(formData: FormData) {
   const tipo = String(formData.get("tipo") ?? "INCASSO");
-  const modalitaIncasso = tipo === "INCASSO" ? String(formData.get("modalitaIncasso") ?? "CONTANTI") : null;
-  const isAssegno = modalitaIncasso === "ASSEGNO";
+  // Il ritiro cassa ha anche lui una modalità (contanti/assegno), come un
+  // incasso — serve per sapere se un ritiro va a ridurre il contante atteso
+  // in cassa (vedi Fondo cassa) oppure no.
+  const modalitaIncasso =
+    tipo === "INCASSO" || tipo === "RITIRO_CASSA" ? String(formData.get("modalitaIncasso") ?? "CONTANTI") : null;
+  // La checklist (fotocopia f/r, timbro RSD) e la data versamento riguardano
+  // solo un assegno in ENTRATA (incasso) da controllare prima di portarlo in
+  // banca — non un assegno che esce dalla cassa con un ritiro.
+  const isAssegnoIncasso = tipo === "INCASSO" && modalitaIncasso === "ASSEGNO";
   const dataVersamentoRaw = String(formData.get("dataVersamento") ?? "").trim();
 
   return {
@@ -54,9 +61,9 @@ function movimentoPayload(formData: FormData) {
     // Checklist e data versamento hanno senso solo per un incasso in assegno:
     // se si cambia modalità, non restano a sporcare un valore impostato in
     // precedenza — stesso trattamento già usato per motivoRifiuto sui preventivi.
-    fotocopiaFR: isAssegno && formData.get("fotocopiaFR") === "on",
-    timbroRSD: isAssegno && formData.get("timbroRSD") === "on",
-    dataVersamento: isAssegno && dataVersamentoRaw ? new Date(dataVersamentoRaw) : null,
+    fotocopiaFR: isAssegnoIncasso && formData.get("fotocopiaFR") === "on",
+    timbroRSD: isAssegnoIncasso && formData.get("timbroRSD") === "on",
+    dataVersamento: isAssegnoIncasso && dataVersamentoRaw ? new Date(dataVersamentoRaw) : null,
     // Utile soprattutto per bonifici e prelievi/versamenti, ma disponibile
     // per qualsiasi movimento — non solo per chi non è un incasso.
     nominativo: String(formData.get("nominativo") ?? "").trim() || null,

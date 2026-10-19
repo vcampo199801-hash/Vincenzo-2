@@ -15,8 +15,12 @@ export default async function EditMovimentoCassaPage({ params }: { params: Promi
   const { studio } = await requireActiveSubscription("kpi");
   const { id } = await params;
 
-  const item = await prisma.movimentoCassa.findFirst({ where: { id, studioId: studio.id } });
+  const [item, membri] = await Promise.all([
+    prisma.movimentoCassa.findFirst({ where: { id, studioId: studio.id } }),
+    prisma.membership.findMany({ where: { studioId: studio.id }, include: { user: true } }),
+  ]);
   if (!item) notFound();
+  const operatori = membri.map((m) => m.user.name ?? m.user.email).sort();
 
   const updateWithId = updateMovimentoCassa.bind(null, item.id);
 
@@ -28,6 +32,7 @@ export default async function EditMovimentoCassaPage({ params }: { params: Promi
         <MovimentoCassaForm
           action={updateWithId}
           submitLabel="Salva modifiche"
+          operatori={operatori}
           defaultValues={{
             tipo: item.tipo,
             data: toIsoDate(item.data),
