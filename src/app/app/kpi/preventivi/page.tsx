@@ -34,6 +34,7 @@ type SearchParams = {
   comeCiHaConosciuto?: string;
   tipoOfferta?: string;
   paziente?: string;
+  scadenza?: string;
   vista?: string;
 };
 
@@ -81,7 +82,8 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
       (!params.assicurazione || p.assicurazione === params.assicurazione) &&
       (!params.comeCiHaConosciuto || p.comeCiHaConosciuto === params.comeCiHaConosciuto) &&
       (!params.tipoOfferta || p.tipoOfferta === params.tipoOfferta) &&
-      (!params.paziente || (p.pazienteNome ?? "").toLowerCase().includes(params.paziente.toLowerCase()))
+      (!params.paziente || (p.pazienteNome ?? "").toLowerCase().includes(params.paziente.toLowerCase())) &&
+      (!params.scadenza || preventivoScadenzaStato(p.scadenza, p.stato) === params.scadenza)
   );
   const exportQuery = new URLSearchParams(
     Object.entries(params).filter(([, v]) => Boolean(v)) as [string, string][]
@@ -177,6 +179,17 @@ export default async function PreventiviPage({ searchParams }: { searchParams: P
                 {s.label}
               </Chip>
             ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">Scadenza</p>
+          <div className="flex flex-wrap gap-1.5">
+            <Chip href={chipHref(params, "scadenza", "SCADUTO")} active={params.scadenza === "SCADUTO"}>
+              Scaduti
+            </Chip>
+            <Chip href={chipHref(params, "scadenza", "IN_SCADENZA")} active={params.scadenza === "IN_SCADENZA"}>
+              In scadenza (7gg)
+            </Chip>
           </div>
         </div>
       </div>
