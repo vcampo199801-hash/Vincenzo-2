@@ -11,7 +11,7 @@ function escapeHtml(text: string) {
 }
 
 // Le sezioni che un destinatario del recap può scegliere di ricevere (vedi
-// RecapDestinatario.sezioni in schema.prisma) — stesso pattern di permessi
+// Membership.recapSezioni in schema.prisma) — stesso pattern di permessi
 // null = "tutte" usato per Membership.permessi in @/lib/modules.
 export const RECAP_SEZIONI = [
   { key: "preventivi", label: "Preventivi caricati" },

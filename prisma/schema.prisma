@@ -103,22 +103,6 @@ model Studio {
   forumSegnalazioni    ForumSegnalazione[]
   richiesteSupporto    RichiestaSupporto[]
   comunicazioniRicevute ComunicazioneInvio[]
-  recapDestinatari     RecapDestinatario[]
-}
-
-// Indirizzi che ricevono il recap giornaliero (vedi src/lib/recap-attivita.ts):
-// uno studio può averne più d'uno (es. segreteria, laboratorio, direzione),
-// ciascuno con le proprie sezioni del recap da ricevere — sezioni null
-// significa "tutte", stesso pattern di Membership.permessi.
-model RecapDestinatario {
-  id        String   @id @default(cuid())
-  studioId  String
-  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  email     String
-  sezioni   String?
-  createdAt DateTime @default(now())
-
-  @@unique([studioId, email])
 }
 
 // Messaggio libero mandato dallo studio al titolare della piattaforma
@@ -191,6 +175,14 @@ model Membership {
   // notificheAttive dello studio, che riguarda solo l'email principale.
   notificheAttive Boolean @default(false)
   notificheEmail  String?
+
+  // Preferenza personale per il recap attività (vedi src/lib/recap-attivita.ts):
+  // ognuno del team lo attiva per sé e sceglie quali sezioni ricevere — a
+  // differenza del promemoria sopra, va sempre e solo alla propria email di
+  // accesso (User.email), non a un indirizzo scelto a parte. recapSezioni
+  // null = tutte le sezioni, stesso pattern di permessi sopra.
+  recapAttivitaAttivo Boolean @default(false)
+  recapSezioni        String?
 
   @@unique([studioId, userId])
   @@index([userId])

@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireSession, requireStudio, isAdminEmail } from "@/lib/auth-guards";
+import { RECAP_SEZIONI, parseSezioniRecap, buildRecapAttivita, renderRecapAttivitaHtml } from "@/lib/recap-attivita";
+import { isEmailConfigured, sendEmail } from "@/lib/email";
 
 export type ChangePasswordState = { error?: string; success?: string } | undefined;
 
@@ -68,6 +70,69 @@ export async function updateNotificationPreference(
 
   revalidatePath("/app/impostazioni");
   return { success: attiva ? `Riceverai il promemoria delle scadenze su ${email}.` : "Promemoria personale disattivato." };
+}
+
+/** Legge le checkbox "sezione_<key>" del form di preferenza del recap
+ * attività: tutte spuntate (o form omesso) → null (nessuna restrizione),
+ * stesso pattern di readPermessi in @/lib/actions/team.ts. */
+function readSezioniRecap(formData: FormData): string | null {
+  const checked = RECAP_SEZIONI.filter((s) => formData.get(`sezione_${s.key}`) === "on").map((s) => s.key);
+  if (checked.length === RECAP_SEZIONI.length) return null;
+  return JSON.stringify(checked);
+}
+
+/** Preferenza personale per il recap attività: ogni membro del team lo attiva
+ * per sé e sceglie quali sezioni ricevere — a differenza del promemoria
+ * scadenze sopra, va sempre alla propria email di accesso, mai a un
+ * indirizzo scelto a parte (vedi commento su Membership.recapAttivitaAttivo
+ * in schema.prisma). */
+export async function updateRecapAttivitaPreference(
+  _prev: NotificationPreferenceState,
+  formData: FormData
+): Promise<NotificationPreferenceState> {
+  const { session, membership } = await requireStudio();
+
+  const attiva = formData.get("recapAttivitaAttivo") === "on";
+  const sezioni = readSezioniRecap(formData);
+
+  if (attiva && sezioni !== null && JSON.parse(sezioni).length === 0) {
+    return { error: "Seleziona almeno una sezione del recap, oppure disattiva il recap." };
+  }
+
+  await prisma.membership.update({
+    where: { id: membership.id },
+    data: { recapAttivitaAttivo: attiva, recapSezioni: attiva ? sezioni : null },
+  });
+
+  revalidatePath("/app/impostazioni");
+  return { success: attiva ? `Riceverai il recap attività su ${session.email}.` : "Recap attività personale disattivato." };
+}
+
+export async function sendTestRecapAttivitaPerMe(): Promise<NotificationPreferenceState> {
+  const { session, studio, membership } = await requireStudio();
+
+  if (!isEmailConfigured()) {
+    return { error: "Le email non sono ancora configurate su questa istanza (manca RESEND_API_KEY/EMAIL_FROM)." };
+  }
+  if (!membership.recapAttivitaAttivo) {
+    return { error: "Attiva prima il recap attività per te qui sopra." };
+  }
+
+  try {
+    const recap = await buildRecapAttivita(studio.id);
+    if (!recap) {
+      return { success: "Nessuna attività registrata oggi: non c'è nulla da segnalare, quindi non è stata inviata alcuna email." };
+    }
+    const sezioni = parseSezioniRecap(membership.recapSezioni);
+    await sendEmail({
+      to: session.email,
+      subject: `Recap attività di oggi — ${studio.name}`,
+      html: renderRecapAttivitaHtml(studio.name, recap, sezioni),
+    });
+    return { success: `Email di recap inviata a ${session.email}.` };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Invio non riuscito." };
+  }
 }
 
 /** Solo per un account admin (vedi ADMIN_EMAILS): attiva l'accesso illimitato

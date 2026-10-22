@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { requireStudio } from "@/lib/auth-guards";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
 import { buildDigestForStudio, renderDigestHtml } from "@/lib/notifications";
-import { buildRecapAttivita, renderRecapAttivitaHtml, parseSezioniRecap } from "@/lib/recap-attivita";
 
 export async function updateStudioInfo(formData: FormData) {
   const { studio } = await requireStudio();
@@ -66,34 +65,3 @@ export async function sendTestDigest(): Promise<TestDigestState> {
   }
 }
 
-export async function sendTestRecapAttivita(): Promise<TestDigestState> {
-  const { studio } = await requireStudio();
-
-  if (!isEmailConfigured()) {
-    return { error: "Le email non sono ancora configurate su questa istanza (manca RESEND_API_KEY/EMAIL_FROM)." };
-  }
-  const destinatari = await prisma.recapDestinatario.findMany({ where: { studioId: studio.id } });
-  if (destinatari.length === 0) {
-    return { error: "Aggiungi prima almeno un destinatario del recap attività qui sotto." };
-  }
-
-  try {
-    const recap = await buildRecapAttivita(studio.id);
-    if (!recap) {
-      return { success: "Nessuna attività registrata oggi: non c'è nulla da segnalare, quindi non è stata inviata alcuna email." };
-    }
-    const inviati: string[] = [];
-    for (const d of destinatari) {
-      const sezioni = parseSezioniRecap(d.sezioni);
-      await sendEmail({
-        to: d.email,
-        subject: `Recap attività di oggi — ${studio.name}`,
-        html: renderRecapAttivitaHtml(studio.name, recap, sezioni),
-      });
-      inviati.push(d.email);
-    }
-    return { success: `Email di recap inviata a: ${inviati.join(", ")}.` };
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : "Invio non riuscito." };
-  }
-}

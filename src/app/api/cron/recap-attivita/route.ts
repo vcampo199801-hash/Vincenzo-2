@@ -24,8 +24,11 @@ export async function GET(req: NextRequest) {
   }
 
   const studios = await prisma.studio.findMany({
-    where: { recapDestinatari: { some: {} } },
-    include: { subscription: true, recapDestinatari: { select: { email: true, sezioni: true } } },
+    where: { memberships: { some: { recapAttivitaAttivo: true } } },
+    include: {
+      subscription: true,
+      memberships: { where: { recapAttivitaAttivo: true }, select: { recapSezioni: true, user: { select: { email: true } } } },
+    },
   });
 
   let sent = 0;
@@ -34,7 +37,8 @@ export async function GET(req: NextRequest) {
     const status = studio.subscription?.status;
     if (!status || !ENTITLED_STATUSES.has(status)) continue;
     try {
-      sent += await sendRecapAttivitaForStudio(studio);
+      const recapDestinatari = studio.memberships.map((m) => ({ email: m.user.email, sezioni: m.recapSezioni }));
+      sent += await sendRecapAttivitaForStudio({ ...studio, recapDestinatari });
     } catch (err) {
       failed++;
       console.error(`Recap attività email failed for studio ${studio.id}:`, err);
