@@ -54,15 +54,6 @@ model Studio {
   // di default spento, ogni studio decide se aderire o meno.
   forumAttivo                    Boolean  @default(false)
   notificheAttive                Boolean  @default(true)
-  // Recap giornaliero (separato dalle notifiche di scadenze sopra) con
-  // preventivi caricati, incassi di Cassa e lavorazioni di laboratorio
-  // movimentate nella giornata — pensato per la Direzione, non per chi usa
-  // l'app sul campo. Di default spento: va attivato esplicitamente.
-  recapAttivitaAttivo            Boolean  @default(false)
-  // Se vuota, in Impostazioni il campo si pre-compila con "email" qui sopra
-  // ma resta un valore indipendente: cambiare l'email dei promemoria non
-  // sposta più questa una volta salvata la prima volta.
-  emailRecapAttivita             String?
   // Se true, i riordini registrati in Magazzino (MovimentoMagazzino) contano
   // anche nel Bilancio generale della Dashboard, non solo nel resoconto
   // interno al modulo Magazzino.
@@ -112,6 +103,22 @@ model Studio {
   forumSegnalazioni    ForumSegnalazione[]
   richiesteSupporto    RichiestaSupporto[]
   comunicazioniRicevute ComunicazioneInvio[]
+  recapDestinatari     RecapDestinatario[]
+}
+
+// Indirizzi che ricevono il recap giornaliero (vedi src/lib/recap-attivita.ts):
+// uno studio può averne più d'uno (es. segreteria, laboratorio, direzione),
+// ciascuno con le proprie sezioni del recap da ricevere — sezioni null
+// significa "tutte", stesso pattern di Membership.permessi.
+model RecapDestinatario {
+  id        String   @id @default(cuid())
+  studioId  String
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  email     String
+  sezioni   String?
+  createdAt DateTime @default(now())
+
+  @@unique([studioId, email])
 }
 
 // Messaggio libero mandato dallo studio al titolare della piattaforma

@@ -10,6 +10,34 @@ function escapeHtml(text: string) {
   return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
 }
 
+// Le sezioni che un destinatario del recap può scegliere di ricevere (vedi
+// RecapDestinatario.sezioni in schema.prisma) — stesso pattern di permessi
+// null = "tutte" usato per Membership.permessi in @/lib/modules.
+export const RECAP_SEZIONI = [
+  { key: "preventivi", label: "Preventivi caricati" },
+  { key: "preventiviAccettati", label: "Preventivi accettati" },
+  { key: "incassi", label: "Incassi di Cassa e POS" },
+  { key: "lavorazioniInviate", label: "Lavorazioni inviate al laboratorio" },
+  { key: "lavorazioniConsegnate", label: "Lavorazioni consegnate dal laboratorio" },
+] as const;
+
+export type RecapSezioneKey = (typeof RECAP_SEZIONI)[number]["key"];
+
+const RECAP_SEZIONE_KEYS = new Set<string>(RECAP_SEZIONI.map((s) => s.key));
+
+/** null return = tutte le sezioni (il campo non è mai stato impostato, oppure
+ * non si è riusciti a interpretarlo — fail open invece di non mandare nulla). */
+export function parseSezioniRecap(raw: string | null | undefined): RecapSezioneKey[] | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter((k): k is RecapSezioneKey => typeof k === "string" && RECAP_SEZIONE_KEYS.has(k));
+  } catch {
+    return null;
+  }
+}
+
 export type RecapAttivita = {
   giorno: Date;
   preventivi: { pazienteNome: string | null; dottore: string; totaleProposto: number; stato: string }[];
@@ -31,6 +59,29 @@ function isVuoto(r: RecapAttivita) {
     r.lavorazioniInviate.length === 0 &&
     r.lavorazioniConsegnate.length === 0
   );
+}
+
+function sezioneHaDati(r: RecapAttivita, key: RecapSezioneKey): boolean {
+  switch (key) {
+    case "preventivi":
+      return r.preventivi.length > 0;
+    case "preventiviAccettati":
+      return r.preventiviAccettatiOggi.length > 0;
+    case "incassi":
+      return r.incassi.length > 0 || r.chiusuraPos > 0;
+    case "lavorazioniInviate":
+      return r.lavorazioniInviate.length > 0;
+    case "lavorazioniConsegnate":
+      return r.lavorazioniConsegnate.length > 0;
+  }
+}
+
+/** Nulla da segnalare nelle sezioni che QUESTO destinatario ha scelto di
+ * ricevere — non vuol dire che il recap intero sia vuoto, solo che non vale
+ * la pena mandare un'email a chi segue solo una parte dell'attività. */
+function recapVuotoPerSezioni(r: RecapAttivita, sezioni: RecapSezioneKey[] | null): boolean {
+  const chiavi = sezioni ?? RECAP_SEZIONI.map((s) => s.key);
+  return !chiavi.some((k) => sezioneHaDati(r, k));
 }
 
 /** "Oggi" allo stesso modo con cui sono salvate le date-giorno nel resto
@@ -73,7 +124,8 @@ export async function buildRecapAttivita(studioId: string, giorno: Date = new Da
   return isVuoto(recap) ? null : recap;
 }
 
-export function renderRecapAttivitaHtml(studioName: string, r: RecapAttivita) {
+export function renderRecapAttivitaHtml(studioName: string, r: RecapAttivita, sezioni: RecapSezioneKey[] | null = null) {
+  const mostra = (key: RecapSezioneKey) => sezioni === null || sezioni.includes(key);
   const righePreventivi = r.preventivi
     .map((p) => `<li>${escapeHtml(p.pazienteNome ?? "Paziente")} — ${escapeHtml(p.dottore)} — ${formatCurrency(p.totaleProposto)} (${escapeHtml(p.stato)})</li>`)
     .join("");
@@ -98,42 +150,48 @@ export function renderRecapAttivitaHtml(studioName: string, r: RecapAttivita) {
     <div style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;max-width:560px;margin:0 auto;">
       <h1 style="font-size:18px;color:#3d7076;">Scadenze in Regola</h1>
       <p>Recap attività di <strong>${escapeHtml(studioName)}</strong> — ${formatDate(r.giorno)}:</p>
-      ${sezione("Preventivi caricati oggi", righePreventivi, "Nessun preventivo caricato oggi.")}
-      ${r.totalePreventiviProposto > 0 ? `<p style="font-size:13px;color:#475569;">Totale proposto oggi: <strong>${formatCurrency(r.totalePreventiviProposto)}</strong></p>` : ""}
-      ${sezione("Preventivi accettati oggi", righeAccettati, "Nessun preventivo accettato oggi.")}
-      ${sezione("Incassi di Cassa oggi", righeIncassi, "Nessun incasso registrato oggi in Cassa.")}
-      ${r.chiusuraPos > 0 ? `<p style="font-size:13px;color:#475569;">Chiusura POS: <strong>${formatCurrency(r.chiusuraPos)}</strong></p>` : ""}
-      <p style="font-size:13px;color:#475569;">Totale incassi oggi (contanti/assegni/bonifici/altro + POS): <strong>${formatCurrency(r.totaleIncassi + r.chiusuraPos)}</strong></p>
-      ${sezione("Lavorazioni inviate al laboratorio oggi", righeInviate, "Nessuna lavorazione inviata oggi.")}
-      ${sezione("Lavorazioni consegnate dal laboratorio oggi", righeConsegnate, "Nessuna lavorazione consegnata oggi.")}
+      ${mostra("preventivi") ? sezione("Preventivi caricati oggi", righePreventivi, "Nessun preventivo caricato oggi.") : ""}
+      ${mostra("preventivi") && r.totalePreventiviProposto > 0 ? `<p style="font-size:13px;color:#475569;">Totale proposto oggi: <strong>${formatCurrency(r.totalePreventiviProposto)}</strong></p>` : ""}
+      ${mostra("preventiviAccettati") ? sezione("Preventivi accettati oggi", righeAccettati, "Nessun preventivo accettato oggi.") : ""}
+      ${mostra("incassi") ? sezione("Incassi di Cassa oggi", righeIncassi, "Nessun incasso registrato oggi in Cassa.") : ""}
+      ${mostra("incassi") && r.chiusuraPos > 0 ? `<p style="font-size:13px;color:#475569;">Chiusura POS: <strong>${formatCurrency(r.chiusuraPos)}</strong></p>` : ""}
+      ${mostra("incassi") ? `<p style="font-size:13px;color:#475569;">Totale incassi oggi (contanti/assegni/bonifici/altro + POS): <strong>${formatCurrency(r.totaleIncassi + r.chiusuraPos)}</strong></p>` : ""}
+      ${mostra("lavorazioniInviate") ? sezione("Lavorazioni inviate al laboratorio oggi", righeInviate, "Nessuna lavorazione inviata oggi.") : ""}
+      ${mostra("lavorazioniConsegnate") ? sezione("Lavorazioni consegnate dal laboratorio oggi", righeConsegnate, "Nessuna lavorazione consegnata oggi.") : ""}
       <p style="margin-top:24px;">
         <a href="${APP_URL()}/app/kpi/preventivi" style="background:#4e888f;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:14px;">
           Apri Scadenze in Regola
         </a>
       </p>
       <p style="margin-top:24px;font-size:12px;color:#94a3b8;">
-        Ricevi questo recap perché è attivo in Impostazioni → Notifiche. Puoi disattivarlo o cambiare l'indirizzo da lì in qualsiasi momento.
+        Ricevi questo recap perché il tuo indirizzo è stato aggiunto in Impostazioni → Notifiche → Recap attività. Il titolare dello studio può modificare le sezioni che ricevi o rimuoverti da lì in qualsiasi momento.
       </p>
     </div>
   `;
 }
 
+/** Manda il recap a ogni destinatario configurato, filtrando per lui le sole
+ * sezioni che ha scelto di ricevere — e saltandolo del tutto se quelle
+ * sezioni non hanno nulla da segnalare oggi, anche se il resto del recap no.
+ * Ritorna quante email sono state effettivamente inviate. */
 export async function sendRecapAttivitaForStudio(studio: {
   id: string;
   name: string;
-  email: string | null;
-  recapAttivitaAttivo: boolean;
-  emailRecapAttivita: string | null;
+  recapDestinatari: { email: string; sezioni: string | null }[];
 }) {
-  if (!studio.recapAttivitaAttivo) return false;
-  const destinatario = studio.emailRecapAttivita || studio.email;
-  if (!destinatario) return false;
-  if (!isEmailConfigured()) return false;
+  if (studio.recapDestinatari.length === 0) return 0;
+  if (!isEmailConfigured()) return 0;
 
   const recap = await buildRecapAttivita(studio.id);
-  if (!recap) return false;
+  if (!recap) return 0;
 
-  const html = renderRecapAttivitaHtml(studio.name, recap);
-  await sendEmail({ to: destinatario, subject: `Recap attività di oggi — ${studio.name}`, html });
-  return true;
+  let inviate = 0;
+  for (const d of studio.recapDestinatari) {
+    const sezioni = parseSezioniRecap(d.sezioni);
+    if (recapVuotoPerSezioni(recap, sezioni)) continue;
+    const html = renderRecapAttivitaHtml(studio.name, recap, sezioni);
+    await sendEmail({ to: d.email, subject: `Recap attività di oggi — ${studio.name}`, html });
+    inviate++;
+  }
+  return inviate;
 }

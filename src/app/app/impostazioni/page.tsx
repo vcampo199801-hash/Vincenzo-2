@@ -2,6 +2,7 @@ import { requireStudio, isAdminEmail } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { updateStudioInfo } from "@/lib/actions/studio";
 import { removeMember } from "@/lib/actions/team";
+import { removeRecapDestinatario } from "@/lib/actions/recap-destinatari";
 import { attivaAccessoIllimitatoPerMe } from "@/lib/actions/account";
 import { aggiungiPostiExtra, rimuoviPostiExtra } from "@/lib/actions/billing";
 import { isPostiExtraConfigured } from "@/lib/stripe";
@@ -16,10 +17,13 @@ import { NotificationPreferenceForm } from "@/components/app/notification-prefer
 import { MemberPermissionsForm } from "@/components/app/member-permissions-form";
 import { TestDigestButton } from "@/components/app/test-digest-button";
 import { TestRecapAttivitaButton } from "@/components/app/test-recap-attivita-button";
+import { AddRecapDestinatarioForm } from "@/components/app/add-recap-destinatario-form";
+import { RecapDestinatarioSezioniForm } from "@/components/app/recap-destinatario-sezioni-form";
 import { TableScroll } from "@/components/ui/table-scroll";
 import { formatDate } from "@/lib/compliance";
 import { isEmailConfigured } from "@/lib/email";
 import { parsePermessi, APP_MODULES } from "@/lib/modules";
+import { RECAP_SEZIONI, parseSezioniRecap } from "@/lib/recap-attivita";
 import { normalizzaPiano, maxCollaboratoriEffettivo, POSTI_EXTRA_PER_BLOCCO, PREZZO_EURO_POSTI_EXTRA } from "@/lib/plans";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
@@ -40,6 +44,15 @@ export default async function ImpostazioniPage({
     where: { studioId: studio.id },
     include: { user: true },
     orderBy: { createdAt: "asc" },
+  });
+  const recapDestinatariRaw = await prisma.recapDestinatario.findMany({
+    where: { studioId: studio.id },
+    orderBy: { createdAt: "asc" },
+  });
+  const recapDestinatari = recapDestinatariRaw.map((d) => {
+    const allowedKeys = parseSezioniRecap(d.sezioni);
+    const sezioniLabel = allowedKeys === null ? "Tutte le sezioni" : `${allowedKeys.length}/${RECAP_SEZIONI.length} sezioni`;
+    return { ...d, allowedKeys, sezioniLabel };
   });
   const ownMembership = memberships.find((m) => m.userId === session.userId);
   const isOwner = ownMembership?.role === "OWNER";
@@ -120,22 +133,6 @@ export default async function ImpostazioniPage({
             name="notificheAttive"
             defaultChecked={studio.notificheAttive}
           />
-          <div className="border-t border-slate-100 pt-4">
-            <CheckboxField
-              label="Ricevi ogni giorno un recap dell'attività (preventivi caricati, incassi di Cassa, lavorazioni di laboratorio)"
-              name="recapAttivitaAttivo"
-              defaultChecked={studio.recapAttivitaAttivo}
-            />
-            <div className="mt-3">
-              <Field
-                label="Email per il recap attività"
-                name="emailRecapAttivita"
-                type="email"
-                defaultValue={studio.emailRecapAttivita ?? studio.email}
-                hint="Pensato per la Direzione: può essere un indirizzo diverso da quello dei promemoria di scadenze qui sopra. Parte precompilato con la stessa email, ma da qui in poi i due campi restano indipendenti."
-              />
-            </div>
-          </div>
           <SubmitButton>Salva impostazioni</SubmitButton>
         </form>
         </UnsavedChangesGuard>
@@ -153,8 +150,39 @@ export default async function ImpostazioniPage({
             <TestDigestButton />
           </div>
           <div className="border-t border-slate-100 pt-4">
-            <p className="mb-2 text-sm font-medium text-slate-700">Recap attività</p>
-            <TestRecapAttivitaButton />
+            <p className="mb-1 text-sm font-medium text-slate-700">Recap attività</p>
+            <p className="mb-3 text-xs text-slate-500">
+              Un riepilogo a fine giornata di preventivi caricati, incassi di Cassa e lavorazioni di laboratorio.
+              Puoi mandarlo a più indirizzi diversi (es. segreteria, laboratorio, direzione), scegliendo per
+              ciascuno quali sezioni ricevere.
+            </p>
+
+            {recapDestinatari.length > 0 && (
+              <div className="mb-4 space-y-2">
+                {recapDestinatari.map((d) => (
+                  <details key={d.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <summary className="flex cursor-pointer items-center justify-between gap-3">
+                      <span className="min-w-0 truncate text-sm font-medium text-slate-800">{d.email}</span>
+                      <span className="shrink-0 text-xs text-slate-500">{d.sezioniLabel}</span>
+                    </summary>
+                    <div className="mt-3 space-y-3">
+                      <RecapDestinatarioSezioniForm destinatarioId={d.id} allowedKeys={d.allowedKeys} />
+                      <DeleteButton
+                        action={removeRecapDestinatario.bind(null, d.id)}
+                        label="Rimuovi destinatario"
+                        confirmMessage={`Confermi di voler rimuovere ${d.email} dai destinatari del recap attività?`}
+                      />
+                    </div>
+                  </details>
+                ))}
+              </div>
+            )}
+
+            <AddRecapDestinatarioForm />
+
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <TestRecapAttivitaButton />
+            </div>
             {!isEmailConfigured() && (
               <p className="mt-3 text-xs text-slate-400">
                 Nota per lo sviluppatore: imposta RESEND_API_KEY e EMAIL_FROM in .env per abilitare l&apos;invio reale.
