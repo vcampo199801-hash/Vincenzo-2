@@ -20,7 +20,7 @@ import { TableScroll } from "@/components/ui/table-scroll";
 import { formatDate } from "@/lib/compliance";
 import { isEmailConfigured } from "@/lib/email";
 import { parsePermessi, APP_MODULES } from "@/lib/modules";
-import { parseSezioniRecap } from "@/lib/recap-attivita";
+import { parseSezioniRecap, sezioniRecapConsentite } from "@/lib/recap-attivita";
 import { normalizzaPiano, maxCollaboratoriEffettivo, POSTI_EXTRA_PER_BLOCCO, PREZZO_EURO_POSTI_EXTRA } from "@/lib/plans";
 import { UnsavedChangesGuard } from "@/components/app/unsaved-changes-guard";
 
@@ -175,6 +175,7 @@ export default async function ImpostazioniPage({
           <RecapAttivitaPreferenceForm
             defaultChecked={ownMembership?.recapAttivitaAttivo ?? false}
             defaultSezioni={parseSezioniRecap(ownMembership?.recapSezioni)}
+            consentite={sezioniRecapConsentite(ownMembership?.permessi, ownMembership?.role ?? "MEMBER")}
             email={session.email}
           />
           {isAdminEmail(session.email) && (
@@ -207,7 +208,8 @@ export default async function ImpostazioniPage({
         <p className="mb-3 text-sm text-slate-500">
           Il titolare più un massimo di {maxCollaboratori} collaborator{maxCollaboratori === 1 ? "e" : "i"} per il
           tuo piano ({collaboratorCount}/{maxCollaboratori} usati) — tutti possono accedere in contemporanea da
-          telefono e computer. Per ogni collaboratore puoi scegliere quali sezioni può vedere.
+          telefono e computer. Per ogni collaboratore puoi scegliere quali sezioni può vedere — e le stesse
+          restrizioni valgono anche per il recap attività che può scegliere di ricevere (Impostazioni → Account).
           {atCap && (
             <>
               {" "}

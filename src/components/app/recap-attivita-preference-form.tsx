@@ -9,10 +9,12 @@ import type { RecapSezioneKey } from "@/lib/recap-attivita";
 export function RecapAttivitaPreferenceForm({
   defaultChecked,
   defaultSezioni,
+  consentite,
   email,
 }: {
   defaultChecked: boolean;
   defaultSezioni: RecapSezioneKey[] | null;
+  consentite: RecapSezioneKey[];
   email: string;
 }) {
   const [state, formAction] = useActionState(updateRecapAttivitaPreference, undefined);
@@ -25,8 +27,8 @@ export function RecapAttivitaPreferenceForm({
       <p className="text-xs text-slate-500">
         Un riepilogo a fine giornata di preventivi caricati, incassi di Cassa e lavorazioni di laboratorio, sulla tua
         email di accesso (<strong>{email}</strong>). Ognuno del team lo attiva per sé, scegliendo quali sezioni
-        ricevere — utile per far arrivare solo le informazioni utili a ciascuna area (es. segreteria, laboratorio,
-        direzione).
+        ricevere tra quelle delle sue sezioni dell&apos;app — così, ad esempio, chi non ha accesso a Bilancio/Cassa
+        non può comunque farsi mandare gli incassi via recap.
       </p>
       <form action={formAction} className="space-y-3">
         <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
@@ -39,7 +41,7 @@ export function RecapAttivitaPreferenceForm({
           />
           Ricevi anche tu il recap attività
         </label>
-        {attiva && <RecapSezioniCheckboxes allowedKeys={defaultSezioni} />}
+        {attiva && <RecapSezioniCheckboxes allowedKeys={defaultSezioni} consentite={consentite} />}
         {state?.success && (
           <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{state.success}</p>
         )}

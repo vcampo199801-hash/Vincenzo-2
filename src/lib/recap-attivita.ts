@@ -3,6 +3,7 @@ import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { formatCurrency, formatDate } from "@/lib/compliance";
 import { toIsoDate } from "@/lib/kpi";
 import { MODALITA_INCASSO_OPTIONS, optionLabelCassa } from "@/lib/cassa";
+import { hasModuleAccess, type ModuleKey } from "@/lib/modules";
 
 const APP_URL = () => process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -12,14 +13,19 @@ function escapeHtml(text: string) {
 
 // Le sezioni che un destinatario del recap può scegliere di ricevere (vedi
 // Membership.recapSezioni in schema.prisma) — stesso pattern di permessi
-// null = "tutte" usato per Membership.permessi in @/lib/modules.
+// null = "tutte" usato per Membership.permessi in @/lib/modules. Ogni sezione
+// è legata al modulo dell'app che mostra quei dati: un collaboratore può
+// scegliere di ricevere una sezione solo se ha accesso al modulo
+// corrispondente (vedi sezioniRecapConsentite sotto) — altrimenti, ad
+// esempio, chi non vede Bilancio/Cassa potrebbe comunque farsi mandare gli
+// incassi via recap, aggirando i permessi impostati dal titolare.
 export const RECAP_SEZIONI = [
-  { key: "preventivi", label: "Preventivi caricati" },
-  { key: "preventiviAccettati", label: "Preventivi accettati" },
-  { key: "incassi", label: "Incassi di Cassa e POS" },
-  { key: "lavorazioniInviate", label: "Lavorazioni inviate al laboratorio" },
-  { key: "lavorazioniConsegnate", label: "Lavorazioni consegnate dal laboratorio" },
-] as const;
+  { key: "preventivi", label: "Preventivi caricati", modulo: "kpi" },
+  { key: "preventiviAccettati", label: "Preventivi accettati", modulo: "kpi" },
+  { key: "incassi", label: "Incassi di Cassa e POS", modulo: "kpi" },
+  { key: "lavorazioniInviate", label: "Lavorazioni inviate al laboratorio", modulo: "laboratori" },
+  { key: "lavorazioniConsegnate", label: "Lavorazioni consegnate dal laboratorio", modulo: "laboratori" },
+] as const satisfies readonly { key: string; label: string; modulo: ModuleKey }[];
 
 export type RecapSezioneKey = (typeof RECAP_SEZIONI)[number]["key"];
 
@@ -36,6 +42,24 @@ export function parseSezioniRecap(raw: string | null | undefined): RecapSezioneK
   } catch {
     return null;
   }
+}
+
+/** Le sezioni del recap che un membro può scegliere di ricevere, in base ai
+ * permessi che ha sui moduli dell'app (titolare = sempre tutte). */
+export function sezioniRecapConsentite(permessi: string | null | undefined, role: string): RecapSezioneKey[] {
+  return RECAP_SEZIONI.filter((s) => hasModuleAccess(permessi, role, s.modulo)).map((s) => s.key);
+}
+
+/** Le sezioni che un membro riceve davvero: l'incrocio tra ciò che ha scelto
+ * (null = tutte quelle consentite) e ciò che i suoi permessi gli consentono
+ * ORA — ricalcolato a ogni invio, così se il titolare restringe i permessi
+ * dopo che il recap era già stato attivato, chi non ha più accesso a un
+ * modulo smette di ricevere quella sezione senza dover risalvare nulla. */
+export function sezioniRecapEffettive(sezioniSalvate: string | null, permessi: string | null | undefined, role: string): RecapSezioneKey[] | null {
+  const consentite = sezioniRecapConsentite(permessi, role);
+  const scelte = parseSezioniRecap(sezioniSalvate);
+  const effettive = scelte === null ? consentite : scelte.filter((k) => consentite.includes(k));
+  return effettive.length === RECAP_SEZIONI.length ? null : effettive;
 }
 
 export type RecapAttivita = {
@@ -164,20 +188,21 @@ export function renderRecapAttivitaHtml(studioName: string, r: RecapAttivita, se
         </a>
       </p>
       <p style="margin-top:24px;font-size:12px;color:#94a3b8;">
-        Ricevi questo recap perché il tuo indirizzo è stato aggiunto in Impostazioni → Notifiche → Recap attività. Il titolare dello studio può modificare le sezioni che ricevi o rimuoverti da lì in qualsiasi momento.
+        Ricevi questo recap perché lo hai attivato tu in Impostazioni → Account. Puoi modificare le sezioni che ricevi, nei limiti dei tuoi permessi, o disattivarlo del tutto da lì in qualsiasi momento.
       </p>
     </div>
   `;
 }
 
 /** Manda il recap a ogni destinatario configurato, filtrando per lui le sole
- * sezioni che ha scelto di ricevere — e saltandolo del tutto se quelle
- * sezioni non hanno nulla da segnalare oggi, anche se il resto del recap no.
- * Ritorna quante email sono state effettivamente inviate. */
+ * sezioni che ha scelto di ricevere E a cui ha accesso in base ai suoi
+ * permessi sui moduli (vedi sezioniRecapEffettive) — e saltandolo del tutto
+ * se quelle sezioni non hanno nulla da segnalare oggi, anche se il resto del
+ * recap no. Ritorna quante email sono state effettivamente inviate. */
 export async function sendRecapAttivitaForStudio(studio: {
   id: string;
   name: string;
-  recapDestinatari: { email: string; sezioni: string | null }[];
+  recapDestinatari: { email: string; sezioni: string | null; permessi: string | null; role: string }[];
 }) {
   if (studio.recapDestinatari.length === 0) return 0;
   if (!isEmailConfigured()) return 0;
@@ -187,7 +212,7 @@ export async function sendRecapAttivitaForStudio(studio: {
 
   let inviate = 0;
   for (const d of studio.recapDestinatari) {
-    const sezioni = parseSezioniRecap(d.sezioni);
+    const sezioni = sezioniRecapEffettive(d.sezioni, d.permessi, d.role);
     if (recapVuotoPerSezioni(recap, sezioni)) continue;
     const html = renderRecapAttivitaHtml(studio.name, recap, sezioni);
     await sendEmail({ to: d.email, subject: `Recap attività di oggi — ${studio.name}`, html });

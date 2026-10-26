@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireSession, requireStudio, isAdminEmail } from "@/lib/auth-guards";
-import { RECAP_SEZIONI, parseSezioniRecap, buildRecapAttivita, renderRecapAttivitaHtml } from "@/lib/recap-attivita";
+import { sezioniRecapConsentite, sezioniRecapEffettive, buildRecapAttivita, renderRecapAttivitaHtml } from "@/lib/recap-attivita";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
 
 export type ChangePasswordState = { error?: string; success?: string } | undefined;
@@ -73,19 +73,23 @@ export async function updateNotificationPreference(
 }
 
 /** Legge le checkbox "sezione_<key>" del form di preferenza del recap
- * attività: tutte spuntate (o form omesso) → null (nessuna restrizione),
- * stesso pattern di readPermessi in @/lib/actions/team.ts. */
-function readSezioniRecap(formData: FormData): string | null {
-  const checked = RECAP_SEZIONI.filter((s) => formData.get(`sezione_${s.key}`) === "on").map((s) => s.key);
-  if (checked.length === RECAP_SEZIONI.length) return null;
+ * attività, considerando solo quelle tra le sezioni consentite a questo
+ * membro (le altre non sono nemmeno renderizzate nel form, ma per sicurezza
+ * una checkbox con un nome diverso inviata a mano verrebbe comunque
+ * ignorata): tutte le consentite spuntate → null (nessuna restrizione tra
+ * quelle che ha), stesso pattern di readPermessi in @/lib/actions/team.ts. */
+function readSezioniRecap(formData: FormData, consentite: ReturnType<typeof sezioniRecapConsentite>): string | null {
+  const checked = consentite.filter((k) => formData.get(`sezione_${k}`) === "on");
+  if (checked.length === consentite.length) return null;
   return JSON.stringify(checked);
 }
 
 /** Preferenza personale per il recap attività: ogni membro del team lo attiva
- * per sé e sceglie quali sezioni ricevere — a differenza del promemoria
- * scadenze sopra, va sempre alla propria email di accesso, mai a un
- * indirizzo scelto a parte (vedi commento su Membership.recapAttivitaAttivo
- * in schema.prisma). */
+ * per sé e sceglie quali sezioni ricevere, tra quelle dei moduli a cui ha
+ * accesso (vedi sezioniRecapConsentite) — così chi non ha accesso a un
+ * modulo non può comunque farsi mandare quei dati via recap. Va sempre alla
+ * propria email di accesso, mai a un indirizzo scelto a parte (vedi commento
+ * su Membership.recapAttivitaAttivo in schema.prisma). */
 export async function updateRecapAttivitaPreference(
   _prev: NotificationPreferenceState,
   formData: FormData
@@ -93,7 +97,8 @@ export async function updateRecapAttivitaPreference(
   const { session, membership } = await requireStudio();
 
   const attiva = formData.get("recapAttivitaAttivo") === "on";
-  const sezioni = readSezioniRecap(formData);
+  const consentite = sezioniRecapConsentite(membership.permessi, membership.role);
+  const sezioni = readSezioniRecap(formData, consentite);
 
   if (attiva && sezioni !== null && JSON.parse(sezioni).length === 0) {
     return { error: "Seleziona almeno una sezione del recap, oppure disattiva il recap." };
@@ -123,7 +128,7 @@ export async function sendTestRecapAttivitaPerMe(): Promise<NotificationPreferen
     if (!recap) {
       return { success: "Nessuna attività registrata oggi: non c'è nulla da segnalare, quindi non è stata inviata alcuna email." };
     }
-    const sezioni = parseSezioniRecap(membership.recapSezioni);
+    const sezioni = sezioniRecapEffettive(membership.recapSezioni, membership.permessi, membership.role);
     await sendEmail({
       to: session.email,
       subject: `Recap attività di oggi — ${studio.name}`,

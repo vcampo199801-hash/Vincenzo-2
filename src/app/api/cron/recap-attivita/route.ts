@@ -27,7 +27,10 @@ export async function GET(req: NextRequest) {
     where: { memberships: { some: { recapAttivitaAttivo: true } } },
     include: {
       subscription: true,
-      memberships: { where: { recapAttivitaAttivo: true }, select: { recapSezioni: true, user: { select: { email: true } } } },
+      memberships: {
+        where: { recapAttivitaAttivo: true },
+        select: { recapSezioni: true, permessi: true, role: true, user: { select: { email: true } } },
+      },
     },
   });
 
@@ -37,7 +40,12 @@ export async function GET(req: NextRequest) {
     const status = studio.subscription?.status;
     if (!status || !ENTITLED_STATUSES.has(status)) continue;
     try {
-      const recapDestinatari = studio.memberships.map((m) => ({ email: m.user.email, sezioni: m.recapSezioni }));
+      const recapDestinatari = studio.memberships.map((m) => ({
+        email: m.user.email,
+        sezioni: m.recapSezioni,
+        permessi: m.permessi,
+        role: m.role,
+      }));
       sent += await sendRecapAttivitaForStudio({ ...studio, recapDestinatari });
     } catch (err) {
       failed++;
