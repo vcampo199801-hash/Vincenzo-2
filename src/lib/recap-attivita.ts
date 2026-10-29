@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { formatCurrency, formatDate } from "@/lib/compliance";
-import { toIsoDate } from "@/lib/kpi";
+import { toIsoDate, optionLabelKpi, STATO_PREVENTIVO_OPTIONS, MODALITA_PAGAMENTO_OPTIONS, TIPO_PAZIENTE_OPTIONS } from "@/lib/kpi";
 import { MODALITA_INCASSO_OPTIONS, optionLabelCassa } from "@/lib/cassa";
 import { hasModuleAccess, type ModuleKey } from "@/lib/modules";
 
@@ -64,7 +64,19 @@ export function sezioniRecapEffettive(sezioniSalvate: string | null, permessi: s
 
 export type RecapAttivita = {
   giorno: Date;
-  preventivi: { pazienteNome: string | null; dottore: string; totaleProposto: number; stato: string }[];
+  preventivi: {
+    pazienteNome: string | null;
+    dottore: string;
+    commerciale: string | null;
+    tipoPaziente: string | null;
+    totaleProposto: number;
+    totaleAccettato: number | null;
+    stato: string;
+    modalitaPagamento: string | null;
+    scadenza: Date | null;
+    dataAccettazione: Date | null;
+    note: string | null;
+  }[];
   totalePreventiviProposto: number;
   preventiviAccettatiOggi: { pazienteNome: string | null; totaleAccettato: number | null }[];
   incassi: { importo: number; modalitaIncasso: string | null; nominativo: string | null }[];
@@ -113,7 +125,22 @@ function recapVuotoPerSezioni(r: RecapAttivita, sezioni: RecapSezioneKey[] | nul
  * nella pagina Cassa. */
 export async function buildRecapAttivita(studioId: string, giorno: Date = new Date(new Date(toIsoDate(new Date())))): Promise<RecapAttivita | null> {
   const [preventiviOggi, preventiviAccettatiOggi, incassiOggi, kpiOggi, lavorazioniInviateOggi, lavorazioniConsegnateOggi] = await Promise.all([
-    prisma.preventivo.findMany({ where: { studioId, data: giorno }, select: { pazienteNome: true, dottore: true, totaleProposto: true, stato: true } }),
+    prisma.preventivo.findMany({
+      where: { studioId, data: giorno },
+      select: {
+        pazienteNome: true,
+        dottore: true,
+        commerciale: true,
+        tipoPaziente: true,
+        totaleProposto: true,
+        totaleAccettato: true,
+        stato: true,
+        modalitaPagamento: true,
+        scadenza: true,
+        dataAccettazione: true,
+        note: true,
+      },
+    }),
     prisma.preventivo.findMany({
       where: { studioId, dataAccettazione: giorno },
       select: { pazienteNome: true, totaleAccettato: true },
@@ -150,8 +177,26 @@ export async function buildRecapAttivita(studioId: string, giorno: Date = new Da
 
 export function renderRecapAttivitaHtml(studioName: string, r: RecapAttivita, sezioni: RecapSezioneKey[] | null = null) {
   const mostra = (key: RecapSezioneKey) => sezioni === null || sezioni.includes(key);
+  const campo = (etichetta: string, valore: string) => `<p style="margin:2px 0;font-size:13px;">${etichetta}: ${valore}</p>`;
   const righePreventivi = r.preventivi
-    .map((p) => `<li>${escapeHtml(p.pazienteNome ?? "Paziente")} — ${escapeHtml(p.dottore)} — ${formatCurrency(p.totaleProposto)} (${escapeHtml(p.stato)})</li>`)
+    .map(
+      (p) => `
+        <li style="list-style:none;margin-bottom:12px;">
+          <div style="background:#f8fafc;border-radius:8px;padding:10px 12px;">
+            <p style="margin:0 0 4px;font-weight:bold;">${escapeHtml(p.pazienteNome ?? "Paziente")}</p>
+            ${campo("Tipo paziente", escapeHtml(optionLabelKpi(TIPO_PAZIENTE_OPTIONS, p.tipoPaziente)))}
+            ${campo("Medico", escapeHtml(p.dottore))}
+            ${campo("Commerciale", p.commerciale ? escapeHtml(p.commerciale) : "—")}
+            ${campo("Proposto", `${formatCurrency(p.totaleProposto)} – Accettato: ${p.totaleAccettato !== null ? formatCurrency(p.totaleAccettato) : "—"}`)}
+            ${campo("Stato", escapeHtml(optionLabelKpi(STATO_PREVENTIVO_OPTIONS, p.stato)))}
+            ${campo("Metodo pagamento", p.modalitaPagamento ? escapeHtml(optionLabelKpi(MODALITA_PAGAMENTO_OPTIONS, p.modalitaPagamento)) : "—")}
+            ${campo("Data accettazione", p.dataAccettazione ? formatDate(p.dataAccettazione) : "—")}
+            ${campo("Scadenza preventivo", p.scadenza ? formatDate(p.scadenza) : "—")}
+            ${campo("Note", p.note ? escapeHtml(p.note) : "—")}
+          </div>
+        </li>
+      `
+    )
     .join("");
   const righeAccettati = r.preventiviAccettatiOggi
     .map((p) => `<li>${escapeHtml(p.pazienteNome ?? "Paziente")} — ${p.totaleAccettato !== null ? formatCurrency(p.totaleAccettato) : "—"}</li>`)
