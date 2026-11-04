@@ -59,13 +59,14 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
           .reduce((s, g) => s + g.chiusuraPos, 0)
       : 0;
   const totaleIncassi = totaleContanti + totaleAssegni + totaleBonifici + totaleFinanziamento + totalePagodil + totalePos;
-  // Un ritiro cassa è concettualmente un prelievo (valore che esce dalla
-  // cassa), solo con più dettaglio su chi l'ha fatto e con cosa — conta
-  // quindi insieme ai prelievi nel totale.
-  const totalePrelievi = filtrati
-    .filter((m) => m.tipo === "PRELIEVO" || m.tipo === "RITIRO_CASSA")
-    .reduce((s, m) => s + m.importo, 0);
+  const totalePrelievi = filtrati.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
   const totaleVersamenti = filtrati.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
+  // Un ritiro cassa esce dalla cassa fisica esattamente come un prelievo (per
+  // questo nella riconciliazione del fondo cassa più sotto conta insieme ai
+  // prelievi), ma qui nei totali riassuntivi ha una card tutta sua: raggruppato
+  // dentro "Totale prelievi" risultava invisibile e creava confusione su dove
+  // fosse finito quell'importo.
+  const totaleRitiriCassa = filtrati.filter((m) => m.tipo === "RITIRO_CASSA").reduce((s, m) => s + m.importo, 0);
   const exportQuery = new URLSearchParams(
     Object.entries(params).filter(([, v]) => Boolean(v)) as [string, string][]
   ).toString();
@@ -232,7 +233,7 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
         )}
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Totale incassi — tutte le modalità (periodo filtrato)</p>
           <p className="mt-1 text-2xl font-bold text-emerald-700">{formatCurrency(totaleIncassi)}</p>
@@ -240,6 +241,10 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Totale prelievi (periodo filtrato)</p>
           <p className="mt-1 text-2xl font-bold text-red-700">{formatCurrency(totalePrelievi)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs text-slate-500">Totale ritiri cassa (periodo filtrato)</p>
+          <p className="mt-1 text-2xl font-bold text-red-700">{formatCurrency(totaleRitiriCassa)}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Totale versamenti (periodo filtrato)</p>
