@@ -61,12 +61,13 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
   const totaleIncassi = totaleContanti + totaleAssegni + totaleBonifici + totaleFinanziamento + totalePagodil + totalePos;
   const totalePrelievi = filtrati.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
   const totaleVersamenti = filtrati.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
-  // Un ritiro cassa esce dalla cassa fisica esattamente come un prelievo (per
-  // questo nella riconciliazione del fondo cassa più sotto conta insieme ai
-  // prelievi), ma qui nei totali riassuntivi ha una card tutta sua: raggruppato
-  // dentro "Totale prelievi" risultava invisibile e creava confusione su dove
-  // fosse finito quell'importo.
+  // Il ritiro cassa è la conferma che un accumulo di versamenti (messi da
+  // parte giorno dopo giorno) è stato fisicamente portato in banca — non
+  // riduce di nuovo il contante (vedi commento nella riconciliazione fondo
+  // cassa qui sotto), ma "azzera" quell'accumulo: la cifra ancora da
+  // ritirare è la differenza tra quanto versato e quanto già ritirato.
   const totaleRitiriCassa = filtrati.filter((m) => m.tipo === "RITIRO_CASSA").reduce((s, m) => s + m.importo, 0);
+  const versamentiDaRitirare = totaleVersamenti - totaleRitiriCassa;
   const exportQuery = new URLSearchParams(
     Object.entries(params).filter(([, v]) => Boolean(v)) as [string, string][]
   ).toString();
@@ -100,12 +101,14 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
     const contantiPeriodo = delPeriodo
       .filter((m) => m.tipo === "INCASSO" && m.modalitaIncasso === "CONTANTI")
       .reduce((s, m) => s + m.importo, 0);
-    // Un ritiro cassa in contanti riduce il contante atteso come un prelievo;
-    // uno in assegni no, perché gli assegni non fanno mai parte del conteggio
-    // del contante fisico (non erano mai stati sommati a contantiPeriodo).
-    const prelieviPeriodo = delPeriodo
-      .filter((m) => m.tipo === "PRELIEVO" || (m.tipo === "RITIRO_CASSA" && m.modalitaIncasso === "CONTANTI"))
-      .reduce((s, m) => s + m.importo, 0);
+    // Il ritiro cassa NON va contato qui: nel flusso di questo studio il
+    // contante esce dalla cassa fisica quando viene dichiarato come
+    // "Versamento" (giorno per giorno, finché si accumula), non quando
+    // l'accumulo viene poi ritirato e portato in banca — il ritiro cassa è
+    // solo la conferma amministrativa di quella consegna, sullo stesso
+    // denaro già sottratto come versamento. Contarlo anche qui lo avrebbe
+    // tolto una seconda volta dal contante atteso.
+    const prelieviPeriodo = delPeriodo.filter((m) => m.tipo === "PRELIEVO").reduce((s, m) => s + m.importo, 0);
     const versamentiPeriodo = delPeriodo.filter((m) => m.tipo === "VERSAMENTO").reduce((s, m) => s + m.importo, 0);
     const atteso = baselineContato + contantiPeriodo - prelieviPeriodo - versamentiPeriodo;
     const differenza = conteggio.importo - atteso;
@@ -200,7 +203,8 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
           soldi in banca, registra il versamento e poi un nuovo conteggio con quello che resta in cassa, così il
           controllo del giorno dopo riparte da lì. Qui sotto trovi lo storico di tutti i controlli fatti, ognuno
           confrontato con quanto ci si aspettava in base agli incassi in contanti, prelievi e versamenti registrati
-          dal conteggio precedente.
+          dal conteggio precedente. Il ritiro cassa non conta qui: segna solo quando l&apos;accumulo dei versamenti
+          viene portato in banca, sullo stesso denaro già tolto dal contante atteso al momento del versamento.
         </p>
         {ultimoFondoCassa ? (
           <div className="space-y-2">
@@ -233,7 +237,7 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
         )}
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Totale incassi — tutte le modalità (periodo filtrato)</p>
           <p className="mt-1 text-2xl font-bold text-emerald-700">{formatCurrency(totaleIncassi)}</p>
@@ -243,12 +247,19 @@ export default async function CassaPage({ searchParams }: { searchParams: Promis
           <p className="mt-1 text-2xl font-bold text-red-700">{formatCurrency(totalePrelievi)}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs text-slate-500">Totale ritiri cassa (periodo filtrato)</p>
+          <p className="text-xs text-slate-500">Totale versamenti (periodo filtrato)</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{formatCurrency(totaleVersamenti)}</p>
+        </div>
+      </div>
+
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs text-slate-500">Totale ritiri cassa — portati in banca (periodo filtrato)</p>
           <p className="mt-1 text-2xl font-bold text-red-700">{formatCurrency(totaleRitiriCassa)}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs text-slate-500">Totale versamenti (periodo filtrato)</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{formatCurrency(totaleVersamenti)}</p>
+          <p className="text-xs text-slate-500">Versamenti ancora da ritirare (periodo filtrato)</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900">{formatCurrency(versamentiDaRitirare)}</p>
         </div>
       </div>
 
