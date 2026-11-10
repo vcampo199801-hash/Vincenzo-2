@@ -309,6 +309,14 @@ model Documento {
   nome      String
   stato     String   @default("MANCANTE")
   note      String?
+  // Scansione del documento (PDF o foto), opzionale: la checklist resta
+  // valida anche senza, ma uno studio che vuole può tenere il file a
+  // portata di mano qui invece che solo "nota: dove si trova". Un solo
+  // file per riga, un nuovo caricamento sostituisce il precedente — a
+  // differenza dei Cedolini non c'è bisogno di tenerne più d'uno.
+  nomeFile        String?
+  fileUrl         String?
+  dataCaricamento DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

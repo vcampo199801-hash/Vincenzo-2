@@ -55,7 +55,18 @@ export default async function DocumentiPage() {
           <tbody className="divide-y divide-slate-100">
             {documenti.map((d) => (
               <tr key={d.id} className={ROW_TONE[d.stato] ?? "hover:bg-slate-50"}>
-                <td className="px-4 py-3 font-medium text-slate-900">{d.nome}</td>
+                <td className="px-4 py-3 font-medium text-slate-900">
+                  {d.nome}
+                  {d.fileUrl && (
+                    <Link
+                      href={`/app/documenti/documento/${d.id}`}
+                      title="Scansione allegata"
+                      className="ml-1.5 text-slate-400 hover:text-brand-600"
+                    >
+                      📎
+                    </Link>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <DocumentoStatoSelect id={d.id} stato={d.stato} />
                 </td>
